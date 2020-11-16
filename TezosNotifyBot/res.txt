@@ -1,0 +1,345 @@
+﻿% Файл текстовых ресурсов TezosNotifierBot
+%
+% Текстовые ресурсы описываются в формате:
+% #Name;lang;text
+% Первым символом в строке должен быть #
+% Name - системное имя ресурса
+% lang - язык (ru или en)
+% text - текст с подстановками
+%
+% Подстановки указываются в фигурных скобках {}
+% Внутри фигурных скобок можно писать выражения и указывать свойства контекстного (корневого) объекта.
+% Контекстный объект имеет следующие свойства (указано имя и тип):
+% u User - пользователь:
+%	UserId int
+%	Firstname string
+%	Lastname string
+%	Username string
+%	CreateDate DateTime
+%	Language string
+%	Inactive bool
+%	HideHashTags bool
+%	WhaleAlertThreshold int
+%	VotingNotify bool
+%	NetworkIssueNotify int
+% ua UserAddress - адрес пользователя
+%	Address string
+%	CreateDate DateTime
+%	Balance decimal
+%	IsDeleted bool
+%	Name string
+%	NotifyBakingRewards bool
+%	AmountThreshold decimal
+%	NotifyTransactions bool
+%	NotifyCycleCompletion bool
+%	NotifyDelegations bool
+%	DelegationAmountThreshold decimal
+%	NotifyMisses bool
+% t ExplorerUrl - преобразователь URL для эксплорера пользователя (твиттера)
+%	block(number) string - формирует URL для блока с заданным номером
+%	account(addr) string - формирует URL для адреса
+%	op(ophash) string - формирует URL для операции
+%	url_vote(proposal) string - формирует URL для предложения
+% Строки, начинающиеся с % являются комментариями
+%
+#Welcome;ru;💚 Добро пожаловать, {(u.Firstname + " " + u.Lastname).Trim()}!
+
+С помощью Tezos Notifier Bot Вы можете мониторить различные события в блокчейне Tezos, например, транзакции, делегирование, пропуски выпечки делегатом, двойная выпечка и т.д.
+
+Поддержать нас донейтом XTZ: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
+
+💡 <b>Первые шаги</b>:
+ - нажмите кнопку ✳️ <b>Новый адрес</b> и введите адрес Tezos, за которым хотите следить. Управлять списком адресом и их настройками можно по кнопке 👛 <b>Мои адреса</b>
+ - или просто не делайте ничего и вы будете получать уведомления о 🐋 <b>больших транзакциях</b>, отключить или настроить которые вы можете по кнопке ⚙️ <b>Настройки</b>
+
+Полное описание и инструкция: http://tzsnt.fr/
+#Welcome;en;💚 Welcome {(u.Firstname + " " + u.Lastname).Trim()}!
+
+With Tezos Notifier Bot you can simply monitor various events in Tezos blockchain, like transactions, delegations, missing block endorsing, double baking, etc.
+
+Donate XTZ to support us: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
+
+💡 <b>First steps</b>:
+ - click the ✳️ <b>New address</b> button and type the Tezos address you want to follow. Use the 👛 <b>My Addresses</b> button to manage address list and special settings.
+ - or simply do nothing and you will be notified about 🐋 <b>whale transactions</b>, which you can disable or configure using ⚙️ <b>Settings</b> button
+
+Full description & manual: http://tzsnt.fr/
+#WelcomeBack;ru;💚 С возвращением, {(u.Firstname + " " + u.Lastname).Trim()}!
+#WelcomeBack;en;💚 Welcome back {(u.Firstname + " " + u.Lastname).Trim()}!
+#HashTags;ru;{(u.HideHashTags ? "🔲" : "☑️")} Хэштеги
+#HashTags;en;{(u.HideHashTags ? "🔲" : "☑️")} Hashtags
+#Search;ru;🔎 Поиск
+#Search;en;🔎 Search
+#VotingNotify;ru;{(u.VotingNotify ? "🔈" : "🔇")} Голосования
+#VotingNotify;en;{(u.VotingNotify ? "🔈" : "🔇")} Votings
+% Главное меню
+#NewAddress;ru;✳️ Новый адрес
+#NewAddress;en;✳️ New Address
+#MyAddresses;ru;👛 Мои адреса
+#MyAddresses;en;👛 My Addresses
+#Contact;ru;✉️ Обратная связь
+#Contact;en;✉️ Feedback
+#Settings;ru;⚙️ Настройки
+#Settings;en;⚙️ Settings
+#GoBack;ru;⬅️ Назад
+#GoBack;en;⬅️ Go back
+#Delete;ru;🗑 Удалить
+#Delete;en;🗑 Delete
+#ManageAddress;ru;🛠 Настроить
+#ManageAddress;en;🛠 Tune
+#RenameAddress;ru;📝 Переименовать
+#RenameAddress;en;📝 Rename
+#SetThreshold;ru;✂️ Порог транзакций
+#SetThreshold;en;✂️ Transaction Threshold
+#SetDlgThreshold;ru;✂️ Порог делегирования
+#SetDlgThreshold;en;✂️ Delegation Threshold
+#RewardNotify;ru;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Вознаграждения
+#RewardNotify;en;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards
+#CycleNotify;ru;{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Завершение цикла
+#CycleNotify;en;{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion
+#MissesNotify;ru;{(ua.NotifyMisses ? "☑️" : "🔲")} Пропуски
+#MissesNotify;en;{(ua.NotifyMisses ? "☑️" : "🔲")} Misses
+#TransactionNotify;ru;{(ua.NotifyTransactions ? "☑️" : "🔲")} Транзакции
+#TransactionNotify;en;{(ua.NotifyTransactions ? "☑️" : "🔲")} Transactions
+#DelegationNotify;ru;{(ua.NotifyDelegations ? "☑️" : "🔲")} Делегирования
+#DelegationNotify;en;{(ua.NotifyDelegations ? "☑️" : "🔲")} Delegations
+#WhaleAlerts;ru;🐋 Оповещения о китах
+#WhaleAlerts;en;🐋 Whale alerts
+#Explorer;ru;🌐 Эксплорер
+#Explorer;en;🌐 Explorer
+#NetworkIssueAlerts;ru;⚠️ Оповещения о сбоях сети
+#NetworkIssueAlerts;en;⚠️ Network failure alerts
+#AddAddress;ru;👀 Следить за
+#AddAddress;en;👀 Monitor delegate
+#Off;ru;Выкл
+#Off;en;Off
+% Сообщения
+#MessageDelivered;ru;Сообщение доставлено для русскоязычных пользователей
+#MessageDelivered;en;Message delivered for english speaking users
+#MessageSentToSupport;ru;Сообщение отправлено. Спасибо за ваше обращение 💛
+#MessageSentToSupport;en;Message sent. Thanks for contacting 💛
+#WriteHere;ru;Напишите ваше сообщение
+#WriteHere;en;Please, write here your message
+#SeeYou;ru;🙋 До связи!
+#SeeYou;en;🙋 Ok, see you later
+#AddressDeleted;ru;Адрес {ua.Address + (!string.IsNullOrEmpty(ua.Name) ? " <b>" + ua.Name + "</b>" : "")} удален
+#AddressDeleted;en;Address {ua.Address + (!string.IsNullOrEmpty(ua.Name) ? " <b>" + ua.Name + "</b>" : "")} deleted
+#AddressNotExist;ru;🚫 Адрес не существует
+#AddressNotExist;en;🚫 Address doesn't exists
+#SupportReply;ru;📩 Сообщение от поддержки:
+#SupportReply;en;📩 Message from support:
+#UnrecognizedCommand;ru;🙈 Команда не распознана
+#UnrecognizedCommand;en;🙈 Command not recognized
+#ChooseExplorer;ru;Выберите эксплорер блокчейна
+#ChooseExplorer;en;Choose blockchain explorer
+#WhaleAlertsTip;ru;Выберите примерный порог транзакций китов
+#WhaleAlertsTip;en;Choose whale transactions average threshold
+#NetworkIssueAlertsTip;ru;Выберите время простоя сети Tezos в минутах до получения уведомления о сбое в работе блокчейна
+#NetworkIssueAlertsTip;en;Choose Tezos network downtime in minutes before sending notifications about blockchain faults
+#WhaleAlertSet;ru;Порог транзакций китов установлен: {((decimal)u.WhaleAlertThreshold).TezToString()}
+#WhaleAlertSet;en;Whale transactions threshold set: {((decimal)u.WhaleAlertThreshold).TezToString()}
+#IncorrectTezosAddress;ru;Некорректный адрес
+#IncorrectTezosAddress;en;Incorrect Tezos Address
+#NoAddresses;ru;У вас нет адресов
+#NoAddresses;en;You have no addresses
+#NewAddressHint;ru;Отправьте адрес кошелька Тезос, который вы хотите отслеживать и название адреса (опционально). Пример:
+
+<i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Артур</i>
+
+Или воспользуйтесь поиском:
+#NewAddressHint;en;Send me your Tezos address you want to monitor and the title for this address (optional). For example:
+
+<i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Arthur</i>
+
+Or use the search:
+#AmountThreshold;ru;✂️ Порог суммы транзакции: <b>{ua.AmountThreshold.TezToString()}</b>
+#AmountThreshold;en;✂️ Transaction threshold: <b>{ua.AmountThreshold.TezToString()}</b>
+#DelegationAmountThreshold;ru;✂️ Порог суммы делегирования: <b>{ua.DelegationAmountThreshold.TezToString()}</b>
+#DelegationAmountThreshold;en;✂️ Delegation threshold: <b>{ua.DelegationAmountThreshold.TezToString()}</b>
+#EnterAmountThreshold;ru;Введите минимальную сумму транзакции для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> для получения уведомлений
+#EnterAmountThreshold;en;Enter minimum transaction amount for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> to receive notifications
+#EnterNewName;ru;Введите новое название для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#EnterNewName;en;Enter new name for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#EnterDlgAmountThreshold;ru;Введите минимальную сумму делегирования для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> для получения уведомлений
+#EnterDlgAmountThreshold;en;Enter minimum delegation amount for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> to receive notifications
+#ThresholdEstablished;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> установлен порог в {ua.AmountThreshold.TezToString()} для получения уведомлений. Вы будете получать уведомление о транзакциях на сумму более {ua.AmountThreshold.TezToString()}
+#ThresholdEstablished;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> transaction amount threshold of {ua.AmountThreshold.TezToString()} was set. You will receive notifications about transactions above {ua.AmountThreshold.TezToString()}
+#DlgThresholdEstablished;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> установлен порог в {ua.DelegationAmountThreshold.TezToString()} для получения уведомлений. Вы будете получать уведомление о делегированиях на сумму более {ua.DelegationAmountThreshold.TezToString()}
+#DlgThresholdEstablished;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> delegation amount threshold {ua.DelegationAmountThreshold.TezToString()} was set. You will receive notifications about delegations above {ua.DelegationAmountThreshold.TezToString()}
+#AddressRenamed;ru;Для адреса <a href='{t.account(ua.Address)}'>{ua.Address}</a> установлено название {ua.DisplayName()}
+#AddressRenamed;en;Address <a href='{t.account(ua.Address)}'>{ua.Address}</a> named as {ua.DisplayName()}
+#Events;ru;События:
+#Events;en;Events:
+#TransactionNotifications;ru;✅ Транзакции: {(ua.NotifyTransactions ? "🔔 вкл" : "🔕 выкл")}
+#TransactionNotifications;en;✅ Transactions: {(ua.NotifyTransactions ? "🔔 on" : "🔕 off")}
+#DelegationNotifications;ru;🤝 Делегирования: {(ua.NotifyDelegations ? "🔔 вкл" : "🔕 выкл")}
+#DelegationNotifications;en;🤝 Delegations: {(ua.NotifyDelegations ? "🔔 on" : "🔕 off")}
+#RewardNotifications;ru;💰 Вознаграждения пекаря: {(ua.NotifyBakingRewards ? "🔔 вкл" : "🔕 выкл")}
+#RewardNotifications;en;💰 Baker rewards: {(ua.NotifyBakingRewards ? "🔔 on" : "🔕 off")}
+#CycleCompletionNotifications;ru;🏁 Завершения циклов: {(ua.NotifyCycleCompletion ? "🔔 вкл" : "🔕 выкл")}
+#CycleCompletionNotifications;en;🏁 Cycle completions: {(ua.NotifyCycleCompletion ? "🔔 on" : "🔕 off")}
+#MissesNotifications;ru;🤷🏻‍♂️ Пропуски пекаря: {(ua.NotifyMisses ? "🔔 вкл" : "🔕 выкл")}
+#MissesNotifications;en;🤷🏻‍♂️ Missed baking/endorsing: {(ua.NotifyMisses ? "🔔 on" : "🔕 off")}
+#AddressAdded;ru;✅ Добавлен <a href='{t.account(ua.Address)}'>{ua.Address}</a>{(!String.IsNullOrEmpty(ua.Name) ? " под названием <b>" + ua.Name + "</b>" : "")}. Вы будете получать уведомления по всем событиям.
+#AddressAdded;en;✅ Added <a href='{t.account(ua.Address)}'>{ua.Address}</a>{(!String.IsNullOrEmpty(ua.Name) ? " as <b>" + ua.Name + "</b>" : "")}. You will receive notifications on any events.
+#NetworkIssueAlertSet;ru;{(u.NetworkIssueNotify == 0 ? "Уведомления о сбоях сети отключены" : "Установлено время простоя сети до уведомления: " + u.NetworkIssueNotify.ToString() + " минут")}
+#NetworkIssueAlertSet;en;{(u.NetworkIssueNotify == 0 ? "Network failure notifications disabled" : "Network downtime prior to notification: " + u.NetworkIssueNotify.ToString() + " minutes")}
+#CurrentBalance;ru;Доступный баланс: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
+#CurrentBalance;en;Spendable Balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
+#ActualBalance;ru;Полный баланс: <b>{ua.FullBalance.TezToString()}</b>
+#ActualBalance;en;Full Balance: <b>{ua.FullBalance.TezToString()}</b>
+#StakingInfo;ru;Выпекающий капитал: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> делегаторов, <b>{ua.Rolls}</b> роллов)
+#StakingInfo;en;Staking Balance: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> delegators, <b>{ua.Rolls}</b> rolls)
+#NotifyIn;ru;Группа: 
+#NotifyIn;en;Group: 
+#FreeSpace;ru;Доступно для делегирования: <b>{ua.FreeSpace.TezToString()}{(ua.FreeSpace <= 0 ? " (переделегировано❗️)" : "")}</b>
+#FreeSpace;en;Free delegation space: <b>{ua.FreeSpace.TezToString()}{(ua.FreeSpace <= 0 ? " (overdelegated❗️)" : "")}</b>
+#Delegate;ru;Делегат
+#Delegate;en;Delegate
+#AveragePerformance;ru;Ср. эффективность за 10 циклов: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
+#AveragePerformance;en;Avg. 10-cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
+#NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами
+#NewProposal;en;💡 <a href='{t.op(OpHash)}'>Injected</a> new proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> by <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls
+#SupplyProposal;ru;👍 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>поддержал</a> предложение <a href='{t.url_vote(Block)}'>{p.Name}</a>
+
+{p.VotedRolls} роллов поддержало, {(100 * p.VotedRolls / TotalRolls).ToString("n1")}% от общего количества
+#SupplyProposal;en;👍 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>upvoted</a> proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+
+{p.VotedRolls} rolls voted, {(100 * p.VotedRolls / TotalRolls).ToString("n1")}% of total rolls
+#QuorumReached;ru;🎉 Кворум по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a> достигнут!
+#QuorumReached;en;🎉 Quorum on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> reached!
+#TestingVoteSuccess;ru;✌️ Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> одобрено. Начинается период тестирования.
+#TestingVoteSuccess;en;✌️ Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> approved. Testing period begins.
+#TestingVoteFailed;ru;😐 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
+#TestingVoteFailed;en;😐 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> declined. The proposal period begins.
+#PromotionVoteSuccess;ru;🥳 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> одобрено. Новый протокол внедрен. Начинается период подачи предложений.
+#PromotionVoteSuccess;en;🥳 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> approved. New protocol implemented. The proposal period begins.
+#PromotionVoteFailed;ru;🚽 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
+#PromotionVoteFailed;en;🚽 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> declined. The proposal period begins.
+#DelegateDidNotVoted;ru;😴 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не проголосовал по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#DelegateDidNotVoted;en;😴 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> didn't vote on proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_yay;ru;🙋‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ДА» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_yay;en;🙋‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «YAY» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_nay;ru;🙅‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «НЕТ» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_nay;en;🙅‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «NAY» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_pass;ru;🙆‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ПАС» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#BallotProposal_pass;en;🙆‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «PASS» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#ProposalSelectedForVoting;ru;Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> выносится на голосование
+#ProposalSelectedForVoting;en;Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> is selected for voting
+#ProposalSelectedForVotingOne;ru;💡 Завершен период подачи предложений.{(p.Delegates.Count > 0 ? " Предложение <a href='" + t.url_vote(Block) + "'>" + p.Name + "</a> поддержали: " : "")}
+#ProposalSelectedForVotingOne;en;💡 Proposal period has been completed.{(p.Delegates.Count > 0 ? " Proposal <a href='" + t.url_vote(Block) + "'>" + p.Name + "</a> supported by: " : "")}
+#ProposalSelectedItem;ru;<a href='{t.url_vote(Block)}'>{p.Name}</a> - {p.VotedRolls} роллов{(p.Delegates.Count > 0 ? ", поддержали: " : "")}
+#ProposalSelectedItem;en;<a href='{t.url_vote(Block)}'>{p.Name}</a> - {p.VotedRolls} rolls{(p.Delegates.Count > 0 ? ", supported by: " : "")}
+#ProposalSelectedMany;ru;💡 Завершен период подачи предложений. Были поданы предложения:
+#ProposalSelectedMany;en;💡 Proposal period has been completed. Proposals have been submitted:
+#IncomingTransactions;ru;✅ Входящие <a href='{t.block(Block)}'>транзакции</a> на сумму <b>{Amount.TezToString()}</b> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
+#IncomingTransactions;en;✅ Incoming <a href='{t.block(Block)}'>transactions</a> of <b>{Amount.TezToString()}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
+#IncomingTransaction;ru;✅ Входящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#IncomingTransaction;en;✅ Incoming <a href='{t.op(OpHash)}'>transaction</a> of <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#From;ru;▫️<b>{Amount.TezToString()}</b> от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#From;en;▫️<b>{Amount.TezToString()}</b> from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#NotAllShown;ru;ℹ️ Не все операции показаны, полный список <a href='{t.block(Block)}'>здесь</a>
+#NotAllShown;en;ℹ️ Not all operations are shown, full list <a href='{t.block(Block)}'>here</a>
+#To;ru;▫️<b>{Amount.TezToString()}</b> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#To;en;▫️<b>{Amount.TezToString()}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#OutgoingTransactions;ru;❎ Исходящие <a href='{t.block(Block)}'>транзакции</a> на сумму <b>{Amount.TezToString()}</b> от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
+#OutgoingTransactions;en;❎ Outgoing <a href='{t.block(Block)}'>transactions</a> of <b>{Amount.TezToString()}</b> from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
+#OutgoingTransaction;ru;❎ Исходящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#OutgoingTransaction;en;❎ Outgoing <a href='{t.op(OpHash)}'>transaction</a> of <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#WhaleTransaction;ru;🐋 Крупная <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#WhaleTransaction;en;🐋 Whale <a href='{t.op(OpHash)}'>transaction</a> of <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#DoubleBakingOccured;ru;😱 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> осуществил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и потерял <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+
+🛑 Бейкер должен немедленно прекратить выпечку и заверение до конца цикла
+#DoubleBakingOccured;en;😱 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> made <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and lost <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+
+🛑 Baker should immediately stop both baking and endorsing for the rest of cycle
+#DoubleBakingEvidence;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> обнаружил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и получил награду <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+#DoubleBakingEvidence;en;👮 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> detected <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and rewarded <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+#SkippedEndorsing;ru;😯 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не будет вознагражден за заверение блока <a href='{t.block(Block)}'>{Block}</a> по причине отсутствия заверяющих операций в блоке <a href='{t.block(Block + 1)}'>{Block + 1}</a>
+#SkippedEndorsing;en;😯 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> shall not be rewarded for block <a href='{t.block(Block)}'>{Block}</a> endorsing due to lack of endorsment operations in block <a href='{t.block(Block + 1)}'>{Block + 1}</a>
+#NewDelegation;ru;🤝 Новое <a href='{t.op(OpHash)}'>делегирование</a> <b>{Amount.TezToString()}</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#NewDelegation;en;🤝 New <a href='{t.op(OpHash)}'>delegation</a> of <b>{Amount.TezToString()}</b> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#UnDelegation;ru;👋 Делегатор <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> с балансом <b>{Amount.TezToString()}</b> покинул делегата <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#UnDelegation;en;👋 Delegator <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> with balance <b>{Amount.TezToString()}</b> left delegate <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#StoleBaking;ru;😎 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> выпек блок <a href='{t.block(Block)}'>{Block}</a> с приоритетом {Priority} и получает дополнительную награду {Amount.TezToString()}
+#StoleBaking;en;😎 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> stole block <a href='{t.block(Block)}'>{Block}</a> baking (priority {Priority}) and gets extra reward {Amount.TezToString()}
+#NetworkIssue;ru;⚠ Сеть Tezos, возможно, испытывает проблемы.
+
+Последний блок <a href='{t.block(Block)}'>{Block}</a> испечён {Minutes} минут назад.
+
+Всем бейкерам необходимо проверить свой софт
+#NetworkIssue;en;⚠ Probably Tezos network is experiencing problems.
+
+Last block <a href='{t.block(Block)}'>{Block}</a> baked {Minutes} minutes ago.
+
+All bakers need to check their software
+#MissedBaking;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил выпечку блока <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 512 ? " из-за нехватки средств (текущий баланс " + ua.Balance.TezToString() + ")" : "")} и не получает награду {Amount.TezToString()}
+#MissedBaking;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed baking block <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 512 ? " due to lack of funds (current balance " + ua.Balance.TezToString() + ")" : "")} and does not receive a reward {Amount.TezToString()}
+#MissedEndorsing;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил заверение блока <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 64 ? " из-за нехватки средств (текущий баланс " + ua.Balance.TezToString() + ")" : "")} и не получает награду {Amount.TezToString()}
+#MissedEndorsing;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed endorsement for block <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 512 ? " due to lack of funds (current balance " + ua.Balance.TezToString() + ")" : "")} and does not receive a reward {Amount.TezToString()}
+#CycleCompleted;ru;🏁 Цикл {Cycle} завершен!
+#CycleCompleted;en;🏁 Cycle {Cycle} is completed!
+#RewardDelivered;ru;💰 Награды за цикл {Cycle} выплачены делегатам!
+#RewardDelivered;en;💰 Rewards for cycle {Cycle} delivered to delegates!
+#Accrued;ru;Начислено за цикл {Cycle}: <b>{Amount.TezToString()}</b>
+#Accrued;en;Accrued per cycle {Cycle}: <b>{Amount.TezToString()}</b>
+#RewardDeliveredItem;ru;<b>{Amount.TezToString()}</b> для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>.
+#RewardDeliveredItem;en;<b>{Amount.TezToString()}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>.
+#Performance;ru;Эффективность <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> составила <b>{ua.Performance.ToString("#0.0")}%</b>
+#Performance;en;Performance of <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is <b>{ua.Performance.ToString("#0.0")}%</b>
+#Watchers;ru;👀 Наблюдают: 
+#Watchers;en;👀 Followers: 
+#NotifyFollowers;ru;📣 Уведомить наблюдателей/делегаторов
+#NotifyFollowers;en;📣 Notify followers/delegators
+#EnterMessageForAddressFollowers;ru;Введите сообщение для делегаторов и наблюдателей делегата <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>.
+Следующие пользователи получат сообщение:
+#EnterMessageForAddressFollowers;en;Enter message for delegators and followers of delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>.
+Following users will receive the message:
+#MessageDeliveredForUsers;ru;Message delivered for users
+#MessageDeliveredForUsers;en;Сообщение отправлено пользователям
+#TwitterWhaleTransaction;en;🐋#Tezos whale transaction of {Amount.TezToString()} ({Amount.TezToUsd(md)} USD) from {ua_from.DisplayName()} to {ua_to.DisplayName()}
+
+Transaction: {t.op(OpHash)}
+
+Use our Telegram bot https://t.me/TezosNotifierBot to monitor any address that you want! 
+#TwitterNetworkAlert;en;⚠️ Probably #Tezos network is experiencing problems. Last block {Block} received {Minutes} minutes ago.
+
+All bakers need to check their software!
+
+Block: {t.block(Block)}
+#TwitterNewProposal;en;💡 Injected new #Tezos proposal {p.Name} by {ua.DisplayName()} with {ua.Rolls} rolls
+
+Proposal: {t.url_vote(Block)}
+#TwitterProposalPeriodComplete;en;💡 #Tezos proposal period has been completed. 
+
+Proposal {p.Name} is selected for voting.
+
+Proposal: {t.url_vote(Block)}
+#TwitterProposalPeriodCompleteMany;en;💡 #Tezos proposal period has been completed. Proposals have been submitted:
+PsBABY5…GmrbU - 33145 rolls
+PsBABY5…mRS9f - 9522 rolls
+
+Proposal {p.Name} is selected for voting.
+
+Proposal: {t.url_vote(Block)}
+#TwitterProposalApproved;en;🥳 #Tezos proposal {p.Name} approved. New protocol implemented. The proposal period begins.
+
+Proposal: {t.url_vote(Block)}
+#TwitterProposalApprovedForTest;en;✌️ #Tezos proposal {p.Name} approved. Testing period begins.
+
+Proposal: {t.url_vote(Block)}
+#TwitterTnbPromo;en;🤖 Check out our Telegram bot https://t.me/TezosNotifierBot for #Tezos network monitoring. Here you can subscribe to the addresses you are interested in and receive relevant notifications.
+#TwitterDoubleBaking;en;😱 Delegate {ua_from.DisplayName()} made double baking/endorsement of block {Block} and lost {Amount.TezToString()} and should immediately stop both baking and endorsing ‼️
+👮 Delegate {ua_to.DisplayName()} detected double baking/endorsement and rewarded {(Amount / 2).TezToString()}
+
+Tx: {t.op(OpHash)}
+#DonateInfo;en;🎁 Your donations help us understand that we are moving in the right direction and making a really cool service!
+
+Our XTZ address: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
+#DonateInfo;ru;🎁 Ваши донейты помогают нам понять, что мы движемся в правильном направлении и создаем действительно крутой сервис!
+
+Наш XTZ адрес: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
+#Donate;en;🎁 Donate
+#Donate;ru;🎁 Поддержать
+#TwitterQuorumReached;en;🎉 Quorum on the proposal {p.Name} reached!

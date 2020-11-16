@@ -1,0 +1,26 @@
+﻿[
+  {
+    "Name": "tezos.org.ua",
+    "Url": "https://api.tezos.org.ua"
+  },
+  {
+    "Name": "Tulip",
+    "Url": "https://rpc.tulip.tools/mainnet"
+  },
+  {
+    "Name": "TezRPC",
+    "Url": "https://rpc.tezrpc.me"
+  },
+  {
+    "Name": "TzScan",
+    "Url": "https://mainnet-node.tzscan.io"
+  },
+  {
+    "Name": "LetzBake!",
+    "Url": "https://teznode.letzbake.com"
+  },
+  {
+    "Name": "carthagenet.tezos.cryptium.ch",
+    "Url": "http://carthagenet.tezos.cryptium.ch:8732"
+  }
+]

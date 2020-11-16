@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2035
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot", "TezosNotifyBot\TezosNotifyBot.csproj", "{FFAE57E9-2564-4C0B-B589-CE608EE49857}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B4DF5634-0943-4ACD-AFE0-424467D8A953}
+	EndGlobalSection
+EndGlobal
