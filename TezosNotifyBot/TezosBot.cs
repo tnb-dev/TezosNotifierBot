@@ -1236,20 +1236,21 @@ namespace TezosNotifyBot
 			try
 			{
 				var t = Explorer.FromId(0);
-				string url = "https://raw.githubusercontent.com/blockwatch-cc/tzstats/master/src/config/aliases.js";
-				var txt = client2.Download(url);
-				string result = "";
-
-				var matches = Regex.Matches(txt, "([tK][zT][a-zA-Z0-9]{34}):\\s{\\sname: ('|\")(.*?)\\2");
-				if (matches.Count == 0)
-					NotifyDev($"Parsing failed: {url}", 0);
 				var delegates = repo.GetDelegates();
 				var knownNames = repo.GetKnownAddresses();
+				string result = "";
 				int cnt = 0;
-				foreach (Match m in matches)
+				string url = "https://api.tzkt.io/v1/accounts?type=delegate&limit=10000";
+				string txt = client2.Download(url);
+				List<string> updated = new List<string>();
+
+				foreach (var a in JsonConvert.DeserializeObject<Tzkt.Account[]>(txt))
 				{
-					var addr = m.Groups[1].Value;
-					var name = m.Groups[3].Value;
+					var addr = a.address;
+					var name = a.alias;
+					if (string.IsNullOrEmpty(a.alias))
+						continue;
+					updated.Add(addr);
 					if (delegates.Any(o => o.Address == addr))
 					{
 						if (delegates.Any(o => o.Address == addr && o.Name != name))
@@ -1274,7 +1275,44 @@ namespace TezosNotifyBot
 					result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
 					cnt++;
 				}
-				
+
+				url = "https://raw.githubusercontent.com/blockwatch-cc/tzstats/master/src/config/aliases.js";
+				txt = client2.Download(url);
+
+				var matches = Regex.Matches(txt, "([tK][zT][a-zA-Z0-9]{34}):\\s{\\sname: ('|\")(.*?)\\2");
+				if (matches.Count == 0)
+					NotifyDev($"Parsing failed: {url}", 0);
+				foreach (Match m in matches)
+				{
+					var addr = m.Groups[1].Value;
+					if (updated.Contains(addr))
+						continue;
+					var name = m.Groups[3].Value;
+					if (delegates.Any(o => o.Address == addr))
+					{
+						if (delegates.Any(o => o.Address == addr && o.Name != name))
+						{
+							repo.SetDelegateName(addr, name);
+							result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
+							cnt++;
+						}
+						continue;
+					}
+					if (knownNames.Any(o => o.Address == addr))
+					{
+						if (knownNames.Any(o => o.Address == addr && o.Name != name))
+						{
+							repo.SetKnownAddress(addr, name);
+							result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
+							cnt++;
+						}
+						continue;
+					}
+					repo.SetKnownAddress(addr, name);
+					result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
+					cnt++;
+				}				
+
 				result = "Updated names: " + cnt + "\n" + result;
 				NotifyDev(result, 0, Telegram.Bot.Types.Enums.ParseMode.Html);
 			}
@@ -2689,8 +2727,17 @@ namespace TezosNotifyBot
             foreach (var devUser in Config.DevUserNames)
             {
                 var user = repo.GetUser(devUser);
-                if (user != null && user.UserId != currentUserID)
-                    SendTextMessage(user.UserId, text, ReplyKeyboards.MainMenu(resMgr, user), parseMode: parseMode);
+				if (user != null && user.UserId != currentUserID)
+				{
+					while (text.Length > 4096)
+					{
+						int lastIndexOf = text.Substring(0, 4096).LastIndexOf('\n');
+						SendTextMessage(user.UserId, text.Substring(0, lastIndexOf), ReplyKeyboards.MainMenu(resMgr, user), parseMode: parseMode);
+						text = text.Substring(lastIndexOf + 1);
+					};
+					if (text != "")
+						SendTextMessage(user.UserId, text, ReplyKeyboards.MainMenu(resMgr, user), parseMode: parseMode);
+				}
             }
         }
 
