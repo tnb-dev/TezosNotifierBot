@@ -5,6 +5,12 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot", "TezosNotifyBot\TezosNotifyBot.csproj", "{FFAE57E9-2564-4C0B-B589-CE608EE49857}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot.Storage", "TezosNotifyBot.Storage\TezosNotifyBot.Storage.csproj", "{E26C154D-FDE0-4A28-AC44-0A54038F5E91}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot.Domain", "TezosNotifyBot.Domain\TezosNotifyBot.Domain.csproj", "{9BBA4D4E-7A31-40D7-999F-645B430D3AE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot.Shared", "TezosNotifyBot.Shared\TezosNotifyBot.Shared.csproj", "{D54310DD-0D46-49A5-AB03-D33E524AD009}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFAE57E9-2564-4C0B-B589-CE608EE49857}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E26C154D-FDE0-4A28-AC44-0A54038F5E91}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E26C154D-FDE0-4A28-AC44-0A54038F5E91}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E26C154D-FDE0-4A28-AC44-0A54038F5E91}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E26C154D-FDE0-4A28-AC44-0A54038F5E91}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9BBA4D4E-7A31-40D7-999F-645B430D3AE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9BBA4D4E-7A31-40D7-999F-645B430D3AE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9BBA4D4E-7A31-40D7-999F-645B430D3AE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9BBA4D4E-7A31-40D7-999F-645B430D3AE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D54310DD-0D46-49A5-AB03-D33E524AD009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D54310DD-0D46-49A5-AB03-D33E524AD009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D54310DD-0D46-49A5-AB03-D33E524AD009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D54310DD-0D46-49A5-AB03-D33E524AD009}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

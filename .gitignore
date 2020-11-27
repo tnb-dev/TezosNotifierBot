@@ -1,0 +1,11 @@
+bin
+obj
+
+# JetBrains files
+.idea
+
+# Mac files
+.DS_Store
+
+TezosNotifyBot/config.json
+TezosNotifyBot/Settings/Settings.Local.json
