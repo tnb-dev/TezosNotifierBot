@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using TezosNotifyBot.Domain;
 
 namespace TezosNotifyBot
 {
@@ -22,11 +23,11 @@ namespace TezosNotifyBot
             m.Keyboard = l.ToArray();
             return m;
         }
-        public static Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup MainMenu(ResourceManager resMgr, Model.User u)
+        public static Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup MainMenu(ResourceManager resMgr, User u)
         {
             return GetMarkup(CmdNewAddress(resMgr, u), CmdMyAddresses(resMgr, u)).AddRow(CmdContact(resMgr, u), CmdSettings(resMgr, u));
         }
-        public static Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup BackMenu(ResourceManager resMgr, Model.User u)
+        public static Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup BackMenu(ResourceManager resMgr, User u)
         {
             return GetMarkup(CmdGoBack(resMgr, u));
         }
@@ -74,7 +75,7 @@ namespace TezosNotifyBot
   //          );
   //      }
 		
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Search(ResourceManager resMgr, Model.User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Search(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
@@ -101,7 +102,7 @@ namespace TezosNotifyBot
 
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
 		}
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Settings(ResourceManager resMgr, Model.User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Settings(ResourceManager resMgr, User u)
         {
             var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
             Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
@@ -146,13 +147,13 @@ namespace TezosNotifyBot
                 //add("🗂 Get user messages", "getusermessages");
                 add("📃 Get logs", "getlog");
                 add("💽 Get database", "getdb");
-				foreach (var cmd in TezosBot.Commands.Where(o => o.username == u.Username || o.username == u.UserId.ToString()))
+				foreach (var cmd in TezosBot.Commands.Where(o => o.username == u.Username || o.username == u.Id.ToString()))
                     add(cmd.commandname, "cmd" + TezosBot.Commands.IndexOf(cmd));
             }
 			add(resMgr.Get(Res.Donate, u), "donate");
             return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
         }
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup WhaleAlertSettings(ResourceManager resMgr, Model.User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup WhaleAlertSettings(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
@@ -180,7 +181,7 @@ namespace TezosNotifyBot
 
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
 		}
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup ExplorerSettings(Model.User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup ExplorerSettings(User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
@@ -198,7 +199,7 @@ namespace TezosNotifyBot
 
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
 		}
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup NetworkIssueAlertSettings(ResourceManager resMgr, Model.User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup NetworkIssueAlertSettings(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
@@ -226,7 +227,7 @@ namespace TezosNotifyBot
 
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
 		}
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, Model.User u, string id, Model.UserAddress ua, Tuple<string,string> addDelegate)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, User u, string id, UserAddress ua, Tuple<string,string> addDelegate)
         {
             var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			if (ua == null)
@@ -280,7 +281,7 @@ namespace TezosNotifyBot
             return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons);
         }
 
-        public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, Model.User u, string id, Model.UserAddress ua)
+        public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, User u, string id, UserAddress ua)
         {
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			if (ua == null)
@@ -365,10 +366,10 @@ namespace TezosNotifyBot
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons);
         }
 
-        public static string CmdNewAddress(ResourceManager resMgr, Model.User u) => resMgr.Get(Res.NewAddress, u);
-        public static string CmdMyAddresses(ResourceManager resMgr, Model.User u) => resMgr.Get(Res.MyAddresses, u);
-		public static string CmdContact(ResourceManager resMgr, Model.User u) => resMgr.Get(Res.Contact, u);
-		public static string CmdSettings(ResourceManager resMgr, Model.User u) => resMgr.Get(Res.Settings, u);
-		public static string CmdGoBack(ResourceManager resMgr, Model.User u) => resMgr.Get(Res.GoBack, u);
+        public static string CmdNewAddress(ResourceManager resMgr, User u) => resMgr.Get(Res.NewAddress, u);
+        public static string CmdMyAddresses(ResourceManager resMgr, User u) => resMgr.Get(Res.MyAddresses, u);
+		public static string CmdContact(ResourceManager resMgr, User u) => resMgr.Get(Res.Contact, u);
+		public static string CmdSettings(ResourceManager resMgr, User u) => resMgr.Get(Res.Settings, u);
+		public static string CmdGoBack(ResourceManager resMgr, User u) => resMgr.Get(Res.GoBack, u);
 	}
 }

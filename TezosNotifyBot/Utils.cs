@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using TezosNotifyBot.Domain;
 
 namespace TezosNotifyBot
 {
@@ -50,9 +51,12 @@ namespace TezosNotifyBot
             return outputMemStream;
         }
 
-        public static string ShortAddr(this string addr)
-        {
-            return addr.Substring(0, 6) + "…" + addr.Substring(32);
-        }
+        /// <summary>
+        /// Temporary added as extension method 
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
+        public static bool IsAdmin(this User user)
+            => TezosBot.Config.DevUserNames.Contains(user.Username);
     }
 }
