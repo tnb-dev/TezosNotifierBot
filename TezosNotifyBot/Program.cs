@@ -51,6 +51,11 @@ namespace TezosNotifyBot
                     services.AddSingleton<TezosBot>();
                     
                     services.AddHostedService<Service>();
+
+                    using var provider = services.BuildServiceProvider();
+                    using var database = provider.GetRequiredService<TezosDataContext>();
+                    
+                    database.Database.Migrate();
                 });
     }
 }
