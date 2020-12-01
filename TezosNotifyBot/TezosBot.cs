@@ -9,13 +9,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MihaZupan;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NornPool.Model;
-using Serilog;
-using Serilog.Core;
-using Serilog.Events;
 using Telegram.Bot;
 using Telegram.Bot.Args;
 using Telegram.Bot.Exceptions;
@@ -30,7 +29,6 @@ using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
 using TezosNotifyBot.TzStats;
-using Constants = TezosNotifyBot.Tezos.Constants;
 using File = System.IO.File;
 using Message = Telegram.Bot.Types.Message;
 using User = TezosNotifyBot.Domain.User;
@@ -39,11 +37,12 @@ namespace TezosNotifyBot
 {
 	public class TezosBot
     {
-        private Repository repo;
+	    private BotConfig Config { get; set; }
+        private ILogger<TezosBot> Logger { get; }
+	    private Repository repo;
         
-        
+
         TelegramBotClient Bot;
-        public static BotConfig Config;
         Client client;
         Client client2;
         MarketData md = new MarketData();
@@ -53,7 +52,6 @@ namespace TezosNotifyBot
         public static string LogsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
 		bool lastBlockChanged = false;
 		//Dictionary<string, MyTezosBaker.Baker> bakers = new Dictionary<string, MyTezosBaker.Baker>();
-		Logger logger;
 		List<Node> Nodes;
 		Node CurrentNode;
 		int NetworkIssueMinutes = 2;
@@ -76,32 +74,21 @@ namespace TezosNotifyBot
 		string twitterAccountName;
 		bool twitterNetworkIssueNotified = false;
 
-		public TezosBot(Repository repo)
+		public TezosBot(Repository repo, ILogger<TezosBot> logger, IOptions<BotConfig> config)
 		{
+			Logger = logger;
+			Config = config.Value;
 			this.repo = repo;
 		}
 
-		public void Run(CancellationToken cancellToken)
+		public void Run(CancellationToken cancelToken)
         {
-			logger = new LoggerConfiguration()
-				.MinimumLevel.Verbose()
-				.WriteTo.Console()
-				.WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Verbose).WriteTo.File(Path.Combine(LogsPath, "Full-.log"), rollingInterval: RollingInterval.Hour, retainedFileCountLimit: 24, flushToDiskInterval: new TimeSpan(0,0,10)))
-				.WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Information).WriteTo.File(Path.Combine(LogsPath, "Info-.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 12, flushToDiskInterval: new TimeSpan(0, 0, 5)))
-				.WriteTo.Logger(l => l.Filter.ByIncludingOnly(e => e.Level >= LogEventLevel.Error).WriteTo.File(Path.Combine(LogsPath, "Error-.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 12, flushToDiskInterval: new TimeSpan(0, 0, 1)))
-				.CreateLogger();
-			if (!Directory.Exists(LogsPath))
-            {
-                Directory.CreateDirectory(LogsPath);
-				logger.Information("Directory created: " + LogsPath);
-            }
-			resMgr.LoadResources("res.txt");
+	        resMgr.LoadResources("res.txt");
 			worker = new Worker();
 			worker.OnError += Worker_OnError;
 			tzStats = new TzStatsData(worker);
 			try
 			{
-				Config = JsonConvert.DeserializeObject<BotConfig>(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json")));
 				Commands = JsonConvert.DeserializeObject<List<Command>>(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "commands.json")));
 				Nodes = JsonConvert.DeserializeObject<List<Node>>(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nodes.json")));
 				CurrentNode = Nodes[0];
@@ -126,19 +113,24 @@ namespace TezosNotifyBot
 					if (lastHash == null)
 						lastHash = client.GetBlockHeader(block.Item1).hash;
 				}
-				twitter = new TwitterClient(Config.TwitterConsumerKey, Config.TwitterConsumerKeySecret, Config.TwitterAccessToken, Config.TwitterAccessTokenSecret, LogsPath);
+				twitter = new TwitterClient(
+					Config.TwitterConsumerKey, 
+					Config.TwitterConsumerKeySecret,
+					Config.TwitterAccessToken, 
+					Config.TwitterAccessTokenSecret, LogsPath
+				);
 				twitter.OnTwit += Twitter_OnTwit;
 				twitter.OnTwitResponse += Twitter_OnTwitResponse;
-				Bot = new TelegramBotClient(Config.TelegramBotSecret, proxy);
-				logger.Verbose("Connecting to Telegram Server...");
+				Bot = new TelegramBotClient(Config.Telegram.BotSecret, proxy);
+				Logger.LogDebug("Connecting to Telegram Server...");
 				Bot.SetWebhookAsync("").ConfigureAwait(true).GetAwaiter().GetResult();
-				logger.Verbose("Connected to Telegram Server.");
+				Logger.LogDebug("Connected to Telegram Server.");
 				Bot.OnCallbackQuery += OnCallbackQuery;
 				Bot.OnUpdate += OnUpdate;
 				addrMgr = new AddressManager();
 				Bot.StartReceiving();
 				var me = Bot.GetMeAsync().ConfigureAwait(true).GetAwaiter().GetResult();
-				logger.Information("Старт обработки сообщений @" + me.Username);
+				Logger.LogInformation("Старт обработки сообщений @" + me.Username);
 				client.BlockReceived += Client_BlockReceived;
 				NotifyDev(me.Username + " v1.186 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
 				tzStats.LoadCycle(repo.GetLastBlockLevel().Item1);
@@ -214,7 +206,7 @@ namespace TezosNotifyBot
 						{
 							try
 							{
-								var bh = new Client(node.Url, logger).GetBlockHeader("head");
+								var bh = new Client(node.Url, Logger).GetBlockHeader("head");
 								if (bh != null)
 								{
 									blockHeaders.Add(bh);
@@ -233,7 +225,7 @@ namespace TezosNotifyBot
 						if (blockHeaders.Count == 0 || blockHeaders.Max(o => o.level) < repo.GetLastBlockLevel().Item1 + 4)
 						{
 							checkNodeResults += "Network issue!";
-							logger.Warning(checkNodeResults);
+							Logger.LogWarning(checkNodeResults);
 							//NotifyDev(checkNodeResults, 0);
 							var lastBH = blockHeaders.OrderByDescending(o => o.level).FirstOrDefault();
 							foreach (var user1 in repo.GetUsers().Where(o => o.NetworkIssueNotify > 0 && !o.NetworkIssueNotified))
@@ -264,15 +256,15 @@ namespace TezosNotifyBot
 					int wait = 60000 - (int)DateTime.Now.Subtract(lastReceived).TotalMilliseconds;
 					if (wait > 10)
 					{
-						logger.Verbose($"Waiting {wait} milliseconds");
+						Logger.LogDebug($"Waiting {wait} milliseconds");
 						Thread.Sleep(wait);
 					}
 				}
-				while (cancellToken.IsCancellationRequested is false);
+				while (cancelToken.IsCancellationRequested is false);
 			}
 			catch(Exception fe)
 			{
-				logger.Fatal(fe, "Fatal error");
+				Logger.LogCritical(fe, "Fatal error");
 			}
         }
 
@@ -330,7 +322,7 @@ namespace TezosNotifyBot
 				{
 					//NotifyDev($"🤖 Starting cache validation of {contracts.Count} addresses on block {level}", 0);
 					int errors = 0;
-					using (var tc = new Client(CurrentNode.Url, wcb.Logger))
+					using (var tc = new Client(CurrentNode.Url, Logger))
 					{
 						foreach (var contract in contracts)
 						{
@@ -347,7 +339,7 @@ namespace TezosNotifyBot
 				});
 			}
 			lastReceived = DateTime.Now;
-			logger.Verbose($"Block {header.level} received");
+			Logger.LogDebug($"Block {header.level} received");
 			addrMgr.LoadQueue(client, lastHash);
 			//if (blockMetadata.level.cycle_position == 0)
 			//{
@@ -373,7 +365,7 @@ namespace TezosNotifyBot
 			 {
 				 if (!addrUpdated.Contains(addr))
 					 addrUpdated.Add(addr);
-				 logger.Verbose($"Balance of {addr} updated to {bal / 1000000M} XTZ at block {header.level}");
+				 Logger.LogDebug($"Balance of {addr} updated to {bal / 1000000M} XTZ at block {header.level}");
 			 };
 
 			if (addrMgr.LastHash != header.hash)
@@ -946,7 +938,7 @@ namespace TezosNotifyBot
 
 			if (!lastBlockChanged)
 				repo.SetLastBlockLevel(header.level, header.priority, header.hash);
-			logger.Information("Block " + header.level.ToString() + " operations processed");
+			Logger.LogInformation("Block " + header.level.ToString() + " operations processed");
 			lastHeader = header;
 			lastMetadata = blockMetadata;
 			lastHash = header.hash;
@@ -960,7 +952,7 @@ namespace TezosNotifyBot
 
 		bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
 		{
-			logger.Verbose($"ProcessBlockBakingData {header.level}");
+			Logger.LogDebug($"ProcessBlockBakingData {header.level}");
 			if (!repo.IsRightsLoaded(blockMetadata.level.cycle))
 				LoadBakingEndorsingRights(header.hash, blockMetadata.level.cycle);
 			if (!repo.IsRightsLoaded(blockMetadata.level.cycle + 1))
@@ -974,7 +966,7 @@ namespace TezosNotifyBot
 			var baking_rights = client.GetBakingRights(header.predecessor);
 			//var endorsing_rights = client.GetEndorsingRights(header.predecessor);
 			// Проверка baking rights
-			logger.Verbose($"Baking rights processing {header.level + 1}");
+			Logger.LogDebug($"Baking rights processing {header.level + 1}");
 			int slots = operations.Where(o => o.contents.Any(o1 => o1.kind == "endorsement")).SelectMany(o => o.contents).Sum(o => o.metadata.slots.Count);
 			if (header.level <= 655360)
 				slots = 32;
@@ -1026,7 +1018,7 @@ namespace TezosNotifyBot
 			}
 			
 			var priority = header.priority;
-			logger.Verbose($"Endorsements processing {header.level + 1}");
+			Logger.LogDebug($"Endorsements processing {header.level + 1}");
 			var endorsing_rights = repo.GetEndorsingRights(header.level);
 			if (operations.Any(o => o.contents.Any(o1 => o1.kind == "endorsement")))
 			{
@@ -1072,14 +1064,14 @@ namespace TezosNotifyBot
 					}
 				}
 			}
-			logger.Verbose($"Updating rewards {header.level}");
+			Logger.LogDebug($"Updating rewards {header.level}");
 			foreach (var bu in blockMetadata.balance_updates.Where(o => o.kind == "freezer" && o.category == "rewards" && (o.level ?? o.cycle) == blockMetadata.level.cycle))
 				rewardsManager.BalanceUpdate(bu.@delegate, header.priority == 0 ? RewardsManager.RewardType.Baking : RewardsManager.RewardType.StolenBaking, header.level + 1, bu.change);
 			foreach (var bu in operations.SelectMany(o => o.contents.Where(o1 => o1.metadata.balance_updates != null).SelectMany(o1 => o1.metadata.balance_updates)).Where(o => o.kind == "freezer" && o.category == "rewards" && (o.level ?? o.cycle) == blockMetadata.level.cycle))
 				rewardsManager.BalanceUpdate(bu.@delegate, RewardsManager.RewardType.Endorsing, header.level + 1, bu.change, endorsing_rights.SingleOrDefault(o => o.Item1 == bu.@delegate)?.Item2 ?? 0);
 			
 			ProcessBlockMetadata(blockMetadata, header.hash);
-			logger.Information("Block " + (header.level + 1).ToString() + " baking data processed");
+			Logger.LogInformation("Block " + (header.level + 1).ToString() + " baking data processed");
 			return true;
 		}
 
@@ -1092,7 +1084,7 @@ namespace TezosNotifyBot
 		}
         void ProcessBlockMetadata(BlockMetadata blockMetadata, string hash)
         {
-			logger.Verbose($"ProcessBlockMetadata {blockMetadata.level.level}");
+	        Logger.LogDebug($"ProcessBlockMetadata {blockMetadata.level.level}");
 			var bakingRewards = blockMetadata.balance_updates.Where(o => o.kind == "contract" || (o.kind == "freezer" && o.category == "deposits"))
                 .GroupBy(o => o.contract ?? o.@delegate).Select(o => new { Delegate = o.Key, Change = o.Sum(o1 => o1.change) }).ToList();
 			//User,rewards,tags,lang
@@ -1253,7 +1245,7 @@ namespace TezosNotifyBot
 					}
 				}
 			}
-			logger.Verbose($"ProcessBlockMetadata {blockMetadata.level.level} completed");
+			Logger.LogDebug($"ProcessBlockMetadata {blockMetadata.level.level} completed");
 		}
 
 		private void LoadAddressList()
@@ -1354,7 +1346,7 @@ namespace TezosNotifyBot
             {
                 var message = ev.CallbackQuery.Message;
                 repo.LogMessage(ev.CallbackQuery.From, message.MessageId, null, ev.CallbackQuery.Data);
-				logger.Information(UserTitle(ev.CallbackQuery.From) + ": button " + ev.CallbackQuery.Data);
+                Logger.LogInformation(UserTitle(ev.CallbackQuery.From) + ": button " + ev.CallbackQuery.Data);
                 var u = repo.GetUser(ev.CallbackQuery.From.Id);
 				var t = Explorer.FromId(u.Explorer);
 				if (ev.CallbackQuery.Data == "donate")
@@ -1636,25 +1628,25 @@ namespace TezosNotifyBot
                 {
                     u.HideHashTags = true;
                     repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
                 }
                 if (ev.CallbackQuery.Data.StartsWith("showhashtags"))
                 {
                     u.HideHashTags = false;
                     repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
 				}
 				if (ev.CallbackQuery.Data.StartsWith("showvotingnotify"))
 				{
 					u.VotingNotify = true;
 					repo.UpdateUser(u);
-					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
 				}
 				if (ev.CallbackQuery.Data.StartsWith("hidevotingnotify"))
 				{
 					u.VotingNotify = false;
 					repo.UpdateUser(u);
-					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
 				}
 				if (Config.DevUserNames.Contains(u.Username))
                 {
@@ -1665,15 +1657,15 @@ namespace TezosNotifyBot
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getuserlist"))
                     {
-                        OnSql(u, "select * from Users");
+                        OnSql(u, "select * from user");
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getuseraddresses"))
                     {
-                        OnSql(u, "select * from UserAddresses");
+                        OnSql(u, "select * from user_address");
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getusermessages"))
                     {
-                        OnSql(u, "select * from Messages");
+                        OnSql(u, "select * from message");
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getlog"))
                     {
@@ -1730,13 +1722,13 @@ namespace TezosNotifyBot
                                 CreateNoWindow = true,
                             }
                         };
-						logger.Information(UserTitle(ev.CallbackQuery.From) + " started: "+ cmd.filepath + " " + cmd.arguments);
+                        Logger.LogInformation(UserTitle(ev.CallbackQuery.From) + " started: "+ cmd.filepath + " " + cmd.arguments);
                         try
                         {
                             process.Start();
                             string result = process.StandardOutput.ReadToEnd();
                             process.WaitForExit(10000);
-							logger.Information(result);
+                            Logger.LogInformation(result);
                             int pos = 0;
                             int limit = 4096;
                             do
@@ -1895,7 +1887,7 @@ namespace TezosNotifyBot
 
                     repo.LogMessage(message.From, message.MessageId, message.Text, null);
 					u = repo.GetUser(message.From.Id);
-					logger.Information(UserTitle(message.From) + ": " + message.Text);
+					Logger.LogInformation(UserTitle(message.From) + ": " + message.Text);
                     if (newUser)
 						NotifyUserActivity("🔅 New user: " + UserLink(u));
                     bool welcomeBack = false;
@@ -1949,7 +1941,7 @@ namespace TezosNotifyBot
 					{
 						OnNewAddress(u);
 					}
-					else if (message.Text.StartsWith("/forward") && u.IsAdmin())
+					else if (message.Text.StartsWith("/forward") && u.IsAdmin(Config.Telegram))
 					{
 						var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
 						var msg = repo.GetMessage(msgid);
@@ -2280,7 +2272,7 @@ namespace TezosNotifyBot
 					}
 					else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, u))
 					{
-						SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u));
+						SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram));
 					}
 					else
 					{
@@ -2581,7 +2573,7 @@ namespace TezosNotifyBot
 			decimal maxStakingThreshold = 1;
 			var maxStakingBalance = bakerStakingCapacity * maxStakingThreshold;
 			var freeSpace = (maxStakingBalance - ua.StakingBalance * 1000000) / 1000000M;
-			logger.Verbose($"FreeSpace calc for {ua.Address}. totalLocked:{totalLocked}; bakerBalance:{bakerBalance}, bakerShare:{bakerShare}, totalRolls:{totalRolls}, bakerStakingCapacity:{bakerStakingCapacity}, maxStakingBalance:{maxStakingBalance}, currentStakingBalance:{ua.StakingBalance}");
+			Logger.LogDebug($"FreeSpace calc for {ua.Address}. totalLocked:{totalLocked}; bakerBalance:{bakerBalance}, bakerShare:{bakerShare}, totalRolls:{totalRolls}, bakerStakingCapacity:{bakerStakingCapacity}, maxStakingBalance:{maxStakingBalance}, currentStakingBalance:{ua.StakingBalance}");
 			ua.FreeSpace = freeSpace;
 			return resMgr.Get(Res.FreeSpace, ua) + "\n";
 		}
@@ -2678,11 +2670,15 @@ namespace TezosNotifyBot
 					result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
 					result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
 					result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
-					result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count.ToString();
+					result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count;
 				}
 				if (!ua.User.HideHashTags)
                     result += "\n\n" + ua.HashTag();
-				return () => SendTextMessage(chatId, result, chatId == ua.UserId ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua) : null, msgid);
+				return () => SendTextMessage(chatId, result,
+					chatId == ua.UserId
+						? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
+							Config.Telegram)
+						: null, msgid);
             }
             else
             {
@@ -2771,7 +2767,7 @@ namespace TezosNotifyBot
 		{			
 			try
 			{
-				logger.Information("->" + chatId.ToString() + ": " + text);
+				Logger.LogInformation("->" + chatId.ToString() + ": " + text);
 				var msg = Bot.SendTextMessageAsync(chatId, text, ParseMode.Html, true).ConfigureAwait(true).GetAwaiter().GetResult();
 				Thread.Sleep(50);
 			}
@@ -2796,7 +2792,7 @@ namespace TezosNotifyBot
                 return 0;
             try
             {
-				logger.Information("->" + u.ToString() + ": " + text);
+	            Logger.LogInformation("->" + u.ToString() + ": " + text);
                 if (replaceId == 0)
                 {
                     var msg = Bot.SendTextMessageAsync(userId, text, parseMode, true, disableNotification, replyMarkup: keyboard).ConfigureAwait(true).GetAwaiter().GetResult();
@@ -2846,7 +2842,7 @@ namespace TezosNotifyBot
 
 		void NotifyUserActivity(string text)
 		{
-			foreach (var userId in Config.UserActivityChat)
+			foreach (var userId in Config.Telegram.ActivityChat)
 			{
 				try
 				{
@@ -2877,12 +2873,12 @@ namespace TezosNotifyBot
                 msg += e.StackTrace + Environment.NewLine + Environment.NewLine;
                 e = e.InnerException;
             }
-			logger.Error(e, msg);
+			Logger.LogError(e, msg);
         }
 
 		Client CreateTezosClient()
 		{
-			return new Client(CurrentNode.Url, logger);
+			return new Client(CurrentNode.Url, Logger);
 		}
         
         string UserTitle(Telegram.Bot.Types.User u)
@@ -2948,11 +2944,11 @@ namespace TezosNotifyBot
 
 		void LoadBakingEndorsingRights(string hash, int cycle)
 		{
-			logger.Information($"Loading rights for cycle {cycle}");
+			Logger.LogInformation($"Loading rights for cycle {cycle}");
 			var br = client2.GetBakingRights(hash, cycle);
 			var er = client2.GetEndorsingRights(hash, cycle);
 			repo.SaveBakingEndorsingRights(br, er);
-			logger.Information($"Rights for cycle {cycle} loaded");
+			Logger.LogInformation($"Rights for cycle {cycle} loaded");
 		}
 	}
 }

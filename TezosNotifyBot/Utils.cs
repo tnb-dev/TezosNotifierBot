@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using NornPool.Model;
 using TezosNotifyBot.Domain;
 
 namespace TezosNotifyBot
@@ -56,7 +57,7 @@ namespace TezosNotifyBot
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public static bool IsAdmin(this User user)
-            => TezosBot.Config.DevUserNames.Contains(user.Username);
+        public static bool IsAdmin(this User user, TelegramOptions config)
+            => config.DevUsers.Contains(user.Username);
     }
 }

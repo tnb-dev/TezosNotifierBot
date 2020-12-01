@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using NornPool.Model;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
 
@@ -29,12 +30,21 @@ namespace TezosNotifyBot
                     builder.AddJsonFile("Settings/Settings.json");
                     builder.AddJsonFile($"Settings/Settings.{context.HostingEnvironment.EnvironmentName}.json", true);
                     builder.AddJsonFile("Settings/Settings.Local.json", true);
+                    builder.AddEnvironmentVariables();
+                    builder.AddCommandLine(args);
                 })
                 .ConfigureServices((context, services) =>
                 {
                     services.AddDbContextPool<TezosDataContext>(builder => builder
                         .UseNpgsql(context.Configuration.GetConnectionString("Default"))
                     );
+
+                    services.Configure<BotConfig>(context.Configuration);
+                    
+                    services.AddLogging(builder =>
+                    {
+                        // TODO: Add json formatter and send logs
+                    });
 
                     // TODO: Make this transient 
                     services.AddSingleton<Repository>();

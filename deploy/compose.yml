@@ -1,0 +1,52 @@
+version: "3.8"
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - app-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=$DB_NAME
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASSWORD
+  bot:
+    image: $CI_REGISTRY_IMAGE/bot:latest
+    depends_on:
+      - db
+    environment:
+      - ENV=Production
+
+  bi:
+    image: metabase/metabase
+    ports:
+      - $BI_PORT:3000
+    depends_on:
+      - bi-db
+    environment:
+      - MB_DB_TYPE=postgres
+      - MB_DB_USER=$BI_DB_USER
+      - MB_DB_PASS=$BI_DB_PASSWORD
+      - MB_DB_PORT=5432
+      - MB_DB_HOST=bi-db
+      - MB_DB_DBNAME=$BI_DB_NAME
+  bi-db:
+    image: postgres:12
+    volumes:
+      - bi-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=$BI_DB_NAME
+      - POSTGRES_USER=$BI_DB_USER
+      - POSTGRES_PASSWORD=$BI_DB_PASSWORD
+
+  db-admin:
+    image: dpage/pgadmin4
+    ports:
+      - $PG_PORT:80
+    depends_on:
+      - db
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
+      - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
+
+volumes:
+  bi-data:
+  app-data:

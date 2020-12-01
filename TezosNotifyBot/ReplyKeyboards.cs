@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using NornPool.Model;
 using TezosNotifyBot.Domain;
 
 namespace TezosNotifyBot
@@ -78,7 +79,7 @@ namespace TezosNotifyBot
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Search(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-			buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							SwitchInlineQueryCurrentChat = "",
@@ -91,7 +92,7 @@ namespace TezosNotifyBot
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup TweetSettings(int twitterMessageId)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string> add = (text, data) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text,
@@ -102,17 +103,17 @@ namespace TezosNotifyBot
 
 			return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons.ToArray());
 		}
-		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Settings(ResourceManager resMgr, User u)
+		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Settings(ResourceManager resMgr, User u, TelegramOptions options)
         {
             var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-            Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+            Action<string, string> add = (text, data) => buttons.Add(new[] {
                         new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
                         {
                             Text = text,
                             CallbackData = data
                         }
                     });
-			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text1,
@@ -139,7 +140,7 @@ namespace TezosNotifyBot
 			else
 				add(resMgr.Get(Res.VotingNotify, u), "showvotingnotify");
 
-			if (u.IsAdmin())
+			if (u.IsAdmin(options))
             {
 				add("🖋 Broadcast message", "broadcast");
                 add("👫 Get user list", "getuserlist");
@@ -156,14 +157,14 @@ namespace TezosNotifyBot
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup WhaleAlertSettings(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string> add = (text, data) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text,
 							CallbackData = data
 						}
 					});
-			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text1,
@@ -184,7 +185,7 @@ namespace TezosNotifyBot
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup ExplorerSettings(User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string> add = (text, data) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text,
@@ -202,14 +203,14 @@ namespace TezosNotifyBot
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup NetworkIssueAlertSettings(ResourceManager resMgr, User u)
 		{
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
-			Action<string, string> add = (text, data) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string> add = (text, data) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text,
 							CallbackData = data
 						}
 					});
-			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+			Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new[] {
 						new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 						{
 							Text = text1,
@@ -231,7 +232,7 @@ namespace TezosNotifyBot
         {
             var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			if (ua == null)
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.Delete, u),
@@ -245,7 +246,7 @@ namespace TezosNotifyBot
 				});
 			else
 			{
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.TransactionNotify, ua),
@@ -257,7 +258,7 @@ namespace TezosNotifyBot
 						CallbackData = "setthreshold " + id
 					}
 				});
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.RenameAddress, u),
@@ -271,7 +272,7 @@ namespace TezosNotifyBot
 				});
 			}
 			if (addDelegate.Item1 != "")
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.AddAddress, u) + " " + addDelegate.Item1,
@@ -281,11 +282,11 @@ namespace TezosNotifyBot
             return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(buttons);
         }
 
-        public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, User u, string id, UserAddress ua)
+        public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup AddressMenu(ResourceManager resMgr, User u, string id, UserAddress ua, TelegramOptions options)
         {
 			var buttons = new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[]>();
 			if (ua == null)
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.Delete, u),
@@ -299,7 +300,7 @@ namespace TezosNotifyBot
 				});
 			else
 			{
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.TransactionNotify, ua),
@@ -311,7 +312,7 @@ namespace TezosNotifyBot
 						CallbackData = "setthreshold " + id
 					}
 				});
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.DelegationNotify, ua),
@@ -323,7 +324,7 @@ namespace TezosNotifyBot
 						CallbackData = "setdlgthreshold " + id
 					}
 				});
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.RewardNotify, ua),
@@ -335,7 +336,7 @@ namespace TezosNotifyBot
 						CallbackData = (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id
 					}
 				});
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.RenameAddress, u),
@@ -347,15 +348,15 @@ namespace TezosNotifyBot
 						CallbackData = (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id
 					}
 				});
-				buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.Delete, u),
 						CallbackData = "deleteaddress " + id
 					}
 				});
-				if (u.IsAdmin())
-					buttons.Add(new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
+				if (u.IsAdmin(options))
+					buttons.Add(new[] {
 					new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
 					{
 						Text = resMgr.Get(Res.NotifyFollowers, u),
