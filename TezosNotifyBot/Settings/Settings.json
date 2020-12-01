@@ -5,5 +5,19 @@
             "System": "Information",
             "Microsoft": "Information"
         }
-    }
+    },
+    "Twitter": {
+        "ConsumerKey": "",
+        "ConsumerKeySecret": "",
+        "AccessToken": "",
+        "AccessTokenSecret": "",
+        "ChatId": -1001482752306,
+        "NetworkIssueNotify": 20
+    },
+    "Telegram": {
+        "BotSecret": "",
+        "DevUsers": [ "mksmfd", "tonoff", "emerido" ],
+        "ActivityChat": [ -1001482752306 ]
+    },
+    "CarthageStart": 38913
 }

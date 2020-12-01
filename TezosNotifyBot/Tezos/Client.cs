@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.IO;
+using Microsoft.Extensions.Logging;
 
 namespace TezosNotifyBot.Tezos
 {
@@ -12,9 +13,9 @@ namespace TezosNotifyBot.Tezos
     {
         WebClient wc = new WebClient();
         string url;
-		Serilog.Core.Logger logger;
+        ILogger logger;
 
-		public Client(string nodeRpcUrl, Serilog.Core.Logger logger)
+		public Client(string nodeRpcUrl, ILogger logger)
         {
             url = nodeRpcUrl;
 			this.logger = logger;
@@ -264,17 +265,17 @@ namespace TezosNotifyBot.Tezos
         {
             try
             {
-				logger?.Verbose("download " + addr);
+				logger?.LogDebug("download " + addr);
 				lock (wc)
 				{
 					var result = wc.DownloadString(addr);
-					logger?.Verbose("download complete: " + addr);
+					logger?.LogDebug("download complete: " + addr);
 					return result;
 				}
             }
             catch(WebException we)
             {
-				logger?.Error(we, "Error downloading from " + addr);
+				logger?.LogError(we, "Error downloading from " + addr);
     //            var rs = we.Response?.GetResponseStream();
 				//if (rs != null)
 				//{
@@ -286,12 +287,12 @@ namespace TezosNotifyBot.Tezos
             }
             catch(Exception e1)
             {
-				logger?.Error(e1, "Error downloading from " + addr);
-				logger?.Verbose("Sleep 10 s");
+				logger?.LogError(e1, "Error downloading from " + addr);
+				logger?.LogDebug("Sleep 10 s");
 				System.Threading.Thread.Sleep(10000);
                 try
                 {
-					logger?.Verbose("download " + addr);
+					logger?.LogDebug("download " + addr);
 					lock (wc)
 					{
 						return wc.DownloadString(addr);
