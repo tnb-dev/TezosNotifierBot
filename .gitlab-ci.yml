@@ -20,7 +20,7 @@ Deploy Bot:
   stage: deploy
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose -f deploy/compose.mainnet-staging.yml pull
+    - docker-compose -f deploy/compose.yml pull
     - docker-compose -f deploy/compose.yml -p tezos-bot up --remove-orphans -d
   tags:
     - deployer
