@@ -20,6 +20,7 @@ Deploy Bot:
   stage: deploy
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f deploy/compose.mainnet-staging.yml pull
     - docker-compose -f deploy/compose.yml -p tezos-bot up --remove-orphans -d
   tags:
     - deployer
@@ -29,6 +30,6 @@ Deploy Bot:
   variables:
     BI_PORT: 50000
     PG_PORT: 50010
-    ConnectionStrings__Default: User ID=$DB_USER;Host=db;Password=$DB_PASSWORD;Port=5432;Database=$DB_NAME;Pooling=true;
+    ConnectionStrings__Default: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
   environment: development
     
