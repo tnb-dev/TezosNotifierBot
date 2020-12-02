@@ -14,6 +14,11 @@ services:
       - db
     environment:
       - ENV=Production
+      - Twitter__AccessToken
+      - Twitter__AccessTokenSecret
+      - Twitter__ConsumerKey
+      - Twitter__ConsumerKeySecret
+      - Telegram__BotSecret
       - ConnectionStrings__Default=$DB
 
   bi:
