@@ -6,6 +6,9 @@
             "Microsoft": "Information"
         }
     },
+    "ConnectionStrings": {
+        "Default": ""
+    },
     "Twitter": {
         "ConsumerKey": "",
         "ConsumerKeySecret": "",
