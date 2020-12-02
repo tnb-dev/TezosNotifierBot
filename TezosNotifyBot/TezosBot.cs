@@ -132,7 +132,7 @@ namespace TezosNotifyBot
 				var me = Bot.GetMeAsync().ConfigureAwait(true).GetAwaiter().GetResult();
 				Logger.LogInformation("Старт обработки сообщений @" + me.Username);
 				client.BlockReceived += Client_BlockReceived;
-				NotifyDev(me.Username + " v1.186 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
+				NotifyDev(me.Username + " v2.0 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
 				tzStats.LoadCycle(repo.GetLastBlockLevel().Item1);
 				var c = tzStats.GetCycle(repo.GetLastBlockLevel().Item1);
 				// TODO: Check why `snapshot_cycle` is null
@@ -515,6 +515,7 @@ namespace TezosNotifyBot
 							var p = repo.GetProposal(hash);
 							if (p == null)
 							{
+								p.VotedRolls = votedrolls;
 								p = repo.AddProposal(hash, from, content.period);
 								foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
 								{
@@ -536,6 +537,7 @@ namespace TezosNotifyBot
 							}
 							else
 							{
+								p.VotedRolls = votedrolls;
 								foreach (var ua in repo.GetUserAddresses(from))
 								{
 									if (ua.User.VotingNotify)
