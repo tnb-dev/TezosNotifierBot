@@ -515,8 +515,8 @@ namespace TezosNotifyBot
 							var p = repo.GetProposal(hash);
 							if (p == null)
 							{
-								p.VotedRolls = votedrolls;
 								p = repo.AddProposal(hash, from, content.period);
+								p.VotedRolls = votedrolls;
 								foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
 								{
 									var ua = repo.GetUserAddresses(u.Id).FirstOrDefault(o => o.Address == from);
