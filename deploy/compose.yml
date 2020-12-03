@@ -2,6 +2,7 @@ version: "3.8"
 services:
   db:
     image: postgres:12
+    restart: always 
     volumes:
       - app-data:/var/lib/postgresql/data
     environment:
@@ -10,6 +11,7 @@ services:
       - POSTGRES_PASSWORD=$DB_PASSWORD
   bot:
     image: $CI_REGISTRY_IMAGE/bot:latest
+    restart: always 
     depends_on:
       - db
     environment:
@@ -25,6 +27,7 @@ services:
     image: metabase/metabase
     ports:
       - $BI_PORT:3000
+    restart: always 
     depends_on:
       - bi-db
     environment:
@@ -36,6 +39,7 @@ services:
       - MB_DB_DBNAME=$BI_DB_NAME
   bi-db:
     image: postgres:12
+    restart: always 
     volumes:
       - bi-data:/var/lib/postgresql/data
     environment:
@@ -47,6 +51,7 @@ services:
     image: dpage/pgadmin4
     ports:
       - $PG_PORT:80
+    restart: always 
     depends_on:
       - db
     environment:
