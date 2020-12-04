@@ -1294,6 +1294,32 @@ namespace TezosNotifyBot
 					result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
 					cnt++;
 				}
+				for (int i = 0; i < 10; i++)
+				{
+					url = $"https://api.tzkt.io/v1/accounts?sort.desc=lastActivity&type=user&limit=10000&offset={i * 10000}";
+					txt = client2.Download(url);
+					foreach (var a in JsonConvert.DeserializeObject<Tzkt.Account[]>(txt))
+					{
+						var addr = a.address;
+						var name = a.alias;
+						if (string.IsNullOrEmpty(a.alias) || updated.Contains(addr))
+							continue;
+						updated.Add(addr);
+						if (knownNames.Any(o => o.Address == addr))
+						{
+							if (knownNames.Any(o => o.Address == addr && o.Name != name))
+							{
+								repo.SetKnownAddress(addr, name);
+								result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
+								cnt++;
+							}
+							continue;
+						}
+						repo.SetKnownAddress(addr, name);
+						result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
+						cnt++;
+					}
+				}
 
 				url = "https://raw.githubusercontent.com/blockwatch-cc/tzstats/master/src/config/aliases.js";
 				txt = client2.Download(url);
