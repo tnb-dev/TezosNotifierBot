@@ -29,7 +29,9 @@ Deploy Bot:
       - develop
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
+    ENV: Staging
     BI_PORT: 50000
     PG_PORT: 50010
+    
   environment: development
     

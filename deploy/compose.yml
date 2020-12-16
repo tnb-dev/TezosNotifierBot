@@ -15,7 +15,7 @@ services:
     depends_on:
       - db
     environment:
-      - ENV=Production
+      - DOTNET_ENVIRONMENT=$ENV
       - Twitter__AccessToken
       - Twitter__AccessTokenSecret
       - Twitter__ConsumerKey

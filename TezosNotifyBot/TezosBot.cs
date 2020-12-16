@@ -7,8 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using ICSharpCode.SharpZipLib.Core;
 using ICSharpCode.SharpZipLib.Zip;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
@@ -37,6 +39,7 @@ namespace TezosNotifyBot
 {
 	public class TezosBot
     {
+	    private readonly IServiceProvider _serviceProvider;
 	    private BotConfig Config { get; set; }
         private ILogger<TezosBot> Logger { get; }
 	    private Repository repo;
@@ -74,14 +77,16 @@ namespace TezosNotifyBot
 		string twitterAccountName;
 		bool twitterNetworkIssueNotified = false;
 
-		public TezosBot(Repository repo, ILogger<TezosBot> logger, IOptions<BotConfig> config)
+		public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config)
 		{
+			_serviceProvider = serviceProvider;
 			Logger = logger;
 			Config = config.Value;
-			this.repo = repo;
+			
+			repo = _serviceProvider.GetRequiredService<Repository>();
 		}
 
-		public void Run(CancellationToken cancelToken)
+		public async Task Run(CancellationToken cancelToken)
         {
 	        resMgr.LoadResources("res.txt");
 			worker = new Worker();
@@ -123,13 +128,15 @@ namespace TezosNotifyBot
 				twitter.OnTwitResponse += Twitter_OnTwitResponse;
 				Bot = new TelegramBotClient(Config.Telegram.BotSecret, proxy);
 				Logger.LogDebug("Connecting to Telegram Server...");
-				Bot.SetWebhookAsync("").ConfigureAwait(true).GetAwaiter().GetResult();
+				
+				await Bot.SetWebhookAsync("");
+				
 				Logger.LogDebug("Connected to Telegram Server.");
 				Bot.OnCallbackQuery += OnCallbackQuery;
 				Bot.OnUpdate += OnUpdate;
 				addrMgr = new AddressManager();
 				Bot.StartReceiving();
-				var me = Bot.GetMeAsync().ConfigureAwait(true).GetAwaiter().GetResult();
+				var me = await Bot.GetMeAsync();
 				Logger.LogInformation("Старт обработки сообщений @" + me.Username);
 				client.BlockReceived += Client_BlockReceived;
 				NotifyDev(me.Username + " v2.0 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
@@ -139,11 +146,19 @@ namespace TezosNotifyBot
 				NotifyDev($"Current cycle: {c.cycle}, rolls: {c.snapshot_cycle?.rolls}", 0);
 				if (Config.TwitterConsumerKey != null)
 				{
-					var settings = twitter.GetSettings().ConfigureAwait(true).GetAwaiter().GetResult();
-					twitterAccountName = (string)JObject.Parse(settings)["screen_name"];
-					if (Config.TwitterChatId != 0)
-						Bot.SendTextMessageAsync(Config.TwitterChatId, $"🚀 Bot started using twitter account: https://twitter.com/{twitterAccountName}");
-					//twitter.TweetAsync("🚀 Bot started!");
+					try
+					{
+						var settings = await twitter.GetSettings();
+						twitterAccountName = (string) JObject.Parse(settings)["screen_name"];
+						if (Config.TwitterChatId != 0)
+							Bot.SendTextMessageAsync(Config.TwitterChatId,
+								$"🚀 Bot started using twitter account: https://twitter.com/{twitterAccountName}");
+						//twitter.TweetAsync("🚀 Bot started!");}
+					}
+					catch (Exception e)
+					{
+						// skip exception
+					}
 				}
 				//NotifyDev("🐦 Twitter response: " + twresult, 0, Telegram.Bot.Types.Enums.ParseMode.Default);
 				LoadAddressList();
@@ -151,6 +166,7 @@ namespace TezosNotifyBot
 				DateTime lastWarn = DateTime.Now;
 				do
 				{
+					
 					try
 					{
 						if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
@@ -296,7 +312,7 @@ namespace TezosNotifyBot
 
 		private void Worker_OnError(object sender, ErrorEventArgs e)
 		{
-			NotifyDev("‼️" + sender.ToString() + ": " + e.GetException().Message, 0);
+			NotifyDev("‼️" + sender + ": " + e.GetException().Message, 0);
 		}
 
 		BlockHeader lastHeader;
@@ -318,25 +334,26 @@ namespace TezosNotifyBot
 				string hash = lastHash;
 				int level = lastHeader.level;
 				var contracts = addrMgr.GetContractsBalances();
-				worker.Run("Cache validation", wcb => 
-				{
-					//NotifyDev($"🤖 Starting cache validation of {contracts.Count} addresses on block {level}", 0);
-					int errors = 0;
-					using (var tc = new Client(CurrentNode.Url, Logger))
-					{
-						foreach (var contract in contracts)
-						{
-							var ci = tc.GetContractInfo(hash, contract.Item1);
-							if (ci.balance != contract.Item2)
-							{
-								NotifyDev($"🤖🛑 Address {contract.Item1} at block {level}: cached {contract.Item2 / 1000000M}XTZ, node value {ci.balance / 1000000M}XTZ. Address removed from cache.", 0);
-								addrMgr.Remove(contract.Item1);
-								errors++;
-							}
-						}
-					}
-					//NotifyDev($"🤖 Finished cache validation of {contracts.Count} addresses on block {level}: {errors} errors", 0);
-				});
+				// TODO: Remove
+				// worker.Run("Cache validation", wcb => 
+				// {
+				// 	//NotifyDev($"🤖 Starting cache validation of {contracts.Count} addresses on block {level}", 0);
+				// 	int errors = 0;
+				// 	using (var tc = new Client(CurrentNode.Url, Logger))
+				// 	{
+				// 		foreach (var contract in contracts)
+				// 		{
+				// 			var ci = tc.GetContractInfo(hash, contract.Item1);
+				// 			if (ci.balance != contract.Item2)
+				// 			{
+				// 				NotifyDev($"🤖🛑 Address {contract.Item1} at block {level}: cached {contract.Item2 / 1000000M}XTZ, node value {ci.balance / 1000000M}XTZ. Address removed from cache.", 0);
+				// 				addrMgr.Remove(contract.Item1);
+				// 				errors++;
+				// 			}
+				// 		}
+				// 	}
+				// 	//NotifyDev($"🤖 Finished cache validation of {contracts.Count} addresses on block {level}: {errors} errors", 0);
+				// });
 			}
 			lastReceived = DateTime.Now;
 			Logger.LogDebug($"Block {header.level} received");
@@ -2511,6 +2528,7 @@ namespace TezosNotifyBot
                 SendTextMessage(u.Id, e.Message, ReplyKeyboards.MainMenu(resMgr, u));
             }
         }
+        
         void OnNewAddressEntered(User user, string msg, Chat chat = null)
         {
 			Bot.SendChatActionAsync(chat?.Id ?? user.Id, ChatAction.Typing);

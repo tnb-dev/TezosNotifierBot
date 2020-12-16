@@ -1,0 +1,17 @@
+{
+    "Logging": {
+        "GELF": {
+            "Host": "173.249.53.127",
+            "Port": 12201,
+            "Protocol": "UDP",
+            "LogSource": "Tezos",
+            "AdditionalFields": {
+            },
+            "LogLevel": {
+                "Microsoft": "Warning",
+                "Microsoft.EntityFrameworkCore": "Warning",
+                "Microsoft.Hosting.Lifetime": "Information"
+            }
+        }
+    }
+}
