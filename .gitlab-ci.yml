@@ -1,5 +1,6 @@
 stages:
   - build
+  - remove
   - deploy
   - release
     
@@ -14,7 +15,8 @@ Build Bot:
   only:
     refs:
       - develop
-  environment: development
+  environment: 
+    name: development
 
 Deploy Bot:
   stage: deploy
@@ -33,5 +35,24 @@ Deploy Bot:
     BI_PORT: 50000
     PG_PORT: 50010
     
-  environment: development
+  environment: 
+    name: development
     
+Remove Bot:
+  stage: remove
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f deploy/compose.yml -p tezos-bot down --remove-orphans -d
+  tags:
+    - deployer
+  only:
+    refs:
+      - develop
+  variables:
+    DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
+    ENV: Staging
+    BI_PORT: 50000
+    PG_PORT: 50010
+
+  environment:
+    name: development
