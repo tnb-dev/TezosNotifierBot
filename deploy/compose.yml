@@ -57,7 +57,7 @@ services:
       - POSTGRES_PASSWORD=$BI_DB_PASSWORD
 
   db-admin:
-    image: dpage/pgadmin4
+    image: dpage/pgadmin4:latest
     ports:
       - $PG_PORT:80
     restart: unless-stopped 
@@ -66,7 +66,6 @@ services:
     networks:
       - default
     environment:
-      - SCRIPT_NAME=/pgadmin4
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
 
