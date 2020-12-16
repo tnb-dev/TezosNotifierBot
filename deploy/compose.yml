@@ -2,7 +2,7 @@ version: "3.8"
 services:
   db:
     image: postgres:12
-    restart: always 
+    restart: unless-stopped 
     volumes:
       - app-data:/var/lib/postgresql/data
     networks:
@@ -13,7 +13,7 @@ services:
       - POSTGRES_PASSWORD=$DB_PASSWORD
   bot:
     image: $CI_REGISTRY_IMAGE/bot:latest
-    restart: always
+    restart: unless-stopped
     networks: 
       - default
       - graylog
@@ -32,7 +32,7 @@ services:
     image: metabase/metabase
     ports:
       - $BI_PORT:3000
-    restart: always 
+    restart: unless-stopped 
     depends_on:
       - bi-db
     networks:
@@ -46,7 +46,7 @@ services:
       - MB_DB_DBNAME=$BI_DB_NAME
   bi-db:
     image: postgres:12
-    restart: always 
+    restart: unless-stopped 
     volumes:
       - bi-data:/var/lib/postgresql/data
     networks:
@@ -60,7 +60,7 @@ services:
     image: dpage/pgadmin4
     ports:
       - $PG_PORT:80
-    restart: always 
+    restart: unless-stopped 
     depends_on:
       - db
     networks:
