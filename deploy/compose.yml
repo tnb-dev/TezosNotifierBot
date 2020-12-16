@@ -11,7 +11,9 @@ services:
       - POSTGRES_PASSWORD=$DB_PASSWORD
   bot:
     image: $CI_REGISTRY_IMAGE/bot:latest
-    restart: always 
+    restart: always
+    networks: 
+      - graylog
     depends_on:
       - db
     environment:
