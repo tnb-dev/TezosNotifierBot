@@ -6,7 +6,7 @@ services:
     volumes:
       - app-data:/var/lib/postgresql/data
     networks:
-      - own
+      - default
     environment:
       - POSTGRES_DB=$DB_NAME
       - POSTGRES_USER=$DB_USER
@@ -15,7 +15,7 @@ services:
     image: $CI_REGISTRY_IMAGE/bot:latest
     restart: always
     networks: 
-      - own
+      - default
       - graylog
     depends_on:
       - db
@@ -36,7 +36,7 @@ services:
     depends_on:
       - bi-db
     networks:
-      - own
+      - default
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_USER=$BI_DB_USER
@@ -50,7 +50,7 @@ services:
     volumes:
       - bi-data:/var/lib/postgresql/data
     networks:
-      - own
+      - default
     environment:
       - POSTGRES_DB=$BI_DB_NAME
       - POSTGRES_USER=$BI_DB_USER
@@ -64,7 +64,7 @@ services:
     depends_on:
       - db
     networks:
-      - own
+      - default
     environment:
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
@@ -74,7 +74,8 @@ volumes:
   app-data:
     
 networks:
-  own: bridge
+  default: 
+    driver: bridge
   graylog:
     external: 
       name: graylog_graylog
