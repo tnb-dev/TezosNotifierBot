@@ -66,6 +66,7 @@ services:
     networks:
       - default
     environment:
+      - SCRIPT_NAME=/pgadmin4
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
 
