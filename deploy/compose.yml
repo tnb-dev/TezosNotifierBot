@@ -67,4 +67,4 @@ volumes:
 networks:
   graylog:
     external: 
-      name: graylog
+      name: graylog_graylog
