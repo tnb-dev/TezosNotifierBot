@@ -61,3 +61,8 @@ services:
 volumes:
   bi-data:
   app-data:
+    
+networks:
+  graylog:
+    external: 
+      name: graylog

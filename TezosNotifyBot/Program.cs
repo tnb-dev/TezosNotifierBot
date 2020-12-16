@@ -57,7 +57,6 @@ namespace TezosNotifyBot
                         }
                     });
 
-                    // TODO: Make this transient 
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     
