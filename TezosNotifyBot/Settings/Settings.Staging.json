@@ -1,7 +1,7 @@
 {
     "Logging": {
         "GELF": {
-            "Host": "173.249.53.127",
+            "Host": "graylog",
             "Port": 12201,
             "Protocol": "UDP",
             "LogSource": "Tezos",
