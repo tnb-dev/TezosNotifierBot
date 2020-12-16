@@ -144,10 +144,6 @@ namespace TezosNotifyBot
             {
 				add("🖋 Broadcast message", "broadcast");
                 add("👫 Get user list", "getuserlist");
-                //add("📪 Get user addresses", "getuseraddresses");
-                //add("🗂 Get user messages", "getusermessages");
-                add("📃 Get logs", "getlog");
-                add("💽 Get database", "getdb");
 				foreach (var cmd in TezosBot.Commands.Where(o => o.username == u.Username || o.username == u.Id.ToString()))
                     add(cmd.commandname, "cmd" + TezosBot.Commands.IndexOf(cmd));
             }

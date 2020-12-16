@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text;
+using Gelf.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using NornPool.Model;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
@@ -22,8 +24,8 @@ namespace TezosNotifyBot
    //          var npb = new TezosBot();
    //          npb.Run();
         }
-        
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, builder) =>
                 {
@@ -35,7 +37,7 @@ namespace TezosNotifyBot
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddDbContextPool<TezosDataContext>(builder => builder
+                    services.AddDbContext<TezosDataContext>(builder => builder
                         .UseNpgsql(context.Configuration.GetConnectionString("Default"))
                     );
 
@@ -43,12 +45,21 @@ namespace TezosNotifyBot
                     
                     services.AddLogging(builder =>
                     {
-                        // TODO: Add json formatter and send logs
+                        if (context.HostingEnvironment.IsDevelopment() is false)
+                        {
+                            builder.AddGelf(options => 
+                                options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
+                            );
+                        }
+                        else
+                        {
+                            builder.AddConsole();
+                        }
                     });
 
                     // TODO: Make this transient 
-                    services.AddSingleton<Repository>();
-                    services.AddSingleton<TezosBot>();
+                    services.AddTransient<Repository>();
+                    services.AddTransient<TezosBot>();
                     
                     services.AddHostedService<Service>();
 

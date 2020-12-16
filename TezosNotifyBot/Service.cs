@@ -1,24 +1,31 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace TezosNotifyBot
 {
     public class Service : BackgroundService
     {
-        private readonly TezosBot bot;
+        private readonly IServiceProvider _serviceProvider;
 
-        public Service(TezosBot bot)
+        public Service(IServiceProvider serviceProvider)
         {
-            this.bot = bot;
+            _serviceProvider = serviceProvider;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            // TODO: This is temporary solution 
-            bot.Run(stoppingToken);
+            while (stoppingToken.IsCancellationRequested is false)
+            {
+                using var scope = _serviceProvider.CreateScope();
+
+                var bot = scope.ServiceProvider.GetRequiredService<TezosBot>();
             
-            return Task.CompletedTask;
+                // TODO: This is temporary solution 
+                await bot.Run(stoppingToken);
+            }
         }
     }
 }

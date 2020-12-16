@@ -1,6 +1,8 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Storage.Extensions;
+using Delegate = TezosNotifyBot.Domain.Delegate;
 
 namespace TezosNotifyBot.Storage
 {

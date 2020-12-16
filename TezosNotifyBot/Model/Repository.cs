@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
@@ -13,17 +14,20 @@ namespace TezosNotifyBot.Model
 {
     public class Repository
     {
-        private readonly TezosDataContext db;
+        private readonly DbContextOptions _dbOptions;
+        private readonly TezosDataContext _db;
+        private readonly IServiceProvider _serviceProvider;
 
         // TODO: This is potential memory leaks or mismatch with database
         private readonly Dictionary<int, User> users;
         private LastBlock lastBlock;
 
-        public Repository(TezosDataContext db)
+        public Repository(DbContextOptions dbOptions)
         {
-            this.db = db;
-            db.Database.Migrate();
-            users = db.Users.ToDictionary(o => o.Id, o => o);
+            _dbOptions = dbOptions;
+            _db = new TezosDataContext(dbOptions);
+            // _db.Database.Migrate();
+            users = _db.Users.ToDictionary(o => o.Id, o => o);
         }
 
         public List<User> GetUsers()
@@ -31,49 +35,75 @@ namespace TezosNotifyBot.Model
             return users.Values.ToList();
         }
 
+        /// <summary>
+        /// It's a awful trick helper. We will remove it's usages in feature releases
+        /// </summary>
+        [Obsolete]
+        private void RunIsolatedDb(Action<TezosDataContext> action)
+        {
+            using var db = new TezosDataContext(_dbOptions);
+            action(db);
+        }
+
+        /// <summary>
+        /// It's a awful trick helper. We will remove it's usages in feature releases
+        /// </summary>
+        [Obsolete]
+        private TOut RunIsolatedDb<TOut>(Func<TezosDataContext, TOut> action)
+        {
+            using var db = new TezosDataContext(_dbOptions);
+            return action(db);
+        }
+        
         internal void LogMessage(Telegram.Bot.Types.User from, int messageId, string text, string data)
         {
-            var msg = new Message
+            RunIsolatedDb(db =>
             {
-                CallbackQueryData = data,
-                CreateDate = DateTime.Now,
-                FromUser = true,
-                UserId = GetUser(from).Id,
-                TelegramMessageId = messageId,
-                Text = text
-            };
-            db.Add(msg);
-            db.SaveChanges();
+                var msg = new Message
+                {
+                    CallbackQueryData = data,
+                    CreateDate = DateTime.Now,
+                    FromUser = true,
+                    UserId = GetUser(from).Id,
+                    TelegramMessageId = messageId,
+                    Text = text
+                };
+                db.Add(msg);
+                db.SaveChanges();
+            });
         }
 
         internal Message GetMessage(int messageId)
         {
-            return db.Messages.FirstOrDefault(o => o.Id == messageId);
+            return _db.Messages.FirstOrDefault(o => o.Id == messageId);
         }
 
         internal void LogOutMessage(int to, int messageId, string text)
         {
-            var msg = new Message
+            RunIsolatedDb(db =>
             {
-                CreateDate = DateTime.Now,
-                FromUser = false,
-                UserId = to,
-                TelegramMessageId = messageId,
-                Text = text
-            };
-            db.Add(msg);
-            db.SaveChanges();
+                var msg = new Message
+                {
+                    CreateDate = DateTime.Now,
+                    FromUser = false,
+                    UserId = to,
+                    TelegramMessageId = messageId,
+                    Text = text
+                };
+                db.Add(msg);
+                db.SaveChanges();
+            });
         }
 
         public (int, int, string) GetLastBlockLevel()
         {
             if (lastBlock == null)
-                lastBlock = db.LastBlock.SingleOrDefault();
+                lastBlock = _db.LastBlock.SingleOrDefault();
             if (lastBlock == null)
             {
                 lastBlock = new LastBlock {Level = 0};
-                db.LastBlock.Add(lastBlock);
-                db.SaveChanges();
+                _db.LastBlock.Add(lastBlock);
+                _db.SaveChanges();
             }
 
             return (lastBlock.Level, lastBlock.Priority, lastBlock.Hash);
@@ -85,7 +115,7 @@ namespace TezosNotifyBot.Model
             lastBlock.Level = level;
             lastBlock.Priority = priority;
             lastBlock.Hash = hash;
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         public bool UserExists(int id)
@@ -105,23 +135,23 @@ namespace TezosNotifyBot.Model
 
         public List<UserAddress> GetUserAddresses(string addr)
         {
-            return db.UserAddresses.Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
+            return _db.UserAddresses.Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
         }
 
         public List<UserAddress> GetUserAddresses()
         {
-            return db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).ToList();
+            return _db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).ToList();
         }
 
         public UserAddress GetUserTezosAddress(int userId, string addr)
         {
-            var ua = db.UserAddresses.FirstOrDefault(o => o.Address == addr && !o.IsDeleted && o.UserId == userId);
+            var ua = _db.UserAddresses.FirstOrDefault(o => o.Address == addr && !o.IsDeleted && o.UserId == userId);
             if (ua != null)
                 return ua;
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
             if (d != null && !String.IsNullOrEmpty(d.Name))
                 return new UserAddress {Address = addr, Name = d.Name};
-            var ka = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+            var ka = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
             if (ka != null)
                 return new UserAddress {Address = addr, Name = ka.Name};
             return new UserAddress {Address = addr};
@@ -129,42 +159,42 @@ namespace TezosNotifyBot.Model
 
         public void DeleteTwitterMessage(TwitterMessage twitterMessage)
         {
-            db.Remove(twitterMessage);
-            db.SaveChanges();
+            _db.Remove(twitterMessage);
+            _db.SaveChanges();
         }
 
         public List<TwitterMessage> GetTwitterMessages(DateTime minCreateDate)
         {
-            return db.TwitterMessages.Where(o => o.CreateDate >= minCreateDate).OrderBy(o => o.Id).ToList();
+            return _db.TwitterMessages.Where(o => o.CreateDate >= minCreateDate).OrderBy(o => o.Id).ToList();
         }
 
         public TwitterMessage GetTwitterMessage(int twitterMessageId)
         {
-            return db.TwitterMessages.Single(o => o.Id == twitterMessageId);
+            return _db.TwitterMessages.Single(o => o.Id == twitterMessageId);
         }
 
         public TwitterMessage CreateTwitterMessage(string text)
         {
             var twm = new TwitterMessage {Text = text, CreateDate = DateTime.Now};
-            db.Add(twm);
-            db.SaveChanges();
+            _db.Add(twm);
+            _db.SaveChanges();
             return twm;
         }
 
         public void UpdateTwitterMessage(TwitterMessage twitterMessage)
         {
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         public List<UserAddress> GetUserAddresses(int userId)
         {
-            return db.UserAddresses.Where(o => o.UserId == userId && !o.IsDeleted).ToList();
+            return _db.UserAddresses.Where(o => o.UserId == userId && !o.IsDeleted).ToList();
         }
 
         public List<UserAddress> GetUserDelegates()
         {
-            return db.UserAddresses.Where(o => !o.IsDeleted && o.NotifyCycleCompletion && !o.User.Inactive)
-                .Join(db.Delegates, o => o.Address, o => o.Address, (o, d) => o).ToList();
+            return _db.UserAddresses.Where(o => !o.IsDeleted && o.NotifyCycleCompletion && !o.User.Inactive)
+                .Join(_db.Delegates, o => o.Address, o => o.Address, (o, d) => o).ToList();
         }
 
         public User GetUser(Telegram.Bot.Types.User u)
@@ -182,7 +212,7 @@ namespace TezosNotifyBot.Model
                         res.Username = u.Username;
                         res.Lastname = u.LastName;
                         res.Firstname = u.FirstName;
-                        db.SaveChanges();
+                        _db.SaveChanges();
                     }
                 }
 
@@ -204,8 +234,8 @@ namespace TezosNotifyBot.Model
                     WhaleAlertThreshold = 500000,
                     VotingNotify = true
                 };
-                db.Add(res);
-                db.SaveChanges();
+                _db.Add(res);
+                _db.SaveChanges();
 
                 users.Add(u.Id, res);
             }
@@ -215,7 +245,7 @@ namespace TezosNotifyBot.Model
 
         public List<string[]> RunSql(string sql)
         {
-            var conn = db.Database.GetDbConnection();
+            var conn = _db.Database.GetDbConnection();
             var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             var result = new List<string[]>();
@@ -253,12 +283,12 @@ namespace TezosNotifyBot.Model
 
         internal void UpdateBalance(UserAddress ua)
         {
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         public UserAddress AddUserAddress(int userId, string addr, decimal bal, string name, long chatId)
         {
-            var ua = db.UserAddresses.FirstOrDefault(o =>
+            var ua = _db.UserAddresses.FirstOrDefault(o =>
                 o.Address == addr && o.UserId == userId && o.ChatId == chatId);
             if (ua == null)
             {
@@ -268,7 +298,7 @@ namespace TezosNotifyBot.Model
                 ua.CreateDate = DateTime.Now;
                 ua.NotifyBakingRewards = true;
                 ua.ChatId = chatId;
-                db.Add(ua);
+                _db.Add(ua);
             }
 
             ua.IsDeleted = false;
@@ -276,7 +306,7 @@ namespace TezosNotifyBot.Model
             ua.Balance = bal;
             ua.Name = name;
             ua.AmountThreshold = 0;
-            db.SaveChanges();
+            _db.SaveChanges();
             return ua;
         }
 
@@ -284,17 +314,17 @@ namespace TezosNotifyBot.Model
         {
             if (!int.TryParse(v, out var uaid))
                 return null;
-            var ua = db.UserAddresses.FirstOrDefault(o => o.UserId == id && o.Id == uaid && !o.IsDeleted);
+            var ua = _db.UserAddresses.FirstOrDefault(o => o.UserId == id && o.Id == uaid && !o.IsDeleted);
             if (ua == null)
                 return null;
             ua.IsDeleted = true;
-            db.SaveChanges();
+            _db.SaveChanges();
             return ua;
         }
 
         internal bool IsDelegate(string addr)
         {
-            return db.Delegates.Any(o => o.Address == addr);
+            return _db.Delegates.Any(o => o.Address == addr);
         }
 
         internal void AddDelegate(string addr, string name)
@@ -304,18 +334,18 @@ namespace TezosNotifyBot.Model
                 Address = addr,
                 Name = name
             };
-            db.Add(d);
-            db.SaveChanges();
+            _db.Add(d);
+            _db.SaveChanges();
         }
 
         internal void UpdateUser(User u)
         {
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         internal string GetDelegateName(string addr)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
             if (d != null && !String.IsNullOrEmpty(d.Name))
                 return d.Name;
             return addr.ShortAddr();
@@ -323,25 +353,28 @@ namespace TezosNotifyBot.Model
 
         internal string GetKnownAddressName(string addr)
         {
-            var ka = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
-            if (ka != null && !String.IsNullOrEmpty(ka.Name))
-                return ka.Name;
-            return null;
+            return RunIsolatedDb(db =>
+            {
+                var ka = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+                if (ka != null && !String.IsNullOrEmpty(ka.Name))
+                    return ka.Name;
+                return null;
+            });
         }
 
         internal void UpdateDelegate(Delegate d)
         {
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         public Delegate GetOrCreateDelegate(string addr)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
             if (d == null)
             {
                 d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
-                db.SaveChanges();
+                _db.Delegates.Add(d);
+                _db.SaveChanges();
             }
 
             return d;
@@ -349,259 +382,313 @@ namespace TezosNotifyBot.Model
 
         internal void SetDelegateName(string addr, string name)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
             if (d == null)
             {
                 d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
+                _db.Delegates.Add(d);
             }
 
             d.Name = name;
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         internal void SetKnownAddress(string addr, string name)
         {
-            var d = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+            var d = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
             if (d == null)
             {
                 d = new KnownAddress {Address = addr};
-                db.KnownAddresses.Add(d);
+                _db.KnownAddresses.Add(d);
             }
 
             d.Name = name;
-            db.SaveChanges();
+            _db.SaveChanges();
         }
 
         public List<KnownAddress> GetKnownAddresses()
         {
-            return db.KnownAddresses.OrderBy(o => o.Name).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.KnownAddresses.OrderBy(o => o.Name).ToList();
+            });
         }
 
         public List<Delegate> GetDelegates()
         {
-            return db.Delegates.OrderBy(o => o.Name).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.Delegates.OrderBy(o => o.Name).ToList();
+            });
         }
 
         public void UpdateDelegateRewards1(string addr, int cycle, long addPlan, long addAcc)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            RunIsolatedDb(db =>
             {
-                d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
-            }
+                var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new Delegate {Address = addr};
+                    db.Delegates.Add(d);
+                }
 
-            var dr = db.DelegateRewards.FirstOrDefault(o => o.Cycle == cycle && o.DelegateId == d.Id);
-            if (dr == null)
-            {
-                dr = new DelegateRewards {Cycle = cycle};
-                dr.Delegate = d;
-                db.DelegateRewards.Add(dr);
-            }
+                var dr = db.DelegateRewards.FirstOrDefault(o => o.Cycle == cycle && o.DelegateId == d.Id);
+                if (dr == null)
+                {
+                    dr = new DelegateRewards {Cycle = cycle};
+                    dr.Delegate = d;
+                    db.DelegateRewards.Add(dr);
+                }
 
-            dr.Rewards = dr.Rewards + addPlan;
-            dr.Accured = dr.Accured + addAcc;
-            db.SaveChanges();
+                dr.Rewards = dr.Rewards + addPlan;
+                dr.Accured = dr.Accured + addAcc;
+                db.SaveChanges();
+            });
         }
 
         public void UpdateDelegateAccured(string addr, int cycle, long accured)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            RunIsolatedDb(db =>
             {
-                d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
-            }
+                var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new Delegate {Address = addr};
+                    db.Delegates.Add(d);
+                }
 
-            var dr = db.DelegateRewards.FirstOrDefault(o => o.Cycle == cycle && o.DelegateId == d.Id);
-            if (dr == null)
-            {
-                dr = new DelegateRewards {Cycle = cycle};
-                dr.Delegate = d;
-                db.DelegateRewards.Add(dr);
-            }
+                var dr = db.DelegateRewards.FirstOrDefault(o => o.Cycle == cycle && o.DelegateId == d.Id);
+                if (dr == null)
+                {
+                    dr = new DelegateRewards {Cycle = cycle};
+                    dr.Delegate = d;
+                    db.DelegateRewards.Add(dr);
+                }
 
-            dr.Accured = accured;
-            db.SaveChanges();
+                dr.Accured = accured;
+                db.SaveChanges();
+            });
         }
 
         internal void AddProposalVote(Proposal p, string from, int votingPeriod, int level, int ballot)
         {
             var d = GetOrCreateDelegate(from);
-            var pv = new ProposalVote();
-            pv.ProposalID = p.Id;
-            pv.DelegateId = d.Id;
-            pv.Level = level;
-            pv.Ballot = ballot;
-            pv.VotingPeriod = votingPeriod;
-            db.ProposalVotes.Add(pv);
-            db.SaveChanges();
+            RunIsolatedDb(db =>
+            {
+                var pv = new ProposalVote
+                {
+                    ProposalID = p.Id,
+                    DelegateId = d.Id,
+                    Level = level,
+                    Ballot = ballot,
+                    VotingPeriod = votingPeriod
+                };
+                db.ProposalVotes.Add(pv);
+                db.SaveChanges();
+            });
         }
 
         public DelegateRewards GetDelegateRewards1(string addr, int cycle)
         {
-            return db.DelegateRewards
-                .FirstOrDefault(o => o.Cycle == cycle && o.Delegate.Address == addr) ?? new DelegateRewards();
+            return RunIsolatedDb(db =>
+            {
+                return db.DelegateRewards
+                    .FirstOrDefault(o => o.Cycle == cycle && o.Delegate.Address == addr) ?? new DelegateRewards();
+            });
         }
 
         public List<DelegateRewards> GetLastDelegateRewards1(string addr, int cycles)
         {
-            return db.DelegateRewards.Where(o => o.Delegate.Address == addr).OrderByDescending(o => o.Cycle)
-                .Skip(1).Take(cycles).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.DelegateRewards.Where(o => o.Delegate.Address == addr).OrderByDescending(o => o.Cycle)
+                    .Skip(1).Take(cycles).ToList();
+            });
         }
 
         public Proposal GetProposal(string hash)
         {
-            return db.Proposals.FirstOrDefault(o => o.Hash == hash);
+            return RunIsolatedDb(db =>
+            {
+                return db.Proposals.FirstOrDefault(o => o.Hash == hash);
+            });
         }
 
         public Proposal AddProposal(string hash, string addr, int votingPeriod)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            return RunIsolatedDb(db =>
             {
-                d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
-            }
+                var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new Delegate {Address = addr};
+                    db.Delegates.Add(d);
+                }
 
-            var p = new Proposal
-            {
-                Delegate = d,
-                Period = votingPeriod,
-                Hash = hash,
-                Name = hash.Substring(0, 7) + "…" + hash.Substring(hash.Length - 5)
-            };
-            db.Proposals.Add(p);
-            db.SaveChanges();
-            return p;
+                var p = new Proposal
+                {
+                    Delegate = d,
+                    Period = votingPeriod,
+                    Hash = hash,
+                    Name = hash.Substring(0, 7) + "…" + hash.Substring(hash.Length - 5)
+                };
+                db.Proposals.Add(p);
+                db.SaveChanges();
+                return p;
+            });
         }
 
         internal List<string> GetProposalVotes(string hash, int period)
         {
-            return db.ProposalVotes.Where(o => o.Proposal.Hash == hash && o.VotingPeriod == period)
-                .Select(o => o.Delegate.Address).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.ProposalVotes.Where(o => o.Proposal.Hash == hash && o.VotingPeriod == period)
+                    .Select(o => o.Delegate.Address).ToList();
+            });
         }
 
         public void SaveBakingEndorsingRights(BakingRights[] br, EndorsingRights[] er)
         {
-            if (db.BakingRights.Any(o => o.Level == br[0].level))
-                return;
-            var delegates = db.Delegates.Where(o => o.Address != null).ToList()
-                .ToDictionary(o => o.Address, o => o);
-            Func<string, Delegate> getDelegate = addr =>
+            RunIsolatedDb(db =>
             {
-                if (delegates.ContainsKey(addr))
-                    return delegates[addr];
-                var d = new Delegate {Address = addr};
-                db.Delegates.Add(d);
-                delegates[addr] = d;
-                return d;
-            };
-            foreach (var b in br)
-            {
-                db.BakingRights.Add(new Domain.BakingRights
+                if (db.BakingRights.Any(o => o.Level == br[0].level))
+                    return;
+                var delegates = db.Delegates.Where(o => o.Address != null).ToList()
+                    .ToDictionary(o => o.Address, o => o);
+                Func<string, Delegate> getDelegate = addr =>
                 {
-                    Delegate = getDelegate(b.@delegate),
-                    Level = b.level
-                });
-            }
-
-            foreach (var e in er)
-            {
-                db.EndorsingRights.Add(new Domain.EndorsingRights
+                    if (delegates.ContainsKey(addr))
+                        return delegates[addr];
+                    var d = new Delegate {Address = addr};
+                    db.Delegates.Add(d);
+                    delegates[addr] = d;
+                    return d;
+                };
+                foreach (var b in br)
                 {
-                    Delegate = getDelegate(e.@delegate),
-                    Level = e.level,
-                    SlotCount = e.slots.Count
-                });
-            }
+                    db.BakingRights.Add(new Domain.BakingRights
+                    {
+                        Delegate = getDelegate(b.@delegate),
+                        Level = b.level
+                    });
+                }
 
-            db.SaveChanges();
+                foreach (var e in er)
+                {
+                    db.EndorsingRights.Add(new Domain.EndorsingRights
+                    {
+                        Delegate = getDelegate(e.@delegate),
+                        Level = e.level,
+                        SlotCount = e.slots.Count
+                    });
+                }
+
+                db.SaveChanges();
+            });
         }
 
         public void AddBalanceUpdate(string @delegate, int type, int level, long amount, int slots)
         {
-            var d = db.Delegates.FirstOrDefault(o => o.Address == @delegate);
-            if (d == null)
+            RunIsolatedDb(db =>
             {
-                d = new Delegate {Address = @delegate};
-                db.Delegates.Add(d);
-            }
+                var d = db.Delegates.FirstOrDefault(o => o.Address == @delegate);
+                if (d == null)
+                {
+                    d = new Delegate {Address = @delegate};
+                    db.Delegates.Add(d);
+                }
 
-            var d_id = d.Id;
-            var q =
-                db.BalanceUpdates.Where(o => o.DelegateId == d_id && o.Type == type && o.Level == level);
-            //var sqlQuery = q.ToSql();
-            if (q.Any())
-                return;
+                var d_id = d.Id;
+                var q =
+                    db.BalanceUpdates.Where(o => o.DelegateId == d_id && o.Type == type && o.Level == level);
+                //var sqlQuery = q.ToSql();
+                if (q.Any())
+                    return;
 
-            db.BalanceUpdates.Add(new BalanceUpdate
-            {
-                Delegate = d,
-                Type = type,
-                Amount = amount,
-                Level = level,
-                Slots = slots
+                db.BalanceUpdates.Add(new BalanceUpdate
+                {
+                    Delegate = d,
+                    Type = type,
+                    Amount = amount,
+                    Level = level,
+                    Slots = slots
+                });
+
+                db.SaveChanges();
             });
-
-            db.SaveChanges();
         }
 
         public long GetRewards(string @delegate, int cycle, bool includeMissed)
         {
             var from = cycle * 4096 + 1;
             var to = from + 4095;
-            if (!includeMissed)
-                return db.BalanceUpdates.Where(o =>
-                        o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to && o.Type <= 2)
-                    .Sum(o => o.Amount);
 
-            var bu = db.BalanceUpdates.Where(o =>
-                o.Delegate.Address == @delegate && o.Level >= @from && o.Level <= to && o.Type <= 4 &&
-                o.Type >= 1);
-            return bu.Sum(o => o.Amount);
+            return RunIsolatedDb(db =>
+            {
+                if (!includeMissed)
+                    return db.BalanceUpdates.Where(o =>
+                            o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to && o.Type <= 2)
+                        .Sum(o => o.Amount);
+
+                var bu = db.BalanceUpdates.Where(o =>
+                    o.Delegate.Address == @delegate && o.Level >= @from && o.Level <= to && o.Type <= 4 &&
+                    o.Type >= 1);
+                return bu.Sum(o => o.Amount);
+            });
         }
 
         public Dictionary<string, long> GetRewards(int from, int to, bool includeMissed)
         {
-            var fromType = includeMissed ? 1 : 0;
-            var toType = includeMissed ? 4 : 2;
-            return db.BalanceUpdates.Where(o =>
-                    o.Level >= from && o.Level <= to && fromType <= o.Type && o.Type <= toType)
-                .GroupBy(o => o.Delegate.Address)
-                .Select(o => new {@Delegate = o.Key, Amount = o.Sum(o1 => o1.Amount)})
-                .ToDictionary(o => o.Delegate, o => o.Amount);
+            return RunIsolatedDb(db =>
+            {
+                var fromType = includeMissed ? 1 : 0;
+                var toType = includeMissed ? 4 : 2;
+                return db.BalanceUpdates.Where(o =>
+                        o.Level >= from && o.Level <= to && fromType <= o.Type && o.Type <= toType)
+                    .GroupBy(o => o.Delegate.Address)
+                    .Select(o => new {@Delegate = o.Key, Amount = o.Sum(o1 => o1.Amount)})
+                    .ToDictionary(o => o.Delegate, o => o.Amount);
+            });
         }
 
         public bool IsRightsLoaded(int cycle)
         {
             var from = cycle * 4096 + 1;
-            return db.BakingRights.Any(o => o.Level == from);
+            return RunIsolatedDb(db => db.BakingRights.Any(o => o.Level == from));
         }
 
         public List<Tuple<string, int>> GetEndorsingRights(int level)
         {
-            return db.EndorsingRights.Where(o => o.Level == level)
-                .Select(o => new {o.Delegate.Address, o.SlotCount}).ToList()
-                .Select(o => new Tuple<string, int>(o.Address, o.SlotCount)).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.EndorsingRights.Where(o => o.Level == level)
+                    .Select(o => new {o.Delegate.Address, o.SlotCount}).ToList()
+                    .Select(o => new Tuple<string, int>(o.Address, o.SlotCount)).ToList();
+            });
         }
 
         public List<Tuple<string, int>> GetCycleBakingRights(int cycle)
         {
             var from = cycle * 4096 + 1;
             var to = from + 4095;
-            return db.BakingRights.Where(o => o.Level >= from && o.Level <= to)
-                .Select(o => new {o.Delegate.Address, o.Level}).ToList()
-                .Select(o => new Tuple<string, int>(o.Address, o.Level)).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.BakingRights.Where(o => o.Level >= from && o.Level <= to)
+                    .Select(o => new {o.Delegate.Address, o.Level}).ToList()
+                    .Select(o => new Tuple<string, int>(o.Address, o.Level)).ToList();
+            });
         }
 
         public List<BalanceUpdate> GetBalanceUpdates(string @delegate, int cycle)
         {
             var from = cycle * 4096 + 1;
             var to = from + 4095;
-            return db.BalanceUpdates
-                .Where(o => o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to).ToList();
+            return RunIsolatedDb(db =>
+            {
+                return db.BalanceUpdates
+                    .Where(o => o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to).ToList();
+            });
         }
     }
 }
