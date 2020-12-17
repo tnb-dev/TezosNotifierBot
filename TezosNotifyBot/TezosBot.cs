@@ -1049,7 +1049,7 @@ namespace TezosNotifyBot
             }
 			foreach (var msg in msgList)
 			{
-				SendTextMessageUA(msg.UserAddress, resMgr.Get(Res.RewardDelivered, new ContextObject { u = msg.User, Cycle = blockMetadata.level.cycle - 5 }) + "\n\n" + msg.Message + (msg.Tags != "" ? "\n#reward" + msg.Tags : ""));					
+				SendTextMessageUA(msg.UserAddress, resMgr.Get(Res.RewardDelivered, new ContextObject { u = msg.User, Cycle = blockMetadata.level.cycle - 5 }) + "\n\n" + msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));					
 			}
 			if (blockMetadata.level.cycle_position == 0)
             {
