@@ -10,7 +10,8 @@
             "LogLevel": {
                 "Microsoft": "Warning",
                 "Microsoft.EntityFrameworkCore": "Warning",
-                "Microsoft.Hosting.Lifetime": "Information"
+                "Microsoft.Hosting.Lifetime": "Information",
+                "TezosNotifyBot": "Debug"
             }
         }
     }
