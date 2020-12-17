@@ -16,6 +16,8 @@ namespace TezosNotifyBot.Model
         private readonly DbContextOptions _dbOptions;
         private readonly TezosDataContext _db;
 
+        private readonly object _dbLock = new object();
+
         private LastBlock lastBlock;
 
         public Repository(DbContextOptions dbOptions)
@@ -26,7 +28,8 @@ namespace TezosNotifyBot.Model
 
         public List<User> GetUsers()
         {
-            return _db.Set<User>().ToList();
+            lock (_dbLock)
+                return _db.Set<User>().ToList();
         }
 
         /// <summary>
@@ -35,8 +38,11 @@ namespace TezosNotifyBot.Model
         [Obsolete]
         private void RunIsolatedDb(Action<TezosDataContext> action)
         {
-            using var db = new TezosDataContext(_dbOptions);
-            action(db);
+            lock (_dbLock)
+            {
+                using var db = new TezosDataContext(_dbOptions);
+                action(db);
+            }
         }
 
         /// <summary>
@@ -45,8 +51,11 @@ namespace TezosNotifyBot.Model
         [Obsolete]
         private TOut RunIsolatedDb<TOut>(Func<TezosDataContext, TOut> action)
         {
-            using var db = new TezosDataContext(_dbOptions);
-            return action(db);
+            lock (_dbLock)
+            {
+                using var db = new TezosDataContext(_dbOptions);
+                return action(db);
+            }
         }
         
         internal void LogMessage(Telegram.Bot.Types.User from, int messageId, string text, string data)
@@ -69,7 +78,8 @@ namespace TezosNotifyBot.Model
 
         internal Message GetMessage(int messageId)
         {
-            return _db.Messages.FirstOrDefault(o => o.Id == messageId);
+            lock (_dbLock)
+                return _db.Messages.FirstOrDefault(o => o.Id == messageId);
         }
 
         internal void LogOutMessage(int to, int messageId, string text)
@@ -91,16 +101,19 @@ namespace TezosNotifyBot.Model
 
         public (int, int, string) GetLastBlockLevel()
         {
-            if (lastBlock == null)
-                lastBlock = _db.LastBlock.SingleOrDefault();
-            if (lastBlock == null)
+            lock (_dbLock)
             {
-                lastBlock = new LastBlock {Level = 0};
-                _db.LastBlock.Add(lastBlock);
-                _db.SaveChanges();
-            }
+                if (lastBlock == null)
+                    lastBlock = _db.LastBlock.SingleOrDefault();
+                if (lastBlock == null)
+                {
+                    lastBlock = new LastBlock {Level = 0};
+                    _db.LastBlock.Add(lastBlock);
+                    _db.SaveChanges();
+                }
 
-            return (lastBlock.Level, lastBlock.Priority, lastBlock.Hash);
+                return (lastBlock.Level, lastBlock.Priority, lastBlock.Hash);
+            }
         }
 
         public void SetLastBlockLevel(int level, int priority, string hash)
@@ -109,92 +122,118 @@ namespace TezosNotifyBot.Model
             lastBlock.Level = level;
             lastBlock.Priority = priority;
             lastBlock.Hash = hash;
-            _db.SaveChanges();
+
+            lock (_dbLock)
+                _db.SaveChanges();
         }
 
         public bool UserExists(int id)
         {
-            return _db.Set<User>().Any(x => x.Id == id);
+            lock (_dbLock)
+                return _db.Set<User>().Any(x => x.Id == id);
         }
 
         public User GetUser(int id)
         {
-            return _db.Set<User>().SingleOrDefault(x => x.Id == id);
+            lock (_dbLock) 
+                return _db.Set<User>().SingleOrDefault(x => x.Id == id);
         }
 
         public User GetUser(string userName)
         {
-            return _db.Set<User>().SingleOrDefault(o => o.Username == userName);
+            lock (_dbLock)
+                return _db.Set<User>().SingleOrDefault(o => o.Username == userName);
         }
 
         public List<UserAddress> GetUserAddresses(string addr)
         {
-            return _db.UserAddresses.Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
+            lock (_dbLock)
+                return _db.UserAddresses.Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
         }
 
         public List<UserAddress> GetUserAddresses()
         {
-            return _db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).ToList();
+            lock (_dbLock)
+                return _db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).ToList();
         }
 
         public UserAddress GetUserTezosAddress(int userId, string addr)
         {
-            var ua = _db.UserAddresses.FirstOrDefault(o => o.Address == addr && !o.IsDeleted && o.UserId == userId);
-            if (ua != null)
-                return ua;
-            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d != null && !String.IsNullOrEmpty(d.Name))
-                return new UserAddress {Address = addr, Name = d.Name};
-            var ka = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
-            if (ka != null)
-                return new UserAddress {Address = addr, Name = ka.Name};
-            return new UserAddress {Address = addr};
+            lock (_dbLock)
+            {
+                var ua = _db.UserAddresses.FirstOrDefault(o => o.Address == addr && !o.IsDeleted && o.UserId == userId);
+                if (ua != null)
+                    return ua;
+                var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d != null && !String.IsNullOrEmpty(d.Name))
+                    return new UserAddress {Address = addr, Name = d.Name};
+                var ka = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+                if (ka != null)
+                    return new UserAddress {Address = addr, Name = ka.Name};
+                return new UserAddress {Address = addr};
+            }
         }
 
         public void DeleteTwitterMessage(TwitterMessage twitterMessage)
         {
-            _db.Remove(twitterMessage);
-            _db.SaveChanges();
+            lock (_dbLock)
+            {
+                _db.Remove(twitterMessage);
+                _db.SaveChanges();
+            }
         }
 
         public List<TwitterMessage> GetTwitterMessages(DateTime minCreateDate)
         {
-            return _db.TwitterMessages.Where(o => o.CreateDate >= minCreateDate).OrderBy(o => o.Id).ToList();
+            lock (_dbLock)
+                return _db.TwitterMessages.Where(o => o.CreateDate >= minCreateDate).OrderBy(o => o.Id).ToList();
         }
 
         public TwitterMessage GetTwitterMessage(int twitterMessageId)
         {
-            return _db.TwitterMessages.Single(o => o.Id == twitterMessageId);
+            lock (_dbLock)
+                return _db.TwitterMessages.Single(o => o.Id == twitterMessageId);
         }
 
         public TwitterMessage CreateTwitterMessage(string text)
         {
-            var twm = new TwitterMessage {Text = text, CreateDate = DateTime.Now};
-            _db.Add(twm);
-            _db.SaveChanges();
-            return twm;
+            lock (_dbLock)
+            {
+                var twm = new TwitterMessage {Text = text, CreateDate = DateTime.Now};
+                _db.Add(twm);
+                _db.SaveChanges();
+                return twm;
+            }
         }
 
         public void UpdateTwitterMessage(TwitterMessage twitterMessage)
         {
-            _db.SaveChanges();
+            lock (_dbLock)
+                _db.SaveChanges();
         }
 
         public List<UserAddress> GetUserAddresses(int userId)
         {
-            return _db.UserAddresses.Where(o => o.UserId == userId && !o.IsDeleted).ToList();
+            lock (_dbLock)
+                return _db.UserAddresses.Where(o => o.UserId == userId && !o.IsDeleted).ToList();
         }
 
+        public UserAddress GetUserAddress(int userId, int addressId)
+        {
+            lock (_dbLock)
+                return _db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addressId);
+        }
+        
         public List<UserAddress> GetUserDelegates()
         {
-            return _db.UserAddresses.Where(o => !o.IsDeleted && o.NotifyCycleCompletion && !o.User.Inactive)
-                .Join(_db.Delegates, o => o.Address, o => o.Address, (o, d) => o).ToList();
+            lock (_dbLock)
+                return _db.UserAddresses.Where(o => !o.IsDeleted && o.NotifyCycleCompletion && !o.User.Inactive)
+                    .Join(_db.Delegates, o => o.Address, o => o.Address, (o, d) => o).ToList();
         }
 
         public User GetUser(Telegram.Bot.Types.User u)
         {
             var user = _db.Set<User>().SingleOrDefault(x => x.Id == u.Id);
-            User res;
             if (user != null)
             {
                 if (user.Username != u.Username ||
@@ -204,7 +243,11 @@ namespace TezosNotifyBot.Model
                     user.Username = u.Username;
                     user.Lastname = u.LastName;
                     user.Firstname = u.FirstName;
-                    _db.SaveChanges();
+                    
+                    lock (_dbLock)
+                    {
+                        _db.SaveChanges();
+                    }
                 }
             }
             else
@@ -212,97 +255,110 @@ namespace TezosNotifyBot.Model
                 user = User.New(u.Id, u.Username, u.FirstName, u.LastName,
                     (u.LanguageCode ?? "").Length > 2 ? u.LanguageCode.Substring(0, 2) : "en");
 
-                _db.Add(user);
-                _db.SaveChanges();
+                lock (_dbLock)
+                {
+                    _db.Add(user);
+                    _db.SaveChanges();
+                }
             }
-
 
             return user;
         }
 
         public List<string[]> RunSql(string sql)
         {
-            var conn = _db.Database.GetDbConnection();
-            
-            var cmd = conn.CreateCommand();
-            cmd.CommandText = sql;
-            var result = new List<string[]>();
-            try
+            lock (_dbLock)
             {
-                conn.Open();
-                using var reader = cmd.ExecuteReader();
-                
-                if (reader.HasRows is false)
+                var conn = _db.Database.GetDbConnection();
+            
+                var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+                var result = new List<string[]>();
+                try
                 {
-                    result.Add(new[] {$"{reader.RecordsAffected} records affected"});
+                    conn.Open();
+                    using var reader = cmd.ExecuteReader();
+                
+                    if (reader.HasRows is false)
+                    {
+                        result.Add(new[] {$"{reader.RecordsAffected} records affected"});
+                        return result;
+                    }
+
+                    var data = new string[reader.FieldCount];
+                    for (var i = 0; i < data.Length; i++)
+                        data[i] = reader.GetName(i);
+                
+                    result.Add(data);
+                    while (reader.Read())
+                    {
+                        data = new string[reader.FieldCount];
+                        for (var i = 0; i < data.Length; i++)
+                            data[i] = reader.GetValue(i).ToString();
+                        result.Add(data);
+                    }
+
                     return result;
                 }
-
-                var data = new string[reader.FieldCount];
-                for (var i = 0; i < data.Length; i++)
-                    data[i] = reader.GetName(i);
-                
-                result.Add(data);
-                while (reader.Read())
+                finally
                 {
-                    data = new string[reader.FieldCount];
-                    for (var i = 0; i < data.Length; i++)
-                        data[i] = reader.GetValue(i).ToString();
-                    result.Add(data);
+                    conn.Close();
                 }
-
-                return result;
-            }
-            finally
-            {
-                conn.Close();
             }
         }
 
         internal void UpdateBalance(UserAddress ua)
         {
-            _db.SaveChanges();
+            lock (_dbLock)
+                _db.SaveChanges();
         }
 
         public UserAddress AddUserAddress(int userId, string addr, decimal bal, string name, long chatId)
         {
-            var ua = _db.UserAddresses.FirstOrDefault(o =>
-                o.Address == addr && o.UserId == userId && o.ChatId == chatId);
-            if (ua == null)
+            lock (_dbLock)
             {
-                ua = new UserAddress();
-                ua.UserId = userId;
-                ua.Address = addr;
-                ua.CreateDate = DateTime.Now;
-                ua.NotifyBakingRewards = true;
-                ua.ChatId = chatId;
-                _db.Add(ua);
-            }
+                var ua = _db.UserAddresses.FirstOrDefault(o =>
+                    o.Address == addr && o.UserId == userId && o.ChatId == chatId);
+                if (ua == null)
+                {
+                    ua = new UserAddress();
+                    ua.UserId = userId;
+                    ua.Address = addr;
+                    ua.CreateDate = DateTime.Now;
+                    ua.NotifyBakingRewards = true;
+                    ua.ChatId = chatId;
+                    _db.Add(ua);
+                }
 
-            ua.IsDeleted = false;
-            ua.LastUpdate = DateTime.Now;
-            ua.Balance = bal;
-            ua.Name = name;
-            ua.AmountThreshold = 0;
-            _db.SaveChanges();
-            return ua;
+                ua.IsDeleted = false;
+                ua.LastUpdate = DateTime.Now;
+                ua.Balance = bal;
+                ua.Name = name;
+                ua.AmountThreshold = 0;
+                _db.SaveChanges();
+                return ua;
+            }
         }
 
         public UserAddress RemoveAddr(int id, string v)
         {
-            if (!int.TryParse(v, out var uaid))
-                return null;
-            var ua = _db.UserAddresses.FirstOrDefault(o => o.UserId == id && o.Id == uaid && !o.IsDeleted);
-            if (ua == null)
-                return null;
-            ua.IsDeleted = true;
-            _db.SaveChanges();
-            return ua;
+            lock (_dbLock)
+            {
+                if (!int.TryParse(v, out var uaid))
+                    return null;
+                var ua = _db.UserAddresses.FirstOrDefault(o => o.UserId == id && o.Id == uaid && !o.IsDeleted);
+                if (ua == null)
+                    return null;
+                ua.IsDeleted = true;
+                _db.SaveChanges();
+                return ua;
+            }
         }
 
         internal bool IsDelegate(string addr)
         {
-            return _db.Delegates.Any(o => o.Address == addr);
+            lock (_dbLock)
+                return _db.Delegates.Any(o => o.Address == addr);
         }
 
         internal void AddDelegate(string addr, string name)
@@ -312,21 +368,29 @@ namespace TezosNotifyBot.Model
                 Address = addr,
                 Name = name
             };
-            _db.Add(d);
-            _db.SaveChanges();
+            
+            lock (_dbLock)
+            {
+                _db.Add(d);
+                _db.SaveChanges();
+            }
         }
 
         internal void UpdateUser(User u)
         {
-            _db.SaveChanges();
+            lock (_dbLock)
+                _db.SaveChanges();
         }
 
         internal string GetDelegateName(string addr)
         {
-            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d != null && !String.IsNullOrEmpty(d.Name))
-                return d.Name;
-            return addr.ShortAddr();
+            lock (_dbLock)
+            {
+                var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d != null && !String.IsNullOrEmpty(d.Name))
+                    return d.Name;
+                return addr.ShortAddr();
+            }
         }
 
         internal string GetKnownAddressName(string addr)
@@ -342,46 +406,56 @@ namespace TezosNotifyBot.Model
 
         internal void UpdateDelegate(Delegate d)
         {
-            _db.SaveChanges();
+            lock (_dbLock)
+                _db.SaveChanges();
         }
 
         public Delegate GetOrCreateDelegate(string addr)
         {
-            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            lock (_dbLock)
             {
-                d = new Delegate {Address = addr};
-                _db.Delegates.Add(d);
-                _db.SaveChanges();
-            }
+                var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new Delegate {Address = addr};
+                    _db.Delegates.Add(d);
+                    _db.SaveChanges();
+                }
 
-            return d;
+                return d;
+            }
         }
 
         internal void SetDelegateName(string addr, string name)
         {
-            var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            lock (_dbLock)
             {
-                d = new Delegate {Address = addr};
-                _db.Delegates.Add(d);
-            }
+                var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new Delegate {Address = addr};
+                    _db.Delegates.Add(d);
+                }
 
-            d.Name = name;
-            _db.SaveChanges();
+                d.Name = name;
+                _db.SaveChanges();
+            }
         }
 
         internal void SetKnownAddress(string addr, string name)
         {
-            var d = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
-            if (d == null)
+            lock (_dbLock)
             {
-                d = new KnownAddress {Address = addr};
-                _db.KnownAddresses.Add(d);
-            }
+                var d = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+                if (d == null)
+                {
+                    d = new KnownAddress {Address = addr};
+                    _db.KnownAddresses.Add(d);
+                }
 
-            d.Name = name;
-            _db.SaveChanges();
+                d.Name = name;
+                _db.SaveChanges();
+            }
         }
 
         public List<KnownAddress> GetKnownAddresses()
