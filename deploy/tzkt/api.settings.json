@@ -1,0 +1,31 @@
+{
+  "Sync": {
+    "CheckInterval": 5,
+    "UpdateInterval": 2
+  },
+
+  "Metadata": {
+    "AccountsPath": "*",
+    "ProposalsPath": "*",
+    "ProtocolsPath": "*"
+  },
+
+  "Cache": {
+    "LoadRate": 0.75,
+    "MaxAccounts": 32000
+  },
+
+  "ConnectionStrings": {
+    "DefaultConnection": "server=tzkt-db;port=5432;database=tzkt_db;username=tzkt;password=tzkt_db_password;"
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  },
+
+  "AllowedHosts": "*"
+}

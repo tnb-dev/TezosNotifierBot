@@ -1,0 +1,31 @@
+{
+  "Protocols": {
+    "Diagnostics": false,
+    "Validation": true
+  },
+
+  "TezosNode": {
+    "ChainId": "NetXdQprcVkpaWU",
+    "Endpoint": "https://mainnet-tezos.giganode.io/",
+    "Timeout": 60
+  },
+
+  "Quotes": {
+    "Async": true,
+    "Provider": {
+      "Name": "TzktQuotes"
+    }
+  },
+
+  "ConnectionStrings": {
+    "DefaultConnection": "server=tzkt-db;port=5432;database=tzkt_db;username=tzkt;password=tzkt_db_password;"
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  }
+}
