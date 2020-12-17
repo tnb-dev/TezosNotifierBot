@@ -246,31 +246,32 @@ namespace TezosNotifyBot.Model
         public List<string[]> RunSql(string sql)
         {
             var conn = _db.Database.GetDbConnection();
+            
             var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
             var result = new List<string[]>();
             try
             {
                 conn.Open();
-                using (var dr = cmd.ExecuteReader())
+                using var reader = cmd.ExecuteReader();
+                
+                if (reader.HasRows is false)
                 {
-                    if (!dr.HasRows)
-                    {
-                        result.Add(new string[] {dr.RecordsAffected.ToString() + " records affected"});
-                        return result;
-                    }
+                    result.Add(new[] {$"{reader.RecordsAffected} records affected"});
+                    return result;
+                }
 
-                    var data = new string[dr.FieldCount];
+                var data = new string[reader.FieldCount];
+                for (var i = 0; i < data.Length; i++)
+                    data[i] = reader.GetName(i);
+                
+                result.Add(data);
+                while (reader.Read())
+                {
+                    data = new string[reader.FieldCount];
                     for (var i = 0; i < data.Length; i++)
-                        data[i] = dr.GetName(i);
+                        data[i] = reader.GetValue(i).ToString();
                     result.Add(data);
-                    while (dr.Read())
-                    {
-                        data = new string[dr.FieldCount];
-                        for (var i = 0; i < data.Length; i++)
-                            data[i] = dr.GetValue(i).ToString();
-                        result.Add(data);
-                    }
                 }
 
                 return result;

@@ -1599,11 +1599,11 @@ namespace TezosNotifyBot
                     if (ev.CallbackQuery.Data.StartsWith("broadcast"))
                     {
                         u.UserState = UserState.Broadcast;
-                        SendTextMessage(u.Id, "Enter your message for [" + u.Language + "] bot users", ReplyKeyboards.BackMenu(resMgr, u));
+                        SendTextMessage(u.Id, $"Enter your message for [{u.Language}] bot users", ReplyKeyboards.BackMenu(resMgr, u));
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getuserlist"))
                     {
-                        OnSql(u, "select * from user");
+                        OnSql(u, "select * from \"user\"");
                     }
                     if (ev.CallbackQuery.Data.StartsWith("getuseraddresses"))
                     {
@@ -1612,47 +1612,6 @@ namespace TezosNotifyBot
                     if (ev.CallbackQuery.Data.StartsWith("getusermessages"))
                     {
                         OnSql(u, "select * from message");
-                    }
-                    if (ev.CallbackQuery.Data.StartsWith("getlog"))
-                    {
-                        var dir = new DirectoryInfo(LogsPath);
-                        var files = dir.GetFiles("*.log");
-                        MemoryStream outputMemStream = new MemoryStream();
-                        var zipStream = new ZipOutputStream(outputMemStream);
-                        zipStream.SetLevel(9);
-                        foreach (var f in files)
-                        {
-                            if (DateTime.Now.Subtract(f.LastWriteTime).TotalDays > 14)
-                                continue;
-                            var newEntry = new ZipEntry(f.Name);
-                            newEntry.DateTime = f.LastWriteTime;
-                            zipStream.PutNextEntry(newEntry);
-                            using (var fs = new FileStream(f.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-								StreamUtils.Copy(fs, zipStream, new byte[4096]);
-                            zipStream.CloseEntry();                            
-                        }
-                        zipStream.IsStreamOwner = false;
-                        zipStream.Close();
-                        outputMemStream.Position = 0;
-                        var tf = new InputOnlineFile(outputMemStream, "logs.zip");
-                        Bot.SendDocumentAsync(u.Id, tf).ConfigureAwait(true).GetAwaiter().GetResult();
-                    }
-                    if (ev.CallbackQuery.Data.StartsWith("getdb"))
-                    {
-                        MemoryStream outputMemStream = new MemoryStream();
-                        var zipStream = new ZipOutputStream(outputMemStream);
-                        zipStream.SetLevel(9);
-                        var newEntry = new ZipEntry("tezosnotifydata.db");
-                        newEntry.DateTime = DateTime.Now;
-                        zipStream.PutNextEntry(newEntry);
-                        using (var fs = new FileStream(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tezosnotifydata.db"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-							StreamUtils.Copy(fs, zipStream, new byte[4096]);
-                        zipStream.CloseEntry();
-                        zipStream.IsStreamOwner = false;
-                        zipStream.Close();
-                        outputMemStream.Position = 0;
-                        var tf = new InputOnlineFile(outputMemStream, "tezosnotifydata.zip");
-                        Bot.SendDocumentAsync(u.Id, tf).ConfigureAwait(true).GetAwaiter().GetResult();
                     }
                     if (ev.CallbackQuery.Data.StartsWith("cmd"))
                     {
