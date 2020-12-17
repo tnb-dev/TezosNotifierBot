@@ -1156,6 +1156,10 @@ namespace TezosNotifyBot
 							string propHash = prop.Key;
 							var p = repo.GetProposal(propHash);
 							p.VotedRolls = prop.Value;
+							var delegateList = supporters[propHash];
+							// Список поддержавших делегатов, которые мониторит юзер
+							var addrList = repo.GetUserAddresses(u.Id).Where(o => delegateList.Contains(o.Address)).ToList();
+							p.Delegates = addrList;
 							string result = resMgr.Get(Res.ProposalSelectedMany, new ContextObject { p = p, u = u, Block = blockMetadata.level.level }) + "\n" + propItems + "\n\n" +
 								resMgr.Get(Res.ProposalSelectedForVoting, new ContextObject { p = p, u = u, Block = blockMetadata.level.level });
 							if (!u.HideHashTags)
