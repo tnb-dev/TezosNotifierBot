@@ -9,4 +9,5 @@ obj
 
 TezosNotifyBot/config.json
 TezosNotifyBot/Settings/Settings.Local.json
+deploy/compose.local.env
 /.vs/TezosNotifyBot

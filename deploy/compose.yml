@@ -68,10 +68,43 @@ services:
     environment:
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
-
+  
+  tzkt-db:
+    image: postgres:12
+    volumes:
+      - tzkt-data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - default
+    environment:
+      POSTGRES_USER: tzkt
+      POSTGRES_PASSWORD: tzkt_db_password
+      POSTGRES_DB: tzkt_db
+      
+  tzkt-api:
+    image: bakingbad/tzkt-api:$TZKT_VERSION
+    restart: always
+    depends_on:
+      - tzkt-db
+    networks:
+      - default
+    volumes:
+      - ${PWD}/deploy/tzkt/api.settings.json:/app/appsettings.json
+  
+  tzkt-sync:
+    image: bakingbad/tzkt-sync:$TZKT_VERSION
+    restart: always
+    depends_on:
+      - tzkt-db
+    networks:
+      - default
+    volumes:
+      - ${PWD}/deploy/tzkt/sync.settings.json:/app/appsettings.json
+    
 volumes:
   bi-data:
   app-data:
+  tzkt-data:
     
 networks:
   default: 
@@ -79,3 +112,4 @@ networks:
   graylog:
     external: 
       name: graylog_graylog
+      
