@@ -1369,15 +1369,20 @@ namespace TezosNotifyBot
 				}
 				if (ev.CallbackQuery.Data.StartsWith("notifyfollowers"))
 				{
-					var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o => o.Id.ToString() == ev.CallbackQuery.Data.Substring("notifyfollowers ".Length));
-					if (ua != null)
+					var addrId = int.Parse(ev.CallbackQuery.Data.Substring("notifyfollowers ".Length));
+					
+					var userAddress = repo.GetUserAddress(ev.CallbackQuery.From.Id, addrId);
+					if (userAddress != null)
 					{
-						u.UserState = UserState.NotifyFollowers;
-						u.EditUserAddressId = ua.Id;
-						repo.UpdateUser(u);
-						string result = resMgr.Get(Res.EnterMessageForAddressFollowers, ua);
-						foreach (User u1 in GetFollowers(ua.Address))
-							result += "\n" + u1.ToString() + $" [{u1.Id}]";
+						var user = repo.GetUser(ev.CallbackQuery.From.Id);
+						user.UserState = UserState.NotifyFollowers;
+						user.EditUserAddressId = userAddress.Id;
+						repo.UpdateUser(user);
+						
+						var result = resMgr.Get(Res.EnterMessageForAddressFollowers, userAddress);
+						
+						foreach (var follower in GetFollowers(userAddress.Address))
+							result += $"\n{follower} [{follower.Id}]";
 						SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
 					}
 					else
