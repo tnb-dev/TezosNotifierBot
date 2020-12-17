@@ -1149,6 +1149,7 @@ namespace TezosNotifyBot
 							if (p == null)
 								p = repo.AddProposal(propHash, null, blockMetadata.level.voting_period - 1);
 							p.VotedRolls = prop.Value;
+							p.Delegates = addrList;
 							propItems += resMgr.Get(Res.ProposalSelectedItem, new ContextObject { p = p, u = u, Block = blockMetadata.level.level }) + "\n" + delegateListString;
 						}
 						{
