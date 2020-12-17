@@ -30,5 +30,24 @@ namespace TezosNotifyBot.Domain
         }
 
         public bool NetworkIssueNotified;
+
+        private User()
+        {
+        }
+
+        public static User New(int id, string username, string firstName, string lastName, string languageCode)
+        {
+            return new User
+            {
+                CreateDate = DateTime.Now,
+                Firstname = firstName,
+                Lastname = lastName,
+                Id = id,
+                Username = username,
+                Language = languageCode,
+                WhaleAlertThreshold = 500000,
+                VotingNotify = true
+            };
+        }
     }
 }

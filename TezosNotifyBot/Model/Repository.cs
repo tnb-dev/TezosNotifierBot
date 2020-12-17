@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
@@ -16,23 +15,18 @@ namespace TezosNotifyBot.Model
     {
         private readonly DbContextOptions _dbOptions;
         private readonly TezosDataContext _db;
-        private readonly IServiceProvider _serviceProvider;
 
-        // TODO: This is potential memory leaks or mismatch with database
-        private readonly Dictionary<int, User> users;
         private LastBlock lastBlock;
 
         public Repository(DbContextOptions dbOptions)
         {
             _dbOptions = dbOptions;
             _db = new TezosDataContext(dbOptions);
-            // _db.Database.Migrate();
-            users = _db.Users.ToDictionary(o => o.Id, o => o);
         }
 
         public List<User> GetUsers()
         {
-            return users.Values.ToList();
+            return _db.Set<User>().ToList();
         }
 
         /// <summary>
@@ -120,17 +114,17 @@ namespace TezosNotifyBot.Model
 
         public bool UserExists(int id)
         {
-            return users.ContainsKey(id);
+            return _db.Set<User>().Any(x => x.Id == id);
         }
 
         public User GetUser(int id)
         {
-            return users[id];
+            return _db.Set<User>().SingleOrDefault(x => x.Id == id);
         }
 
         public User GetUser(string userName)
         {
-            return users.Values.FirstOrDefault(o => o.Username == userName);
+            return _db.Set<User>().SingleOrDefault(o => o.Username == userName);
         }
 
         public List<UserAddress> GetUserAddresses(string addr)
@@ -199,48 +193,31 @@ namespace TezosNotifyBot.Model
 
         public User GetUser(Telegram.Bot.Types.User u)
         {
+            var user = _db.Set<User>().SingleOrDefault(x => x.Id == u.Id);
             User res;
-            if (users.ContainsKey(u.Id))
+            if (user != null)
             {
-                res = users[u.Id];
-                if (res.Username != u.Username ||
-                    res.Lastname != u.LastName ||
-                    res.Firstname != u.FirstName)
+                if (user.Username != u.Username ||
+                    user.Lastname != u.LastName ||
+                    user.Firstname != u.FirstName)
                 {
-                    lock (users)
-                    {
-                        res.Username = u.Username;
-                        res.Lastname = u.LastName;
-                        res.Firstname = u.FirstName;
-                        _db.SaveChanges();
-                    }
+                    user.Username = u.Username;
+                    user.Lastname = u.LastName;
+                    user.Firstname = u.FirstName;
+                    _db.SaveChanges();
                 }
-
-                return res;
             }
-
-            lock (users)
+            else
             {
-                if (users.ContainsKey(u.Id))
-                    return users[u.Id];
-                res = new User
-                {
-                    CreateDate = DateTime.Now,
-                    Firstname = u.FirstName,
-                    Lastname = u.LastName,
-                    Id = u.Id,
-                    Username = u.Username,
-                    Language = (u.LanguageCode ?? "").Length > 2 ? u.LanguageCode.Substring(0, 2) : "en",
-                    WhaleAlertThreshold = 500000,
-                    VotingNotify = true
-                };
-                _db.Add(res);
-                _db.SaveChanges();
+                user = User.New(u.Id, u.Username, u.FirstName, u.LastName,
+                    (u.LanguageCode ?? "").Length > 2 ? u.LanguageCode.Substring(0, 2) : "en");
 
-                users.Add(u.Id, res);
+                _db.Add(user);
+                _db.SaveChanges();
             }
 
-            return res;
+
+            return user;
         }
 
         public List<string[]> RunSql(string sql)
