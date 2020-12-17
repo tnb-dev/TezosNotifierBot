@@ -22,5 +22,6 @@
         "DevUsers": [ "mksmfd", "tonoff", "emerido" ],
         "ActivityChat": [ -1001482752306 ]
     },
-    "CarthageStart": 38913
+    "CarthageStart": 38913,
+    "TzKtUrl": "https://api.tzkt.io/"
 }

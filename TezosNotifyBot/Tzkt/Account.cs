@@ -10,7 +10,7 @@ namespace TezosNotifyBot.Tzkt
 		public string address { get; set; }
 		public string publicKey { get; set; }
 		public bool revealed { get; set; }
-		public object balance { get; set; }
+		public long balance { get; set; }
 		public object frozenDeposits { get; set; }
 		public object frozenRewards { get; set; }
 		public int frozenFees { get; set; }

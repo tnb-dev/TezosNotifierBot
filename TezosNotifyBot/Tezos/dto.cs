@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TezosNotifyBot.Tezos
@@ -152,12 +153,14 @@ namespace TezosNotifyBot.Tezos
         public List<FrozenBalanceByCycle> frozen_balance_by_cycle { get; set; }
         public decimal staking_balance { get; set; }
         public List<string> delegated_contracts { get; set; }
-        public decimal delegated_balance { get; set; }
+        //public decimal delegated_balance { get; set; }
         public bool deactivated { get; set; }
-        public int grace_period { get; set; }
-		public DateTime Received { get; } = DateTime.Now;
-		public string Hash;
-	}
+        //public int grace_period { get; set; }
+        public DateTime Received { get; } = DateTime.Now;
+        public string Hash;
+        public decimal? bond;
+        public decimal Bond => bond ?? (balance - frozen_balance + (frozen_balance_by_cycle.Count > 0 ? frozen_balance_by_cycle.Sum(o => o.deposit) : 0));
+    }
 
     public class Delegate
     {
