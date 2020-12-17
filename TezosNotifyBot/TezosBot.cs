@@ -1396,7 +1396,7 @@ namespace TezosNotifyBot
 				var t = Explorer.FromId(u.Explorer);
 				if (ev.CallbackQuery.Data == "donate")
 				{
-					InputOnlineFile file = new InputOnlineFile(File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tnb-qr.jpg")));
+					var file = new InputOnlineFile(File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "DonateQR.jpg")));
 					await Bot.SendPhotoAsync(ev.CallbackQuery.From.Id, file, resMgr.Get(Res.DonateInfo, u), ParseMode.Html, replyMarkup: ReplyKeyboards.MainMenu(resMgr, u));
 				}
 				if (ev.CallbackQuery.Data.StartsWith("twdelete "))
