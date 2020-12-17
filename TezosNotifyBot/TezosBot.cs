@@ -773,7 +773,7 @@ namespace TezosNotifyBot
 							}
                         }
 					}
-					result += "\n\n";
+					result += "\n";
 					if (fromDelegate)
                         result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
 					else
@@ -846,7 +846,7 @@ namespace TezosNotifyBot
 							}
 						}
                     }
-					result += "\n\n";
+					result += "\n";
 					if (toDelegate)
                         result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
 					else
