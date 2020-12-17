@@ -9,3 +9,4 @@ obj
 
 TezosNotifyBot/config.json
 TezosNotifyBot/Settings/Settings.Local.json
+/.vs/TezosNotifyBot

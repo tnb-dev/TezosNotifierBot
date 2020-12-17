@@ -84,6 +84,7 @@ namespace TezosNotifyBot
 			Config = config.Value;
 			
 			repo = _serviceProvider.GetRequiredService<Repository>();
+			addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
 		}
 
 		public async Task Run(CancellationToken cancelToken)
@@ -134,7 +135,6 @@ namespace TezosNotifyBot
 				Logger.LogDebug("Connected to Telegram Server.");
 				Bot.OnCallbackQuery += OnCallbackQuery;
 				Bot.OnUpdate += OnUpdate;
-				addrMgr = new AddressManager();
 				Bot.StartReceiving();
 				var me = await Bot.GetMeAsync();
 				Logger.LogInformation("Старт обработки сообщений @" + me.Username);
@@ -324,104 +324,14 @@ namespace TezosNotifyBot
 				NotifyDev($"✅ Node {CurrentNode.Name} continue working", 0);
 				lastWebExceptionNotify = DateTime.MinValue;
 			}
-			if (lastHeader != null && header.predecessor != lastHeader.hash)
-			{
-				NotifyDev($"🤖 Last processed block {lastHeader.level} ({lastHeader.hash}), current received block {header.level} (predecessor {header.predecessor}). Address cache cleared", 0);
-				addrMgr.Clear();
-			}
-			if (lastHeader != null && header.level % 100 == 0 && lastHeader.level + 1 == header.level)
-			{
-				string hash = lastHash;
-				int level = lastHeader.level;
-				var contracts = addrMgr.GetContractsBalances();
-				// TODO: Remove
-				// worker.Run("Cache validation", wcb => 
-				// {
-				// 	//NotifyDev($"🤖 Starting cache validation of {contracts.Count} addresses on block {level}", 0);
-				// 	int errors = 0;
-				// 	using (var tc = new Client(CurrentNode.Url, Logger))
-				// 	{
-				// 		foreach (var contract in contracts)
-				// 		{
-				// 			var ci = tc.GetContractInfo(hash, contract.Item1);
-				// 			if (ci.balance != contract.Item2)
-				// 			{
-				// 				NotifyDev($"🤖🛑 Address {contract.Item1} at block {level}: cached {contract.Item2 / 1000000M}XTZ, node value {ci.balance / 1000000M}XTZ. Address removed from cache.", 0);
-				// 				addrMgr.Remove(contract.Item1);
-				// 				errors++;
-				// 			}
-				// 		}
-				// 	}
-				// 	//NotifyDev($"🤖 Finished cache validation of {contracts.Count} addresses on block {level}: {errors} errors", 0);
-				// });
-			}
+			
 			lastReceived = DateTime.Now;
 			Logger.LogDebug($"Block {header.level} received");
-			addrMgr.LoadQueue(client, lastHash);
-			//if (blockMetadata.level.cycle_position == 0)
-			//{
-			//	var delegates = client.GetDelegates(header.hash);
-			//	var constants = client.GetConstants(header.hash);
-			//	int rolls = 0;
-			//	decimal totalstake = 0;
-			//	foreach (var d in delegates)
-			//	{
-			//		var s = client.GetDelegateStake(header.hash, d);
-			//		rolls += (int)decimal.Floor(s / constants.tokens_per_roll);
-			//		totalstake += s;
-			//	}
-			//	NotifyDev($"Total rolls for cycle {blockMetadata.level.cycle + 5}: {rolls}, total stake: {totalstake / 1000000}", 0);
-			//}
+			
 			var prevHeader = lastHeader?.hash == header.predecessor ? lastHeader : client.GetBlockHeader((header.level - 1).ToString());
 			var prevMD = lastMetadata?.level?.level == header.level - 1 ? lastMetadata : client.GetBlockMetadata((header.level - 1).ToString());
 			if (!ProcessBlockBakingData(prevHeader, prevMD, operations))
 				return false;
-
-			HashSet<string> addrUpdated = new HashSet<string>();
-			Action<string, long> addrUpdate = (addr, bal) =>
-			 {
-				 if (!addrUpdated.Contains(addr))
-					 addrUpdated.Add(addr);
-				 Logger.LogDebug($"Balance of {addr} updated to {bal / 1000000M} XTZ at block {header.level}");
-			 };
-
-			if (addrMgr.LastHash != header.hash)
-			{
-				foreach (var op in operations)
-				{
-					foreach (var content in op.contents)
-					{
-						if (content.kind == "activate_account" || content.kind == "reveal" || content.kind == "delegation" || content.kind == "origination" || content.kind == "transaction")
-						{
-							addrMgr.UpdateBalance(content.metadata.balance_updates, header.hash, addrUpdate);
-							if (content.metadata.operation_result?.status == "applied")
-								addrMgr.UpdateBalance(content.metadata.operation_result?.balance_updates, header.hash, addrUpdate);
-							if (content.metadata.internal_operation_results != null)
-							{
-								foreach (var ior in content.metadata.internal_operation_results)
-								{
-									if (ior.result.status == "applied")
-										addrMgr.UpdateBalance(ior.result.balance_updates, header.hash, addrUpdate);
-								}
-							}
-						}
-					}
-				}
-				addrMgr.UpdateBalance(blockMetadata.balance_updates, header.hash, addrUpdate);
-				addrMgr.UpdateBalance(operations.SelectMany(o => o.contents.Where(o1 => o1.metadata.balance_updates != null && o1.kind == "endorsement").SelectMany(o1 => o1.metadata.balance_updates)), header.hash, addrUpdate);
-				addrMgr.LastHash = header.hash;
-			}
-
-			/*foreach(var addr in addrUpdated)
-			{
-				var ci = client.GetContractInfo(header.hash, addr);
-				var bal = addrMgr.GetContract(client, header.hash, addr).balance;
-				if (ci.balance != bal)
-				{
-					logger.Verbose($"Actual balance of {addr} is {ci.balance / 1000000M} XTZ at block {header.level}");
-					NotifyDev($"🤖🛑 Address {addr} at block {header.level}: cached {bal / 1000000M}XTZ, node value {ci.balance / 1000000M}XTZ. Block {header.hash}", 0);
-				}
-			}*/
 
 			if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "testing")
 			{
@@ -681,7 +591,6 @@ namespace TezosNotifyBot
 									SendTextMessageUA(ua, result);
 								}
 							}
-							addrMgr.UpdateDelegate(from, to);
 							var prevdelegate = client.GetContractInfo(header.hash + "~1", from)?.@delegate;
 							if (prevdelegate != null)
 							{
@@ -728,7 +637,6 @@ namespace TezosNotifyBot
                         var from = content.source;
                         var to = content.@delegate;
                         var fromAddresses = repo.GetUserAddresses(from);
-						addrMgr.UpdateDelegate(from, to);
 						if (to != null)
 						{
 							var toAddresses = repo.GetUserAddresses(to);
@@ -779,7 +687,6 @@ namespace TezosNotifyBot
                         string tezAmount = amount.TezToString();
                         var toAddresses = repo.GetUserAddresses(to);
                         var fromAddresses = repo.GetUserAddresses(from);
-						addrMgr.UpdateDelegate(from, to);
                         foreach (var ua in repo.GetUserAddresses(content.source))
                         {
                             var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
@@ -816,10 +723,7 @@ namespace TezosNotifyBot
                         fromDelegate = true;
 						var di = addrMgr.GetDelegate(client, header.hash, from.Key, true);
 						if (di != null)
-						{
-							decimal bond = di.balance - di.frozen_balance + (di.frozen_balance_by_cycle.Count > 0 ? di.frozen_balance_by_cycle.Sum(o => o.deposit) : 0);
-							fromBalance = bond / 1000000;
-						}
+							fromBalance = di.Bond / 1000000;
 						else
 							throw new ApplicationException("GetDelegateInfo error (" + CurrentNode.Name + ")");
                     }
@@ -894,8 +798,7 @@ namespace TezosNotifyBot
                     {
                         toDelegate = true;
                         var di = addrMgr.GetDelegate(client, header.hash, to.Key, true);
-						decimal bond = di.balance - di.frozen_balance + (di.frozen_balance_by_cycle.Count > 0 ? di.frozen_balance_by_cycle.Sum(o => o.deposit) : 0);
-                        toBalance = bond / 1000000;
+						toBalance = di.Bond / 1000000;
                     }
                     else
                     {
@@ -1011,7 +914,7 @@ namespace TezosNotifyBot
 
 					foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 					{
-						ua.Balance = info.balance;
+						ua.Balance = info.balance / 1000000M;
 						var result = resMgr.Get(Res.MissedBaking, new ContextObject { u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M });
 						
 						if (!ua.User.HideHashTags)
@@ -1060,7 +963,7 @@ namespace TezosNotifyBot
 							info = addrMgr.GetContract(client, header.hash, d.Item1);
 						foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 						{
-							ua.Balance = info.balance;
+							ua.Balance = info.balance / 1000000M;
 							var result = resMgr.Get(Res.MissedEndorsing, new ContextObject { u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M });
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed_endorsing" + ua.HashTag();
@@ -1128,9 +1031,7 @@ namespace TezosNotifyBot
                         {
 							var t = Explorer.FromId(ua.User.Explorer);
 							string result = resMgr.Get(Res.RewardDeliveredItem, new ContextObject { u = ua.User, ua = ua, Amount = d.Change / 1000000M }) + " ";
-                            decimal bond = di.balance - di.frozen_balance + (di.frozen_balance_by_cycle.Count > 0 ? di.frozen_balance_by_cycle.Sum(o => o.deposit) : 0);
-                            bond /= 1000000;
-							ua.FullBalance = bond;
+                            ua.FullBalance = di.Bond / 1000000;
                             result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n\n";
 
 							var reward = msgList.LastOrDefault(o => o.User == ua.User && o.UserAddress.ChatId == ua.ChatId);
@@ -1166,7 +1067,7 @@ namespace TezosNotifyBot
 					}
 					if (di != null)
 					{
-						decimal accured = di.frozen_balance_by_cycle.Where(o => o.cycle == (blockMetadata.level.cycle - 1)).Sum(o => o.rewards + o.fees);
+						decimal accured = addrMgr.GetRewardsForCycle(client, d, di, blockMetadata.level.cycle - 1);
 						repo.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long)accured);
 					}
 				}
@@ -2013,18 +1914,12 @@ namespace TezosNotifyBot
 /userinfo {userid} - view user info and settings
 /set_ru - switch tu russian
 /set_en - switch to english
-/clearcache - clear address cache
 /forward messageid - forward message to user and caller
 /twclean - clean published twitter messages", ReplyKeyboards.MainMenu(resMgr, u));
 					}
 					else if (message.Text.StartsWith("/sql") && Config.DevUserNames.Contains(message.From.Username))
 					{
 						OnSql(u, message.Text.Substring("/sql".Length));
-					}
-					else if (message.Text.StartsWith("/clearcache") && Config.DevUserNames.Contains(message.From.Username))
-					{
-						addrMgr.Clear();
-						NotifyDev("ℹ️ Cache is cleared", 0);
 					}
 					else if (message.Text == "/twclean")
 					{
@@ -2554,12 +2449,9 @@ namespace TezosNotifyBot
 					result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
 					if (di != null)
 					{
-						decimal bond = di.balance - di.frozen_balance + (di.frozen_balance_by_cycle.Count > 0 ? di.frozen_balance_by_cycle.Sum(o => o.deposit) : 0);
-						bond /= 1000000;
-						ua.FullBalance = bond;
+						ua.FullBalance = di.Bond / 1000000;
 						result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
-						var sb = di.staking_balance / 1000000;
-						ua.StakingBalance = sb;
+						ua.StakingBalance = di.staking_balance / 1000000;
 						ua.Delegators = di.delegated_contracts.Count;
 						result += resMgr.Get(Res.StakingInfo, ua) + "\n";
 						result += FreeSpace(ua);
@@ -2647,12 +2539,9 @@ namespace TezosNotifyBot
                 try
                 {
                     var di = addrMgr.GetDelegate(client2, lastHash, ua.Address, enqueue: true);
-                    decimal bond = di.balance - di.frozen_balance + (di.frozen_balance_by_cycle.Count > 0 ? di.frozen_balance_by_cycle.Sum(o => o.deposit) : 0);
-                    bond /= 1000000;
-					ua.FullBalance = bond;
+                    ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
-                    var sb = di.staking_balance / 1000000;
-					ua.StakingBalance = sb;
+                    ua.StakingBalance = di.staking_balance / 1000000;
 					ua.Delegators = di.delegated_contracts.Count;
 					result += resMgr.Get(Res.StakingInfo, ua) + "\n";
 					result += FreeSpace(ua);

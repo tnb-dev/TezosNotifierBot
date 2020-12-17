@@ -3,78 +3,70 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using TezosNotifyBot.Tezos;
+using System.Net;
+using Newtonsoft.Json;
 
 namespace TezosNotifyBot
 {
 	public class AddressManager
 	{
-		Dictionary<string, ContractInfo> cache = new Dictionary<string, ContractInfo>();
-		Dictionary<string, DelegateInfo> dcache = new Dictionary<string, DelegateInfo>();
-		HashSet<string> queue = new HashSet<string>();
-		public string LastHash;
-
-		public List<Tuple<string,long>> GetContractsBalances()
+		string _tzKtUrl;
+		public AddressManager(string tzKtUrl)
 		{
-			return cache.ToList().Select(o => new Tuple<string, long>(o.Key, o.Value.balance)).ToList();
+			_tzKtUrl = tzKtUrl;
 		}
 
 		public ContractInfo GetContract(Client client, string hash, string addr, bool enqueue = false)
 		{
-			if (cache.ContainsKey(addr))
-				return cache[addr];
+			try
+			{
+				if (_tzKtUrl == null)
+					return client.GetContractInfo(hash, addr);
 
-			var ci = client.GetContractInfo(hash, addr);
-			ci.Hash = hash;
-			if (!enqueue)
-			{
-				cache[addr] = ci;
-			}
-			else if (!queue.Contains(addr))
-			{
-				queue.Add(addr);
-			}
-			return ci ?? new ContractInfo();
-		}
-
-		public void LoadQueue(Client client, string hash)
-		{
-			foreach (var addr in queue.ToList())
-			{
-				GetContract(client, hash, addr);
-				queue.Remove(addr);
-			}
-		}
-
-		public void UpdateBalance(IEnumerable<BalanceUpdate> bu_list, string hash, Action<string, long> update)
-		{
-			if (bu_list == null)
-				return;
-			foreach (var bu in bu_list)
-			{
-				string addr = "";
-				if (bu.kind == "contract")
-					addr = bu.contract;
-				if (cache.ContainsKey(addr) && cache[addr].Hash != hash)
+				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
+				var contract = JsonConvert.DeserializeObject<TzKt.Account>(str);
+				return new ContractInfo
 				{
-					cache[addr].balance += bu.change;
-					update(addr, cache[addr].balance);
-				}
+					balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
+					@delegate = contract.@delegate?.address,
+					manager = contract.manager?.address,
+					Hash = hash
+				};
+			}
+			catch
+			{
+				var ci = client.GetContractInfo(hash, addr);
+				ci.Hash = hash;
+
+				return ci ?? new ContractInfo();
 			}
 		}
 
 		public DelegateInfo GetDelegate(Client client, string hash, string addr, bool forceUpdate = false, bool enqueue = false)
 		{
-			if (!forceUpdate && dcache.ContainsKey(addr) && DateTime.Now.Subtract(dcache[addr].Received).TotalHours < 2)
+			try
 			{
-				var ci1 = GetContract(client, hash, addr, enqueue);
-				return dcache[addr];
+				if (_tzKtUrl == null)
+					return client.GetDelegateInfo(addr, hash);
+				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
+				var @delegate = JsonConvert.DeserializeObject<TzKt.Account>(str);
+				var str_d = client.Download(_tzKtUrl + "v1/accounts/" + addr + "/delegators");
+				return new DelegateInfo
+				{
+					balance = @delegate.balance - @delegate.frozenDeposits - @delegate.frozenRewards - @delegate.frozenFees,
+					deactivated = !@delegate.active,
+					staking_balance = @delegate.stakingBalance,
+					bond = @delegate.balance,//@delegate.balance ,
+					Hash = hash,
+					delegated_contracts = JsonConvert.DeserializeObject<TzKt.Delegator[]>(str_d).Select(d => d.address).ToList()
+				};
 			}
-
-			var di = client.GetDelegateInfo(addr, hash);
-			var ci = GetContract(client, hash, addr, enqueue);
-			dcache[addr] = di;
-			di.Hash = hash;
-			return di ?? new DelegateInfo();
+			catch
+			{
+				var di = client.GetDelegateInfo(addr, hash);
+				di.Hash = hash;
+				return di ?? new DelegateInfo();
+			}
 		}
 
 		Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
@@ -97,27 +89,160 @@ namespace TezosNotifyBot
 			return avgPerf[(cycle, addr)];
 		}
 
-		public void UpdateDelegate(string addr, string @delegate)
+		internal decimal GetRewardsForCycle(Client client, string d, DelegateInfo di, int cycle)
 		{
-			if (cache.ContainsKey(addr))
+			try
 			{
-				cache[addr].@delegate = @delegate;
+				var str = client.Download(_tzKtUrl + $"v1/rewards/bakers/{d}/{cycle}");
+				if (str == "")
+					return 0;
+				var rew = JsonConvert.DeserializeObject<TzKt.DelegateReward>(str);
+				return rew.TotalRewards;
+			}
+			catch (Exception e)
+			{
+				return di.frozen_balance_by_cycle.Where(o => o.cycle == cycle).Sum(o => o.rewards + o.fees);
 			}
 		}
+	}
+}
 
-		public void Clear()
-		{
-			cache.Clear();
-			dcache.Clear();
-			LastHash = null;
-		}
+namespace TzKt
+{
+	public class DelegateReward
+	{
+		public int cycle { get; set; }
+		public long stakingBalance { get; set; }
+		public long delegatedBalance { get; set; }
+		public int numDelegators { get; set; }
+		public double expectedBlocks { get; set; }
+		public double expectedEndorsements { get; set; }
+		public int futureBlocks { get; set; }
+		public long futureBlockRewards { get; set; }
+		public long futureBlockDeposits { get; set; }
+		public int ownBlocks { get; set; }
+		public long ownBlockRewards { get; set; }
+		public int extraBlocks { get; set; }
+		public long extraBlockRewards { get; set; }
+		public int missedOwnBlocks { get; set; }
+		public long missedOwnBlockRewards { get; set; }
+		public int missedExtraBlocks { get; set; }
+		public long missedExtraBlockRewards { get; set; }
+		public int uncoveredOwnBlocks { get; set; }
+		public long uncoveredOwnBlockRewards { get; set; }
+		public int uncoveredExtraBlocks { get; set; }
+		public long uncoveredExtraBlockRewards { get; set; }
+		public long blockDeposits { get; set; }
+		public int futureEndorsements { get; set; }
+		public long futureEndorsementRewards { get; set; }
+		public long futureEndorsementDeposits { get; set; }
+		public int endorsements { get; set; }
+		public long endorsementRewards { get; set; }
+		public int missedEndorsements { get; set; }
+		public long missedEndorsementRewards { get; set; }
+		public int uncoveredEndorsements { get; set; }
+		public long uncoveredEndorsementRewards { get; set; }
+		public long endorsementDeposits { get; set; }
+		public long ownBlockFees { get; set; }
+		public long extraBlockFees { get; set; }
+		public long missedOwnBlockFees { get; set; }
+		public long missedExtraBlockFees { get; set; }
+		public long uncoveredOwnBlockFees { get; set; }
+		public long uncoveredExtraBlockFees { get; set; }
+		public long doubleBakingRewards { get; set; }
+		public long doubleBakingLostDeposits { get; set; }
+		public long doubleBakingLostRewards { get; set; }
+		public long doubleBakingLostFees { get; set; }
+		public long doubleEndorsingRewards { get; set; }
+		public long doubleEndorsingLostDeposits { get; set; }
+		public long doubleEndorsingLostRewards { get; set; }
+		public long doubleEndorsingLostFees { get; set; }
+		public long revelationRewards { get; set; }
+		public long revelationLostRewards { get; set; }
+		public long revelationLostFees { get; set; }
 
-		internal void Remove(string addr)
-		{
-			if (cache.ContainsKey(addr))
-				cache.Remove(addr);
-			if (dcache.ContainsKey(addr))
-				dcache.Remove(addr);
-		}
+		public long TotalRewards => ownBlockRewards +
+			extraBlockRewards +
+			missedOwnBlockRewards +
+			missedExtraBlockRewards +
+			endorsementRewards +
+			uncoveredEndorsementRewards +
+			ownBlockFees +
+			extraBlockFees +
+			doubleBakingRewards +
+			doubleEndorsingRewards +
+			revelationRewards;
+	}
+
+	public class Delegator
+	{
+		public string type { get; set; }
+		public string address { get; set; }
+		public long balance { get; set; }
+		public int delegationLevel { get; set; }
+		public DateTime delegationTime { get; set; }
+	}
+
+	public class Delegate
+	{
+		public string alias { get; set; }
+		public string address { get; set; }
+		public bool active { get; set; }
+	}
+
+	public class Creator
+	{
+		public string address { get; set; }
+	}
+
+	public class Manager
+	{
+		public string address { get; set; }
+		public string publicKey { get; set; }
+	}
+
+	public class Account
+	{
+		public string type { get; set; }
+		public string address { get; set; }
+		public string publicKey { get; set; }
+		public bool revealed { get; set; }
+		public long balance { get; set; }
+		public int counter { get; set; }
+		public Delegate @delegate { get; set; }
+		public int delegationLevel { get; set; }
+		public DateTime delegationTime { get; set; }
+		public int numContracts { get; set; }
+		public int numActivations { get; set; }
+		public int numDelegations { get; set; }
+		public int numOriginations { get; set; }
+		public int numTransactions { get; set; }
+		public int numReveals { get; set; }
+		public int numMigrations { get; set; }
+		public int firstActivity { get; set; }
+		public DateTime firstActivityTime { get; set; }
+		public int lastActivity { get; set; }
+		public DateTime lastActivityTime { get; set; }
+
+		public bool active { get; set; }
+		public long frozenDeposits { get; set; }
+		public long frozenRewards { get; set; }
+		public long frozenFees { get; set; }
+		public int activationLevel { get; set; }
+		public DateTime activationTime { get; set; }
+		public long stakingBalance { get; set; }
+		public int numDelegators { get; set; }
+		public int numBlocks { get; set; }
+		public int numEndorsements { get; set; }
+		public int numBallots { get; set; }
+		public int numProposals { get; set; }
+		public int numDoubleBaking { get; set; }
+		public int numDoubleEndorsing { get; set; }
+		public int numNonceRevelations { get; set; }
+		public int numRevelationPenalties { get; set; }
+
+		public string kind { get; set; }
+		public Creator creator { get; set; }
+		public Manager manager { get; set; }
 	}
 }

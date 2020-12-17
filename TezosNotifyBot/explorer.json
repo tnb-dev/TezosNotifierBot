@@ -16,14 +16,6 @@
     "opurl": "https://tzstats.com/{0}?utm_source=tezosnotifierbot"
   },
   {
-    "id": 2,
-    "name": "tezos.id",
-    "buttonprefix": "tezosid",
-    "blockurl": "https://tezos.id/{0}?utm_source=tezosnotifierbot",
-    "accounturl": "https://tezos.id/accounts/{0}?utm_source=tezosnotifierbot",
-    "opurl": "https://tezos.id/{0}?utm_source=tezosnotifierbot"
-  },
-  {
     "id": 3,
     "name": "tzkt.io",
     "buttonprefix": "tzkt",
