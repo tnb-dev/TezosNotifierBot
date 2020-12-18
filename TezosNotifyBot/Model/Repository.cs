@@ -745,7 +745,8 @@ namespace TezosNotifyBot.Model
 
         public AddressConfig GetAddressConfig(string address)
         {
-            return _db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == address);
+            lock (_dbLock)
+                return _db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == address);
         }
     }
 }
