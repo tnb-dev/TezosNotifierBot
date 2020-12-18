@@ -50,7 +50,7 @@ namespace TezosNotifyBot
 					return client.GetDelegateInfo(addr, hash);
 				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
 				var @delegate = JsonConvert.DeserializeObject<TzKt.Account>(str);
-				if (@delegate.kind != "delegate")
+				if (@delegate.type != "delegate")
 					return null;
 				var str_d = client.Download(_tzKtUrl + "v1/accounts/" + addr + "/delegators");
 				return new DelegateInfo
