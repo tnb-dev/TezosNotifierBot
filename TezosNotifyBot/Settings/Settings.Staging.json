@@ -14,5 +14,6 @@
                 "TezosNotifyBot": "Debug"
             }
         }
-    }
+    },
+    "TzKtUrl": "http://tzkt-api:5000/"
 }
