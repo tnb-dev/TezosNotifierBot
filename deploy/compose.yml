@@ -35,6 +35,7 @@ services:
     labels:
       - traefik.docker.network=traefik
       - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
+      - traefik.http.services.bi.loadbalancer.server.port=3000
     restart: unless-stopped 
     depends_on:
       - bi-db
