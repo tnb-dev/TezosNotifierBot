@@ -30,8 +30,10 @@ services:
 
   bi:
     image: metabase/metabase
-    ports:
-      - $BI_PORT:3000
+    expose: 
+      - 3000
+    labels:
+      - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
     restart: unless-stopped 
     depends_on:
       - bi-db
