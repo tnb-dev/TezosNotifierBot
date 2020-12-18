@@ -798,7 +798,7 @@ namespace TezosNotifyBot
                     {
                         toDelegate = true;
                         var di = addrMgr.GetDelegate(client, header.hash, to.Key, true);
-						toBalance = di.Bond / 1000000;
+						toBalance = (di?.Bond ?? 0) / 1000000;
                     }
                     else
                     {
