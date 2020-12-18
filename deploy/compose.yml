@@ -67,8 +67,8 @@ services:
       - 80
     labels:
       - traefik.docker.network=traefik
-      - traefik.http.routers.pgadmin.rule=Host(`test.tnb.thegroup.tech`) && Path(`/pgadmin4`)
-      - traefik.http.services.pgadmin.loadbalancer.server.port=80
+      - traefik.http.routers.db-admin.rule=Host(`test.tnb.thegroup.tech`) && PathPrefix(`/pgadmin4`)
+      - traefik.http.services.db-admin.loadbalancer.server.port=80
     restart: unless-stopped 
     depends_on:
       - db
