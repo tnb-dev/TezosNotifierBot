@@ -1856,6 +1856,11 @@ namespace TezosNotifyBot
 					{
 						OnNewAddress(u);
 					}
+					else if (message.Text.StartsWith("/tzkt "))
+					{
+						var str = client2.Download(message.Text.Substring("/tzkt ".Length));
+						NotifyDev(str, u.Id);
+					}
 					else if (message.Text.StartsWith("/forward") && u.IsAdmin(Config.Telegram))
 					{
 						var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
@@ -2649,12 +2654,12 @@ namespace TezosNotifyBot
         }
         #endregion
 
-        void NotifyDev(string text, int currentUserID, ParseMode parseMode = ParseMode.Markdown)
+        void NotifyDev(string text, int currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
         {
             foreach (var devUser in Config.DevUserNames)
             {
                 var user = repo.GetUser(devUser);
-				if (user != null && user.Id != currentUserID)
+				if (user != null && ((user.Id != currentUserID && !current) || (user.Id == currentUserID && current)))
 				{
 					while (text.Length > 4096)
 					{
