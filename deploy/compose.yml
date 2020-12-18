@@ -36,6 +36,8 @@ services:
       - traefik.docker.network=traefik
       - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
       - traefik.http.services.bi.loadbalancer.server.port=3000
+      - traefik.http.routers.bi.tls=true
+      - traefik.http.routers.bi.tls.certresolver=default
     restart: unless-stopped 
     depends_on:
       - bi-db
@@ -69,6 +71,8 @@ services:
       - traefik.docker.network=traefik
       - traefik.http.routers.db-admin.rule=Host(`test.tnb.thegroup.tech`) && PathPrefix(`/pgadmin4`)
       - traefik.http.services.db-admin.loadbalancer.server.port=80
+      - traefik.http.routers.db-admin.tls=true
+      - traefik.http.routers.db-admin.tls.certresolver=default
     restart: unless-stopped 
     depends_on:
       - db
