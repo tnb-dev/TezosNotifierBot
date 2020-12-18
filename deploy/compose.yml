@@ -34,6 +34,7 @@ services:
       - $BI_PORT:3000
     labels:
       - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
+      - traefik.http.services.bi.loadbalancer.server.port=$BI_PORT
     restart: unless-stopped 
     depends_on:
       - bi-db
