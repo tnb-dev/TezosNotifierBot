@@ -64,6 +64,11 @@ namespace TezosNotifyBot.Storage
             modelBuilder.Entity<BalanceUpdate>();
             modelBuilder.Entity<Proposal>();
             modelBuilder.Entity<ProposalVote>();
+
+            modelBuilder.Entity<AddressConfig>()
+                .HasData(
+                    new AddressConfig("tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM", "💎")
+                );
             
             // MUST BE BELOW ANY OTHER CONFIGURATIONS
             modelBuilder.ApplyPostgresConventions();
