@@ -38,6 +38,8 @@ services:
       - traefik.http.services.bi.loadbalancer.server.port=3000
       - traefik.http.routers.bi.tls=true
       - traefik.http.routers.bi.tls.certresolver=default
+      - traefik.http.middlewares.bi.redirectscheme.scheme=https
+      - traefik.http.middlewares.bi.redirectscheme.permanent=true
     restart: unless-stopped 
     depends_on:
       - bi-db
@@ -73,6 +75,8 @@ services:
       - traefik.http.services.db-admin.loadbalancer.server.port=80
       - traefik.http.routers.db-admin.tls=true
       - traefik.http.routers.db-admin.tls.certresolver=default
+      - traefik.http.middlewares.db-admin.redirectscheme.scheme=https
+      - traefik.http.middlewares.db-admin.redirectscheme.permanent=true
     restart: unless-stopped 
     depends_on:
       - db
