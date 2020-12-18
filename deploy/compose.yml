@@ -33,7 +33,7 @@ services:
     expose:
       - 3000
     labels:
-#      - traefik.docker.network=traefik
+      - traefik.docker.network=traefik
       - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
       - traefik.http.services.bi.loadbalancer.server.port=3000
     restart: unless-stopped 
@@ -63,13 +63,18 @@ services:
 
   db-admin:
     image: dpage/pgadmin4:latest
-    ports:
-      - $PG_PORT:80
+    expose:
+      - 80
+    labels:
+      - traefik.docker.network=traefik
+      - traefik.http.routers.bi.rule=Host(`test.tnb.thegroup.tech`) && PathPrefix(`/pgadmin4`)
+      - traefik.http.services.bi.loadbalancer.server.port=80
     restart: unless-stopped 
     depends_on:
       - db
     networks:
       - default
+      - traefik
     environment:
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
       - PGADMIN_DEFAULT_PASSWORD=$PGADMIN_PASSWORD
