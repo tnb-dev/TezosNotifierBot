@@ -30,16 +30,17 @@ services:
 
   bi:
     image: metabase/metabase
-    ports:
-      - $BI_PORT:3000
+    expose:
+      - 3000
     labels:
+      - traefik.docker.network=traefik
       - traefik.http.routers.bi.rule=Host(`bi.test.tnb.thegroup.tech`)
-      - traefik.http.services.bi.loadbalancer.server.port=3000
     restart: unless-stopped 
     depends_on:
       - bi-db
     networks:
       - default
+      - traefik
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_USER=$BI_DB_USER
@@ -112,6 +113,9 @@ volumes:
 networks:
   default: 
     driver: bridge
+  traefik:
+    external: 
+      name: traefik
   graylog:
     external: 
       name: graylog_graylog
