@@ -2488,8 +2488,9 @@ namespace TezosNotifyBot
 		{
 			var t = Explorer.FromId(ua.User.Explorer);
 			var isDelegate = repo.IsDelegate(ua.Address);
-			string result = chatId == ua.UserId ? "" : $"ℹ️User {ua.User} [{ua.UserId}] address\n";
-			result += isDelegate ? "👑 " : "";
+			var result = chatId == ua.UserId ? "" : $"ℹ️User {ua.User} [{ua.UserId}] address\n";
+			var config = repo.GetAddressConfig(ua.Address);
+			result += isDelegate ? $"{config?.Icon ?? "👑"} " : "";
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
             result += $"<a href='{t.account(ua.Address)}'>" + ua.Address + "</a>\n";

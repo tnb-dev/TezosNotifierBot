@@ -742,5 +742,10 @@ namespace TezosNotifyBot.Model
                     .Where(o => o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to).ToList();
             });
         }
+
+        public AddressConfig GetAddressConfig(string address)
+        {
+            return _db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == address);
+        }
     }
 }
