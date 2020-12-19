@@ -8,31 +8,34 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Storage;
 
 namespace TezosNotifyBot.Workers
 {
-    public class ReleasesWorker: BackgroundService
+    public class ReleasesWorker : BackgroundService
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<ReleasesWorker> _logger;
         private readonly IOptions<ReleasesWorkerOptions> _options;
 
-        public ReleasesWorker(IServiceProvider serviceProvider, IOptions<ReleasesWorkerOptions> options)
+        public ReleasesWorker(IServiceProvider serviceProvider, ILogger<ReleasesWorker> logger,
+            IOptions<ReleasesWorkerOptions> options)
         {
+            _logger = logger;
             _options = options;
             _serviceProvider = serviceProvider;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-
             while (stoppingToken.IsCancellationRequested is false)
             {
                 using var scope = _serviceProvider.CreateScope();
                 await using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
-                
+
                 var client = scope.ServiceProvider.GetRequiredService<ReleasesClient>();
 
                 try
@@ -52,10 +55,9 @@ namespace TezosNotifyBot.Workers
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
-                    throw;
+                    _logger.LogError(e, "Failed to fetch tezos releases");
                 }
-                
+
                 await Task.Delay(_options.Value.RefreshInterval);
             }
         }
@@ -90,7 +92,7 @@ namespace TezosNotifyBot.Workers
             return results.Select(json =>
             {
                 var announce = json.Assets.Links.FirstOrDefault();
-                
+
                 return new TezosRelease
                 {
                     Tag = json.Tag,
@@ -102,44 +104,35 @@ namespace TezosNotifyBot.Workers
                 };
             }).ToArray();
         }
-        
+
         private class ReleaseItem
         {
-            [JsonPropertyName("tag_name")]
-            public string Tag { get; set; }
+            [JsonPropertyName("tag_name")] public string Tag { get; set; }
 
-            [JsonPropertyName("name")]
-            public string Name { get; set; }
+            [JsonPropertyName("name")] public string Name { get; set; }
 
-            [JsonPropertyName("description")]
-            public string Description { get; set; }
+            [JsonPropertyName("description")] public string Description { get; set; }
 
-            [JsonPropertyName("released_at")]
-            public DateTime ReleasedAt { get; set; }
+            [JsonPropertyName("released_at")] public DateTime ReleasedAt { get; set; }
 
-            [JsonPropertyName("_links")]
-            public ReleaseLinks Links { get; set; }
+            [JsonPropertyName("_links")] public ReleaseLinks Links { get; set; }
 
-            [JsonPropertyName("assets")]
-            public ReleaseAssets Assets { get; set; }
+            [JsonPropertyName("assets")] public ReleaseAssets Assets { get; set; }
         }
 
         private class ReleaseLinks
         {
-            [JsonPropertyName("self")]
-            public string Self { get; set; }
+            [JsonPropertyName("self")] public string Self { get; set; }
         }
 
         private class ReleaseAssets
         {
-            [JsonPropertyName("links")]
-            public AssetsLink[] Links { get; set; }
+            [JsonPropertyName("links")] public AssetsLink[] Links { get; set; }
         }
 
         private class AssetsLink
         {
-            [JsonPropertyName("url")]
-            public string Url { get; set; }
+            [JsonPropertyName("url")] public string Url { get; set; }
         }
     }
 }

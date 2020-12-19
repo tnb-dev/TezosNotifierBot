@@ -67,7 +67,8 @@ namespace TezosNotifyBot.Storage
 
             modelBuilder.Entity<AddressConfig>()
                 .HasData(
-                    new AddressConfig("tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM", "💎")
+                    new AddressConfig("tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM", "💎"),
+                    new AddressConfig("tz1NortRftucvAkD1J58L32EhSVrQEWJCEnB", "🥨")
                 );
 
             modelBuilder.Entity<TezosRelease>(builder =>
