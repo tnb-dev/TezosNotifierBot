@@ -69,6 +69,13 @@ namespace TezosNotifyBot.Storage
                 .HasData(
                     new AddressConfig("tz1aRoaRhSpRYvFdyvgWLL6TGyRoGF51wDjM", "💎")
                 );
+
+            modelBuilder.Entity<TezosRelease>(builder =>
+                {
+                    builder.HasKey(x => x.Tag);
+                    builder.Property(x => x.Tag).ValueGeneratedNever();
+                })
+                ;
             
             // MUST BE BELOW ANY OTHER CONFIGURATIONS
             modelBuilder.ApplyPostgresConventions();
