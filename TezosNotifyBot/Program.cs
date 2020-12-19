@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using NornPool.Model;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
+using TezosNotifyBot.Workers;
 
 namespace TezosNotifyBot
 {
@@ -42,6 +43,7 @@ namespace TezosNotifyBot
                     );
 
                     services.Configure<BotConfig>(context.Configuration);
+                    services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
                     
                     services.AddLogging(builder =>
                     {
@@ -57,10 +59,14 @@ namespace TezosNotifyBot
                         }
                     });
 
+                    services.AddHttpClient<ReleasesClient>();
+                    
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
+                    
                     services.AddHostedService<Service>();
+                    services.AddHostedService<ReleasesWorker>();
 
                     using var provider = services.BuildServiceProvider();
                     using var database = provider.GetRequiredService<TezosDataContext>();
