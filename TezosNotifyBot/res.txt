@@ -72,7 +72,7 @@ Full description & manual: http://tzsnt.fr/
 #Search;en;🔎 Search
 #VotingNotify;ru;{(u.VotingNotify ? "🔈" : "🔇")} Голосования
 #VotingNotify;en;{(u.VotingNotify ? "🔈" : "🔇")} Votings
-#ReleaseNotify;ru;{(u.ReleaseNotify ? "🦊" : "🔳") Обновления софта
+#ReleaseNotify;ru;{(u.ReleaseNotify ? "🦊" : "🔳")} Обновления софта
 #ReleaseNotify;en;{(u.ReleaseNotify ? "🦊" : "🔳")} Software releases
 % Главное меню
 #NewAddress;ru;✳️ Новый адрес
@@ -347,8 +347,16 @@ Our XTZ address: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 #TwitterQuorumReached;en;🎉 Quorum on the proposal {p.Name} reached!
 #TezosReleaseWithLink;ru;🦊 Выпущено обновление программного обеспечения <a href='{r.Url}'>{r.Tag}</a>: {r.Description}
 Ознакомьтесь с <a href='{r.AnnounceUrl}'>анонсом</a>.
+
+ #gitlab
 #TezosReleaseWithLink;en;🦊 Software update <a href='{r.Url}'>{r.Tag}</a> released: {r.Description}
 Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
+
+ #gitlab
 #TezosRelease;ru;🦊 Выпущено обновление программного обеспечения <a href='{r.Url}'>{r.Tag}</a>: {r.Description}
+
+ #gitlab
 #TezosRelease;en;🦊 Software update <a href='{r.Url}'>{r.Tag}</a> released: {r.Description}
+
+ #gitlab
  
