@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TezosNotifyBot.Storage;
@@ -9,9 +10,10 @@ using TezosNotifyBot.Storage;
 namespace TezosNotifyBot.Storage.Migrations
 {
     [DbContext(typeof(TezosDataContext))]
-    partial class TezosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20201221121521_AddMessageKind")]
+    partial class AddMessageKind
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -269,7 +271,7 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("kind");
 
-                    b.Property<int?>("TelegramMessageId")
+                    b.Property<int>("TelegramMessageId")
                         .HasColumnType("integer")
                         .HasColumnName("telegram_message_id");
 
@@ -468,10 +470,6 @@ namespace TezosNotifyBot.Storage.Migrations
                     b.Property<int>("NetworkIssueNotify")
                         .HasColumnType("integer")
                         .HasColumnName("network_issue_notify");
-
-                    b.Property<bool>("ReleaseNotify")
-                        .HasColumnType("boolean")
-                        .HasColumnName("release_notify");
 
                     b.Property<int>("UserState")
                         .HasColumnType("integer")

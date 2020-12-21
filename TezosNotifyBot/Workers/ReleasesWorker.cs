@@ -20,12 +20,14 @@ namespace TezosNotifyBot.Workers
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<ReleasesWorker> _logger;
         private readonly IOptions<ReleasesWorkerOptions> _options;
+        private readonly ResourceManager _resourceManager;
 
         public ReleasesWorker(IServiceProvider serviceProvider, ILogger<ReleasesWorker> logger,
-            IOptions<ReleasesWorkerOptions> options)
+            IOptions<ReleasesWorkerOptions> options, ResourceManager resourceManager)
         {
             _logger = logger;
             _options = options;
+            _resourceManager = resourceManager;
             _serviceProvider = serviceProvider;
         }
 
@@ -42,12 +44,14 @@ namespace TezosNotifyBot.Workers
                 {
                     var releases = await client.GetAll();
 
-                    foreach (var tezosRelease in releases)
+                    foreach (var release in releases)
                     {
-                        var exists = await db.Set<TezosRelease>().AnyAsync(x => x.Tag == tezosRelease.Tag);
+                        var exists = await db.Set<TezosRelease>().AnyAsync(x => x.Tag == release.Tag);
                         if (exists is false)
                         {
-                            db.Add(tezosRelease);
+                            await db.AddAsync(release);
+
+                            await BroadcastRelease(release);
                         }
                     }
 
@@ -59,7 +63,27 @@ namespace TezosNotifyBot.Workers
                 }
 
                 await Task.Delay(_options.Value.RefreshInterval);
+                
+                
+                async Task BroadcastRelease(TezosRelease release)
+                {
+                    var subscribers = await db.Set<User>().AsNoTracking()
+                        .Where(x => x.ReleaseNotify)
+                        .ToArrayAsync();
+
+                    var messages = subscribers.Select(user =>
+                    {
+                        var type = release.AnnounceUrl is null ? Res.TezosRelease : Res.TezosReleaseWithLink;
+                        var message = _resourceManager.Get(type, (user, release));
+                        return Message.Push(user.Id, message);
+                    });
+
+                    await db.AddRangeAsync(messages);
+                    await db.SaveChangesAsync();
+                }
             }
+
+            
         }
     }
 
