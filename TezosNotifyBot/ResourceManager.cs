@@ -96,6 +96,9 @@ namespace TezosNotifyBot
 		public Explorer t => (u != null ? Explorer.FromId(u.Explorer) : Explorer.FromId(0));
 		public Tezos.MarketData md { get; set; } = new Tezos.MarketData();
 		public Proposal p { get; set; }
+
+		public TezosRelease r { get; set; }
+		
 		public string OpHash { get; set; }
 		public int TotalRolls { get; set; }
 		public int Block { get; set; }
@@ -110,6 +113,8 @@ namespace TezosNotifyBot
 		public static implicit operator ContextObject(UserAddress userAddress) => new ContextObject { u = userAddress.User, ua = userAddress };
 		public static implicit operator ContextObject((UserAddress userAddress, Tezos.MarketData md) uamd) => new ContextObject { u = uamd.userAddress.User, ua = uamd.userAddress, md = uamd.md };
 		public static implicit operator ContextObject((UserAddress userAddress, Proposal p) uap) => new ContextObject { u = uap.userAddress.User, ua = uap.userAddress, p = uap.p };
+		public static implicit operator ContextObject((User user, TezosRelease release) data) 
+			=> new ContextObject { u = data.user, r = data.release };
 	}
 
 	public enum Res
@@ -223,6 +228,8 @@ namespace TezosNotifyBot
 		TwitterNetworkAlert,
 		Donate,
 		DonateInfo,
-		TwitterQuorumReached
+		TwitterQuorumReached,
+		TezosReleaseWithLink,
+		TezosRelease
 	}
 }

@@ -61,7 +61,7 @@ namespace TezosNotifyBot
 		Worker worker;
 		RewardsManager rewardsManager;
 		AddressManager addrMgr;
-		ResourceManager resMgr = new ResourceManager();
+		private readonly ResourceManager resMgr;
 		string lastHash;
 		Constants _currentConstants;
 		Constants GetConstants()
@@ -77,19 +77,20 @@ namespace TezosNotifyBot
 		string twitterAccountName;
 		bool twitterNetworkIssueNotified = false;
 
-		public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config)
+		public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config, TelegramBotClient bot, ResourceManager resourceManager)
 		{
 			_serviceProvider = serviceProvider;
 			Logger = logger;
 			Config = config.Value;
+			Bot = bot;
 			
 			repo = _serviceProvider.GetRequiredService<Repository>();
 			addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
+			resMgr = resourceManager;
 		}
 
 		public async Task Run(CancellationToken cancelToken)
         {
-	        resMgr.LoadResources("res.txt");
 			worker = new Worker();
 			worker.OnError += Worker_OnError;
 			tzStats = new TzStatsData(worker);
@@ -100,16 +101,6 @@ namespace TezosNotifyBot
 				CurrentNode = Nodes[0];
 
 				rewardsManager = new RewardsManager(repo);
-				IWebProxy proxy = null;
-				if (Config.ProxyAddress != null)
-				{
-					if (Config.ProxyType == "http")
-						proxy = new WebProxy(Config.ProxyAddress, Config.ProxyPort);
-					else
-						proxy = new HttpToSocks5Proxy(Config.ProxyAddress, Config.ProxyPort);
-					if (Config.ProxyLogin != null)
-						proxy.Credentials = new NetworkCredential(Config.ProxyLogin, Config.ProxyPassword);
-				}
 
 				client = CreateTezosClient();
 				client2 = CreateTezosClient();
@@ -127,7 +118,7 @@ namespace TezosNotifyBot
 				);
 				twitter.OnTwit += Twitter_OnTwit;
 				twitter.OnTwitResponse += Twitter_OnTwitResponse;
-				Bot = new TelegramBotClient(Config.Telegram.BotSecret, proxy);
+				
 				Logger.LogDebug("Connecting to Telegram Server...");
 				
 				await Bot.SetWebhookAsync("");
@@ -1865,9 +1856,9 @@ namespace TezosNotifyBot
 					{
 						var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
 						var msg = repo.GetMessage(msgid);
-						var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, msg.TelegramMessageId).ConfigureAwait(true).GetAwaiter().GetResult();
+						var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int) msg.TelegramMessageId).ConfigureAwait(true).GetAwaiter().GetResult();
 						SendTextMessage(u.Id, $"Message forwarded for user {UserLink(repo.GetUser(msg.UserId))}", ReplyKeyboards.MainMenu(resMgr, u), parseMode: ParseMode.Markdown);
-						Bot.ForwardMessageAsync(u.Id, msg.UserId, msg.TelegramMessageId);
+						Bot.ForwardMessageAsync(u.Id, msg.UserId, (int) msg.TelegramMessageId);
 					}
 					else if (message.Text.StartsWith("/help") && Config.DevUserNames.Contains(message.From.Username))
 					{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Text;
 using Gelf.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MihaZupan;
 using NornPool.Model;
+using Telegram.Bot;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Workers;
@@ -64,9 +68,36 @@ namespace TezosNotifyBot
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
+
+                    services.AddSingleton(provider =>
+                    {
+                        var config = provider.GetService<IOptions<BotConfig>>();
+
+                        IWebProxy proxy = null;
+                        if (config.Value.ProxyAddress != null)
+                        {
+                            if (config.Value.ProxyType == "http")
+                                proxy = new WebProxy(config.Value.ProxyAddress, config.Value.ProxyPort);
+                            else
+                                proxy = new HttpToSocks5Proxy(config.Value.ProxyAddress, config.Value.ProxyPort);
+                            if (config.Value.ProxyLogin != null)
+                                proxy.Credentials = new NetworkCredential(config.Value.ProxyLogin, config.Value.ProxyPassword);
+                        }
+                        
+                        return new TelegramBotClient(config.Value.Telegram.BotSecret, proxy);
+                    });
+
+                    services.AddSingleton(_ =>
+                    {
+                        var manager = new ResourceManager();
+                        manager.LoadResources("res.txt");
+
+                        return manager;
+                    });
                     
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
+                    services.AddHostedService<BroadcastWorker>();
 
                     using var provider = services.BuildServiceProvider();
                     using var database = provider.GetRequiredService<TezosDataContext>();

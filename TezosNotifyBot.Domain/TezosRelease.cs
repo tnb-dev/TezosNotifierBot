@@ -12,7 +12,7 @@ namespace TezosNotifyBot.Domain
 
         public string Description { get; set; }
         
-        public string AnnounceUrl { get; set; }
+        public string? AnnounceUrl { get; set; }
         
         public DateTime ReleasedAt { get; set; }
         
