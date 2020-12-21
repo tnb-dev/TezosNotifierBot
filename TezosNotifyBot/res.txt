@@ -72,6 +72,8 @@ Full description & manual: http://tzsnt.fr/
 #Search;en;🔎 Search
 #VotingNotify;ru;{(u.VotingNotify ? "🔈" : "🔇")} Голосования
 #VotingNotify;en;{(u.VotingNotify ? "🔈" : "🔇")} Votings
+#ReleaseNotify;ru;{(u.ReleaseNotify ? "🦊" : "🔳") Обновления софта
+#ReleaseNotify;en;{(u.ReleaseNotify ? "🦊" : "🔳")} Software releases
 % Главное меню
 #NewAddress;ru;✳️ Новый адрес
 #NewAddress;en;✳️ New Address
