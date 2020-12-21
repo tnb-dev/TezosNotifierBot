@@ -139,6 +139,11 @@ namespace TezosNotifyBot
 				add(resMgr.Get(Res.VotingNotify, u), "hidevotingnotify");
 			else
 				add(resMgr.Get(Res.VotingNotify, u), "showvotingnotify");
+			
+			if (u.ReleaseNotify)
+				add(resMgr.Get(Res.ReleaseNotify, u), "tezos_release_off");
+			else
+				add(resMgr.Get(Res.ReleaseNotify, u), "tezos_release_on");
 
 			if (u.IsAdmin(options))
             {

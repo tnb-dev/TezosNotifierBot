@@ -1595,6 +1595,19 @@ namespace TezosNotifyBot
 					repo.UpdateUser(u);
 					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
 				}
+
+				if (ev.CallbackQuery.Data.StartsWith("tezos_release_on"))
+				{
+					u.ReleaseNotify = true;
+					repo.UpdateUser(u);
+					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
+				}
+				if (ev.CallbackQuery.Data.StartsWith("tezos_release_off"))
+				{
+					u.ReleaseNotify = false;
+					repo.UpdateUser(u);
+					SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram), ev.CallbackQuery.Message.MessageId);
+				}
 				if (Config.DevUserNames.Contains(u.Username))
                 {
                     if (ev.CallbackQuery.Data.StartsWith("broadcast"))

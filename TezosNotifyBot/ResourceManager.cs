@@ -199,6 +199,7 @@ namespace TezosNotifyBot
 		WhaleAlerts,
 		NetworkIssueAlerts,
 		VotingNotify,
+		ReleaseNotify,
 		Off,
 		Delete,
 		ManageAddress,
