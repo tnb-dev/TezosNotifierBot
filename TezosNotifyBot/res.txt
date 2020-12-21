@@ -359,3 +359,4 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #TezosRelease;en;🦊 Software update <a href='{r.Url}'>{r.Tag}</a> released: {r.Description}
 
  #gitlab
+ 
