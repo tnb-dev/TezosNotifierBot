@@ -45,7 +45,7 @@ namespace TezosNotifyBot.Workers
                 
                 foreach (var message in messages)
                 {
-                    var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text, ParseMode.Html);
+                    var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text, ParseMode.Html, true);
                     
                     message.Sent(id.MessageId);
                     
