@@ -1,9 +1,5 @@
 ﻿[
   {
-    "Name": "TNB-local",
-    "Url": "http://173.249.53.127:8732"
-  },
-  {
     "Name": "mainnet-tezos.giganode.io",
     "Url": "https://mainnet-tezos.giganode.io"
   },
