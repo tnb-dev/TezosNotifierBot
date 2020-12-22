@@ -2430,7 +2430,7 @@ namespace TezosNotifyBot
 						ua.FullBalance = di.Bond / 1000000;
 						result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
 						ua.StakingBalance = di.staking_balance / 1000000;
-						ua.Delegators = di.delegated_contracts.Count;
+						ua.Delegators = di.NumDelegators;
 						result += resMgr.Get(Res.StakingInfo, ua) + "\n";
 						result += FreeSpace(ua);
 					}
@@ -2521,7 +2521,7 @@ namespace TezosNotifyBot
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
-					ua.Delegators = di.delegated_contracts.Count;
+					ua.Delegators = di.NumDelegators;
 					result += resMgr.Get(Res.StakingInfo, ua) + "\n";
 					result += FreeSpace(ua);
 					decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
