@@ -60,13 +60,15 @@ namespace TezosNotifyBot
 					staking_balance = @delegate.stakingBalance,
 					bond = @delegate.balance,//@delegate.balance ,
 					Hash = hash,
-					delegated_contracts = JsonConvert.DeserializeObject<TzKt.Delegator[]>(str_d).Select(d => d.address).ToList()
+					delegated_contracts = JsonConvert.DeserializeObject<TzKt.Delegator[]>(str_d).Select(d => d.address).ToList(),
+					NumDelegators = @delegate.numDelegators
 				};
 			}
 			catch
 			{
 				var di = client.GetDelegateInfo(addr, hash);
 				di.Hash = hash;
+				di.NumDelegators = di.delegated_contracts.Count;
 				return di ?? new DelegateInfo();
 			}
 		}
