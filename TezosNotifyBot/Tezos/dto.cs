@@ -159,6 +159,7 @@ namespace TezosNotifyBot.Tezos
         public DateTime Received { get; } = DateTime.Now;
         public string Hash;
         public decimal? bond;
+        public int NumDelegators { get; set; }
         public decimal Bond => bond ?? (balance - frozen_balance + (frozen_balance_by_cycle.Count > 0 ? frozen_balance_by_cycle.Sum(o => o.deposit) : 0));
     }
 
