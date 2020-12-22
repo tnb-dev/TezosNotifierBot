@@ -51,6 +51,8 @@ namespace TezosNotifyBot.Domain
                 Id = id,
                 Username = username,
                 Language = languageCode,
+                // Enable release notifications only for new users
+                ReleaseNotify = true,
                 WhaleAlertThreshold = 500000,
                 VotingNotify = true
             };
