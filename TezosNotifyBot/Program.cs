@@ -23,11 +23,11 @@ namespace TezosNotifyBot
         {
             // TODO: It's needed?
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            
+
             CreateHostBuilder(args).Build().Run();
-			// Console.WriteLine("Бот запущен " + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-   //          var npb = new TezosBot();
-   //          npb.Run();
+            // Console.WriteLine("Бот запущен " + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
+            //          var npb = new TezosBot();
+            //          npb.Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -47,13 +47,14 @@ namespace TezosNotifyBot
                     );
 
                     services.Configure<BotConfig>(context.Configuration);
+                    services.Configure<TwitterOptions>(context.Configuration.GetSection("Twitter"));
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
-                    
+
                     services.AddLogging(builder =>
                     {
                         if (context.HostingEnvironment.IsDevelopment() is false)
                         {
-                            builder.AddGelf(options => 
+                            builder.AddGelf(options =>
                                 options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
                             );
                         }
@@ -64,7 +65,7 @@ namespace TezosNotifyBot
                     });
 
                     services.AddHttpClient<ReleasesClient>();
-                    
+
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
@@ -81,9 +82,10 @@ namespace TezosNotifyBot
                             else
                                 proxy = new HttpToSocks5Proxy(config.Value.ProxyAddress, config.Value.ProxyPort);
                             if (config.Value.ProxyLogin != null)
-                                proxy.Credentials = new NetworkCredential(config.Value.ProxyLogin, config.Value.ProxyPassword);
+                                proxy.Credentials =
+                                    new NetworkCredential(config.Value.ProxyLogin, config.Value.ProxyPassword);
                         }
-                        
+
                         return new TelegramBotClient(config.Value.Telegram.BotSecret, proxy);
                     });
 
@@ -94,14 +96,16 @@ namespace TezosNotifyBot
 
                         return manager;
                     });
-                    
+
+                    services.AddSingleton<TwitterClient>();
+
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
 
                     using var provider = services.BuildServiceProvider();
                     using var database = provider.GetRequiredService<TezosDataContext>();
-                    
+
                     database.Database.Migrate();
                 });
     }

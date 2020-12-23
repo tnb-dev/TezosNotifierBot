@@ -56,6 +56,18 @@ namespace TezosNotifyBot.Shared.Extensions
             .Select((word, i) => i == 0 ? word : word.Capitalize())
             .Join("");
 
+        public static string Ellipsis(this string str, int length)
+        {
+            str = str.TrimEnd();
+            
+            if (str.Length > length)
+            {
+                return str.Substring(0, length - 1) + "...";
+            }
+
+            return str;
+        }
+
         // TODO: #8 Replace with Span<T> realization and SplitType enum
         public static IEnumerable<string> Separate(this string source, char[] separators = null)
         {
