@@ -11,6 +11,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TezosNotifyBot.Domain;
+using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
 
 namespace TezosNotifyBot.Workers
@@ -21,13 +22,15 @@ namespace TezosNotifyBot.Workers
         private readonly ILogger<ReleasesWorker> _logger;
         private readonly IOptions<ReleasesWorkerOptions> _options;
         private readonly ResourceManager _resourceManager;
+        private readonly TwitterClient _twitter;
 
         public ReleasesWorker(IServiceProvider serviceProvider, ILogger<ReleasesWorker> logger,
-            IOptions<ReleasesWorkerOptions> options, ResourceManager resourceManager)
+            IOptions<ReleasesWorkerOptions> options, ResourceManager resourceManager, TwitterClient twitter)
         {
             _logger = logger;
             _options = options;
             _resourceManager = resourceManager;
+            _twitter = twitter;
             _serviceProvider = serviceProvider;
         }
 
@@ -51,6 +54,7 @@ namespace TezosNotifyBot.Workers
                         {
                             await db.AddAsync(release);
 
+                            await PublishTwitter(release);
                             await BroadcastRelease(release);
                         }
                     }
@@ -63,8 +67,18 @@ namespace TezosNotifyBot.Workers
                 }
 
                 await Task.Delay(_options.Value.RefreshInterval);
-                
-                
+
+                async Task PublishTwitter(TezosRelease release)
+                {
+                    var text =
+                        $"🦊 #Tezos software update {release.Name} released: {release.Description.Ellipsis(128)}" +
+                        "\n\n" +
+                        $"Release: {release.Url}\n" +
+                        (release.AnnounceUrl.HasValue() ? $"Announcement: {release.AnnounceUrl}" : "");
+
+                    await _twitter.TweetAsync(text.TrimEnd());
+                }
+
                 async Task BroadcastRelease(TezosRelease release)
                 {
                     var subscribers = await db.Set<User>().AsNoTracking()
@@ -82,8 +96,6 @@ namespace TezosNotifyBot.Workers
                     await db.SaveChangesAsync();
                 }
             }
-
-            
         }
     }
 

@@ -1,12 +1,13 @@
-﻿using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using NornPool.Model;
 
 namespace TezosNotifyBot
 {
@@ -15,7 +16,7 @@ namespace TezosNotifyBot
 		readonly string consumerKey, consumerKeySecret, accessToken, accessTokenSecret, twitterApiBaseUrl = "https://api.twitter.com/1.1/";
 		readonly HMACSHA1 sigHasher;
 		readonly DateTime epochUtc = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		ILogger logger;
+		private readonly ILogger<TwitterClient> _logger;
 
 		/// <summary>
 		/// Creates an object for sending tweets to Twitter using Single-user OAuth.
@@ -24,20 +25,16 @@ namespace TezosNotifyBot
 		/// "Keys and Access Tokens" section for your app. They can be found under the
 		/// "Your Access Token" heading.
 		/// </summary>
-		public TwitterClient(string consumerKey, string consumerKeySecret, string accessToken, string accessTokenSecret, string logsPath)
+		public TwitterClient(IOptions<TwitterOptions> options, ILogger<TwitterClient> logger)
 		{
-			this.consumerKey = consumerKey;
-			this.consumerKeySecret = consumerKeySecret;
-			this.accessToken = accessToken;
-			this.accessTokenSecret = accessTokenSecret;
+			consumerKey = options.Value.ConsumerKey;
+			consumerKeySecret = options.Value.ConsumerKeySecret;
+			accessToken = options.Value.AccessToken;
+			accessTokenSecret = options.Value.AccessTokenSecret;
 
 			sigHasher = new HMACSHA1(new ASCIIEncoding().GetBytes(string.Format("{0}&{1}", consumerKeySecret, accessTokenSecret)));
 
-			logger = new LoggerConfiguration()
-				.MinimumLevel.Verbose()
-				.WriteTo.Console()
-				.WriteTo.Logger(l => l.WriteTo.File(Path.Combine(logsPath, "Twitter-.log"), rollingInterval: RollingInterval.Day, retainedFileCountLimit: 24, flushToDiskInterval: new TimeSpan(0, 0, 10)))
-				.CreateLogger();
+			_logger = logger;
 		}
 
 		public delegate int TwitHandler(string text);
@@ -48,18 +45,18 @@ namespace TezosNotifyBot
 		/// <summary>
 		/// Sends a tweet with the supplied text and returns the response from the Twitter API.
 		/// </summary>
-		async public void TweetAsync(string text)
+		public async Task TweetAsync(string text)
 		{
 			var data = new Dictionary<string, string> {
 				{ "status", text },
 				{ "trim_user", "1" }
 			};
-			logger.Verbose("Tweet: " + text);
+			_logger.LogDebug("Tweet: " + text);
 			int twitId = OnTwit.Invoke(text);
 			if (consumerKey != null)
 			{
 				var result = await SendRequestAsync("statuses/update.json", data);
-				logger.Verbose("Twitter response: " + result);
+				_logger.LogDebug("Twitter response: " + result);
 				OnTwitResponse(twitId, result);
 			}
 		}
@@ -70,7 +67,7 @@ namespace TezosNotifyBot
 				{ "id", id },
 				{ "trim_user", "1" }
 			};
-			logger.Verbose("Delete tweet: " + id);
+			_logger.LogDebug("Delete tweet: " + id);
 			return await SendRequestAsync($"statuses/destroy/{id}.json", data);
 		}
 
@@ -146,10 +143,10 @@ namespace TezosNotifyBot
 				"{0}&{1}&{2}",
 				method,
 				Uri.EscapeDataString(url),
-				Uri.EscapeDataString(sigString.ToString())
+				Uri.EscapeDataString(sigString)
 			);
 
-			return Convert.ToBase64String(sigHasher.ComputeHash(new ASCIIEncoding().GetBytes(fullSigData.ToString())));
+			return Convert.ToBase64String(sigHasher.ComputeHash(new ASCIIEncoding().GetBytes(fullSigData)));
 		}
 
 		/// <summary>
