@@ -2,14 +2,14 @@ stages:
   - build
   - remove
   - deploy
-  - release
+  - service
     
-Build Bot:
+Build Staging:
   stage: build
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/bot:latest .
-    - docker push $CI_REGISTRY_IMAGE/bot:latest
+    - docker build -t $CI_REGISTRY_IMAGE/bot:staging .
+    - docker push $CI_REGISTRY_IMAGE/bot:staging
   tags:
     - builder
   only:
@@ -32,17 +32,17 @@ Deploy Bot:
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Staging
-    BI_PORT: 50000
-    PG_PORT: 50010
+    BASE_DOMAIN: test.tnb.thegroup.tech
+    DOCKER_VERSION: staging
     
   environment: 
     name: development
     
-Remove Bot:
-  stage: remove
+Restart Staging:
+  stage: service
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker-compose -f deploy/compose.yml -p tezos-bot down --remove-orphans --volumes
+    - docker-compose -f deploy/compose.yml -p tezos-bot restart bot
   tags:
     - deployer
   only:
@@ -52,8 +52,42 @@ Remove Bot:
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Staging
-    BI_PORT: 50000
-    PG_PORT: 50010
-
+    BASE_DOMAIN: test.tnb.thegroup.tech
+    DOCKER_VERSION: staging
   environment:
     name: development
+
+
+Build Release:
+  stage: build
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE/bot:release .
+    - docker push $CI_REGISTRY_IMAGE/bot:release
+  tags:
+    - builder
+  only:
+#    - tags
+    - master
+  environment:
+    name: release
+    
+Deploy Release:
+  stage: deploy
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f deploy/compose.yml pull
+    - docker-compose -f deploy/compose.yml -p tezos-bot-release up -d db bi bi-db db-admin tzkt-db
+  tags:
+    - deployer
+  only:
+#    - tags
+    - master
+  variables:
+    DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
+    ENV: Production
+    BASE_DOMAIN: tnb.thegroup.tech
+#    DOCKER_VERSION: $CI_COMMIT_TAG
+    DOCKER_VERSION: release
+  environment:
+    name: release
