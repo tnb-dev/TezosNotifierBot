@@ -33,18 +33,19 @@ services:
     expose:
       - 3000
     labels:
-      - traefik.docker.network=default
-      - traefik.http.routers.bi.rule=Host(`bi.${BASE_DOMAIN}`)
-      - traefik.http.services.bi.loadbalancer.server.port=3000
-      - traefik.http.routers.bi.tls=true
-      - traefik.http.routers.bi.tls.certresolver=default
-      - traefik.http.middlewares.bi.redirectscheme.scheme=https
-      - traefik.http.middlewares.bi.redirectscheme.permanent=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.bi-${CI_ENVIRONMENT_NAME}.rule=Host(`bi.${BASE_DOMAIN}`)
+      - traefik.http.services.bi-${CI_ENVIRONMENT_NAME}.loadbalancer.server.port=3000
+      - traefik.http.routers.bi-${CI_ENVIRONMENT_NAME}.tls=true
+      - traefik.http.routers.bi-${CI_ENVIRONMENT_NAME}.tls.certresolver=default
+      - traefik.http.middlewares.bi-${CI_ENVIRONMENT_NAME}.redirectscheme.scheme=https
+      - traefik.http.middlewares.bi-${CI_ENVIRONMENT_NAME}.redirectscheme.permanent=true
     restart: unless-stopped 
     depends_on:
       - bi-db
     networks:
       - default
+      - traefik
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_USER=$BI_DB_USER
@@ -69,18 +70,19 @@ services:
     expose:
       - 80
     labels:
-      - traefik.docker.network=default
-      - traefik.http.routers.db-admin.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/pgadmin4`)
-      - traefik.http.services.db-admin.loadbalancer.server.port=80
-      - traefik.http.routers.db-admin.tls=true
-      - traefik.http.routers.db-admin.tls.certresolver=default
-      - traefik.http.middlewares.db-admin.redirectscheme.scheme=https
-      - traefik.http.middlewares.db-admin.redirectscheme.permanent=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.db-admin-${CI_ENVIRONMENT_NAME}.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/pgadmin4`)
+      - traefik.http.services.db-admin-${CI_ENVIRONMENT_NAME}.loadbalancer.server.port=80
+      - traefik.http.routers.db-admin-${CI_ENVIRONMENT_NAME}.tls=true
+      - traefik.http.routers.db-admin-${CI_ENVIRONMENT_NAME}.tls.certresolver=default
+      - traefik.http.middlewares.db-admin-${CI_ENVIRONMENT_NAME}.redirectscheme.scheme=https
+      - traefik.http.middlewares.db-admin-${CI_ENVIRONMENT_NAME}.redirectscheme.permanent=true
     restart: unless-stopped 
     depends_on:
       - db
     networks:
       - default
+      - traefik
     environment:
       - SCRIPT_NAME=/pgadmin4
       - PGADMIN_DEFAULT_EMAIL=$PGADMIN_USER
