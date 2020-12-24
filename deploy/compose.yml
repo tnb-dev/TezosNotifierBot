@@ -34,7 +34,7 @@ services:
       - 3000
     labels:
       - traefik.docker.network=traefik
-      - traefik.http.routers.bi.rule=Host(`bi.$BASE_DOMAIN`)
+      - traefik.http.routers.bi.rule=Host(`bi.${BASE_DOMAIN}`)
       - traefik.http.services.bi.loadbalancer.server.port=3000
       - traefik.http.routers.bi.tls=true
       - traefik.http.routers.bi.tls.certresolver=default
@@ -71,7 +71,7 @@ services:
       - 80
     labels:
       - traefik.docker.network=traefik
-      - traefik.http.routers.db-admin.rule=Host(`test.$BASE_DOMAIN`) && PathPrefix(`/pgadmin4`)
+      - traefik.http.routers.db-admin.rule=Host(`test.${BASE_DOMAIN}`) && PathPrefix(`/pgadmin4`)
       - traefik.http.services.db-admin.loadbalancer.server.port=80
       - traefik.http.routers.db-admin.tls=true
       - traefik.http.routers.db-admin.tls.certresolver=default
