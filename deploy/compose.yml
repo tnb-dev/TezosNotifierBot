@@ -71,7 +71,7 @@ services:
       - 80
     labels:
       - traefik.docker.network=traefik
-      - traefik.http.routers.db-admin.rule=Host(`test.${BASE_DOMAIN}`) && PathPrefix(`/pgadmin4`)
+      - traefik.http.routers.db-admin.rule=Host(`${BASE_DOMAIN}`) && PathPrefix(`/pgadmin4`)
       - traefik.http.services.db-admin.loadbalancer.server.port=80
       - traefik.http.routers.db-admin.tls=true
       - traefik.http.routers.db-admin.tls.certresolver=default
