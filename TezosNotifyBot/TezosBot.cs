@@ -351,6 +351,7 @@ namespace TezosNotifyBot
             lastReceived = DateTime.Now;
             Logger.LogDebug($"Block {header.level} received");
             var tzKtHead = _serviceProvider.GetService<ITzKtClient>().GetHead();
+            Logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
             if (tzKtHead.level < header.level)
                 return false;
 

@@ -26,14 +26,14 @@ namespace TezosNotifyBot.Tzkt
 		{
 			try
 			{
-				_logger.LogDebug($"download {_client.BaseAddress}/{addr}");
+				_logger.LogDebug($"download {_client.BaseAddress}{addr}");
 				var result = _client.DownloadString(addr);
-				_logger.LogDebug($"download complete: {_client.BaseAddress}/{addr}");
+				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
 				return result;
 			}
 			catch (Exception e)
 			{
-				_logger.LogError(e, "Error downloading from {_client.BaseAddress}/{addr}");
+				_logger.LogError(e, $"Error downloading from {_client.BaseAddress}{addr}");
 				throw;
 			}
 		}
