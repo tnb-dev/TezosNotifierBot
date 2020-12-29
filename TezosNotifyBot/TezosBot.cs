@@ -862,7 +862,7 @@ namespace TezosNotifyBot
                         if (di != null)
                             fromBalance = di.Bond / 1000000;
                         else
-                            throw new ApplicationException("GetDelegateInfo error (" + CurrentNode.Name + ")");
+                            fromBalance = addrMgr.GetContract(client, header.hash, from.Key).balance / 1000000M;
                     }
                     else
                     {
@@ -948,7 +948,10 @@ namespace TezosNotifyBot
                     {
                         toDelegate = true;
                         var di = addrMgr.GetDelegate(client, header.hash, to.Key, true);
-                        toBalance = (di?.Bond ?? 0) / 1000000;
+                        if (di != null)
+                            toBalance = (di?.Bond ?? 0) / 1000000;
+                        else
+                            toBalance = addrMgr.GetContract(client, header.hash, to.Key).balance / 1000000M;
                     }
                     else
                     {
