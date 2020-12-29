@@ -65,7 +65,7 @@ namespace TezosNotifyBot
                     });
 
                     services.AddHttpClient<ReleasesClient>();
-
+                    services.AddTransient<Tzkt.ITzKtClient>(sp => new Tzkt.TzKtClient(sp.GetService<ILogger<Tzkt.TzKtClient>>(), context.Configuration.GetValue<string>("TzKtUrl")));
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));

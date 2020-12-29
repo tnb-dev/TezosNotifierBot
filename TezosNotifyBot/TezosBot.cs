@@ -134,7 +134,7 @@ namespace TezosNotifyBot
                 var me = await Bot.GetMeAsync();
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 client.BlockReceived += Client_BlockReceived;
-                NotifyDev(me.Username + " v2.0 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
+                NotifyDev(me.Username + " v2.1 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
                 tzStats.LoadCycle(repo.GetLastBlockLevel().Item1);
                 var c = tzStats.GetCycle(repo.GetLastBlockLevel().Item1);
                 // TODO: Check why `snapshot_cycle` is null
@@ -350,6 +350,10 @@ namespace TezosNotifyBot
 
             lastReceived = DateTime.Now;
             Logger.LogDebug($"Block {header.level} received");
+            var tzKtHead = _serviceProvider.GetService<ITzKtClient>().GetHead();
+            Logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
+            if (tzKtHead.level < header.level)
+                return false;
 
             var prevHeader = lastHeader?.hash == header.predecessor
                 ? lastHeader
@@ -2212,7 +2216,7 @@ namespace TezosNotifyBot
                     else if (message.Text.StartsWith("/tzkt "))
                     {
                         var str = client2.Download(message.Text.Substring("/tzkt ".Length));
-                        NotifyDev(str, u.Id);
+                        NotifyDev(str, u.Id, ParseMode.Default, true);
                     }
                     else if (message.Text.StartsWith("/forward") && u.IsAdmin(Config.Telegram))
                     {
@@ -2958,7 +2962,7 @@ namespace TezosNotifyBot
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
-                    ua.Delegators = ua.Delegators;
+                    ua.Delegators = di.NumDelegators;
                     result += resMgr.Get(Res.StakingInfo, ua) + "\n";
                     result += FreeSpace(ua);
                     decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
