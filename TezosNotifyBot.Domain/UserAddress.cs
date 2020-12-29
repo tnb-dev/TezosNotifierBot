@@ -14,7 +14,7 @@ namespace TezosNotifyBot.Domain
         public decimal Balance { get; set; }
         public DateTime LastUpdate { get; set; }
         public bool IsDeleted { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public bool NotifyBakingRewards { get; set; }
         public decimal AmountThreshold { get; set; }
         public bool NotifyTransactions { get; set; }
