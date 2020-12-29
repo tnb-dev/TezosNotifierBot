@@ -99,7 +99,7 @@ namespace TezosNotifyBot
 
                     services.AddSingleton<TwitterClient>();
 
-                    // services.AddHostedService<Service>();
+                    services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
 
