@@ -55,8 +55,7 @@ namespace TezosNotifyBot.Storage
                 .HasDefaultValue(0);
             
             modelBuilder.Entity<User>();
-            modelBuilder.Entity<UserAddress>()
-                .Property(x => x.Name).HasDefaultValue("");
+            modelBuilder.Entity<UserAddress>();
             modelBuilder.Entity<UserAddressDelegation>();
             modelBuilder.Entity<Message>();
             modelBuilder.Entity<Delegate>();
