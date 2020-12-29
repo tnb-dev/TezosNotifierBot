@@ -68,7 +68,6 @@ Build Release:
     - builder
   only:
     - tags
-    - master
   environment:
     name: release
     
@@ -82,7 +81,6 @@ Deploy Release:
     - deployer
   only:
     - tags
-    - master
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Production
