@@ -62,12 +62,12 @@ Build Release:
   stage: build
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/bot:release .
-    - docker push $CI_REGISTRY_IMAGE/bot:release
+    - docker build -t $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG .
+    - docker push $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG
   tags:
     - builder
   only:
-#    - tags
+    - tags
     - master
   environment:
     name: release
@@ -81,13 +81,12 @@ Deploy Release:
   tags:
     - deployer
   only:
-#    - tags
+    - tags
     - master
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Production
     BASE_DOMAIN: tnb.thegroup.tech
-#    DOCKER_VERSION: $CI_COMMIT_TAG
-    DOCKER_VERSION: release
+    DOCKER_VERSION: $CI_COMMIT_TAG
   environment:
     name: release
