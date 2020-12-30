@@ -68,6 +68,8 @@ Build Release:
     - builder
   only:
     - tags
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   environment:
     name: release
     
@@ -81,6 +83,8 @@ Deploy Release:
     - deployer
   only:
     - tags
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Production
