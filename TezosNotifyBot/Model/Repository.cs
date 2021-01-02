@@ -148,7 +148,10 @@ namespace TezosNotifyBot.Model
         public List<UserAddress> GetUserAddresses(string addr)
         {
             lock (_dbLock)
-                return _db.UserAddresses.Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
+                return _db.UserAddresses
+                    .Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive)
+                    .Include(x => x.User)
+                    .ToList();
         }
 
         public List<UserAddress> GetUserAddresses()
