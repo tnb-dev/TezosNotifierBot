@@ -9,11 +9,15 @@ namespace TezosNotifyBot.Domain
         public int UserId { get; set; }
 
         public MessageKind Kind { get; set; } = MessageKind.Simple;
+
+        public MessageStatus Status { get; set; } = MessageStatus.Sent;
+        
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public string Text { get; set; }
         public string CallbackQueryData { get; set; }
         public bool FromUser { get; set; }
         public int? TelegramMessageId { get; set; }
+
 
         public static Message Push(int userId, string text)
         {
@@ -22,6 +26,7 @@ namespace TezosNotifyBot.Domain
                 Kind = MessageKind.Push,
                 UserId = userId,
                 FromUser = false,
+                Status = MessageStatus.Queued,
                 Text = text,
             };
         }
@@ -29,6 +34,12 @@ namespace TezosNotifyBot.Domain
         public void Sent(in int telegramMessageId)
         {
             TelegramMessageId = telegramMessageId;
+            Status = MessageStatus.Sent;
+        }
+
+        public void Failed()
+        {
+            Status = MessageStatus.Failed;
         }
     }
 
@@ -36,5 +47,12 @@ namespace TezosNotifyBot.Domain
     {
         Simple,
         Push
+    }
+
+    public enum MessageStatus
+    {
+        Sent,
+        Queued,
+        Failed
     }
 }
