@@ -131,7 +131,7 @@ namespace TezosNotifyBot.Workers
 
             return results.Select(json =>
             {
-                var announce = json.Assets.Links.FirstOrDefault();
+                var announce = json.Assets.Links.FirstOrDefault(x => x.Url.StartsWith("https://tezos.gitlab.io/releases/"));
 
                 return new TezosRelease
                 {
