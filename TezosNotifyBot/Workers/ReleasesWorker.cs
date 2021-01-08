@@ -86,8 +86,7 @@ namespace TezosNotifyBot.Workers
                 async Task BroadcastRelease(TezosRelease release)
                 {
                     var subscribers = await db.Set<User>().AsNoTracking()
-                        .Where(x => x.ReleaseNotify)
-                        .Where(x => x.Username == "emerido")
+                        .Where(x => x.ReleaseNotify && x.Inactive == false)
                         .ToArrayAsync();
 
                     var messages = subscribers.Select(user =>
