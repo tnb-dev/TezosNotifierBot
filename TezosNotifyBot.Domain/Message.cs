@@ -9,7 +9,7 @@ namespace TezosNotifyBot.Domain
         public int UserId { get; set; }
 
         public MessageKind Kind { get; set; } = MessageKind.Simple;
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public string Text { get; set; }
         public string CallbackQueryData { get; set; }
         public bool FromUser { get; set; }
