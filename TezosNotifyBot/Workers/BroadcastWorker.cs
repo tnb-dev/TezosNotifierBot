@@ -45,11 +45,16 @@ namespace TezosNotifyBot.Workers
                 
                 foreach (var message in messages)
                 {
-                    var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text, ParseMode.Html, true);
-                    
-                    message.Sent(id.MessageId);
-                    
-                    await db.SaveChangesAsync();
+                    try
+                    {
+                        var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text, ParseMode.Html, true);
+                        message.Sent(id.MessageId);
+                        await db.SaveChangesAsync();
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError($"Failed to send push message for user {message.Id}", e);
+                    }
                 }
                 
                 // Wait one second
