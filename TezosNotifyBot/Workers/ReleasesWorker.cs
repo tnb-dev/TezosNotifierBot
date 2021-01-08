@@ -70,8 +70,12 @@ namespace TezosNotifyBot.Workers
 
                 async Task PublishTwitter(TezosRelease release)
                 {
+                    var desc = release.Description is null 
+                        ? "." 
+                        : $": {release.Description.Ellipsis(128)}";
+                    
                     var text =
-                        $"🦊 #Tezos software update {release.Name} released: {release.Description.Ellipsis(128)}" +
+                        $"🦊 #Tezos software update {release.Name} released{desc}" +
                         "\n\n" +
                         $"Release: {release.Url}\n" +
                         (release.AnnounceUrl.HasValue() ? $"Announcement: {release.AnnounceUrl}" : "");
