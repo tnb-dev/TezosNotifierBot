@@ -30,5 +30,13 @@
     "blockurl": "https://mininax.io/mainnet/blocks/{0}?utm_source=tezosnotifierbot",
     "accounturl": "https://mininax.io/mainnet/accounts/{0}?utm_source=tezosnotifierbot",
     "opurl": "https://mininax.io/mainnet/operations/{0}?utm_source=tezosnotifierbot"
+  },
+  {
+    "id": 5,
+    "name": "teztracker.com",
+    "buttonprefix": "teztrack",
+    "blockurl": "https://teztracker.com/en/mainnet/block/{0}?utm_source=tezosnotifierbot",
+    "accounturl": "https://teztracker.com/en/mainnet/account/{0}?utm_source=tezosnotifierbot",
+    "opurl": "https://teztracker.com/en/mainnet/tx/{0}?utm_source=tezosnotifierbot"
   }
 ]
