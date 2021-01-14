@@ -3,7 +3,7 @@ stages:
   - remove
   - deploy
   - service
-    
+
 Build Staging:
   stage: build
   script:
@@ -15,7 +15,7 @@ Build Staging:
   only:
     refs:
       - develop
-  environment: 
+  environment:
     name: development
 
 Deploy Bot:
@@ -34,10 +34,10 @@ Deploy Bot:
     ENV: Staging
     BASE_DOMAIN: test.tnb.thegroup.tech
     DOCKER_VERSION: staging
-    
-  environment: 
+
+  environment:
     name: development
-    
+
 Restart Staging:
   stage: service
   script:
@@ -62,17 +62,19 @@ Build Release:
   stage: build
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - docker build -t $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG .
-    - docker push $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG
+    #    - docker build -t $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG .
+    - docker build -t $CI_REGISTRY_IMAGE/bot:latest .
+    #    - docker push $CI_REGISTRY_IMAGE/bot:$CI_COMMIT_TAG
+    - docker push $CI_REGISTRY_IMAGE/bot:latest
   tags:
     - builder
+  #  rules:
+  #    - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG != null'
   only:
-    - tags
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - master
   environment:
     name: release
-    
+
 Deploy Release:
   stage: deploy
   script:
@@ -81,14 +83,15 @@ Deploy Release:
     - docker-compose -f deploy/compose.yml -p tezos-bot-release up -d
   tags:
     - deployer
+  #  rules:
+  #    - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG != null'
   only:
-    - tags
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - master
   variables:
     DB: "User ID=${DB_USER};Host=db;Password=${DB_PASSWORD};Port=5432;Database=${DB_NAME};Pooling=true;"
     ENV: Production
     BASE_DOMAIN: tnb.thegroup.tech
-    DOCKER_VERSION: $CI_COMMIT_TAG
+    #    DOCKER_VERSION: $CI_COMMIT_TAG
+    DOCKER_VERSION: latest
   environment:
     name: release
