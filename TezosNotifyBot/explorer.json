@@ -34,7 +34,7 @@
   {
     "id": 5,
     "name": "teztracker.com",
-    "buttonprefix": "teztrack",
+    "buttonprefix": "teztracker",
     "blockurl": "https://teztracker.com/en/mainnet/block/{0}?utm_source=tezosnotifierbot",
     "accounturl": "https://teztracker.com/en/mainnet/account/{0}?utm_source=tezosnotifierbot",
     "opurl": "https://teztracker.com/en/mainnet/tx/{0}?utm_source=tezosnotifierbot"
