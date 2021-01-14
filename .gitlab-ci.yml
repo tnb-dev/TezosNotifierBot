@@ -68,8 +68,6 @@ Build Release:
     - docker push $CI_REGISTRY_IMAGE/bot:latest
   tags:
     - builder
-#  rules:
-#    - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG != null'
   only:
     - master
   environment:
@@ -83,8 +81,6 @@ Deploy Release:
     - docker-compose -f deploy/compose.yml -p tezos-bot-release up -d
   tags:
     - deployer
-#  rules:
-#    - if: '$CI_COMMIT_REF_NAME == "master" && $CI_COMMIT_TAG != null'
   only:
     - master
   variables:
