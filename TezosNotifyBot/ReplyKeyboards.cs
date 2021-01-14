@@ -31,50 +31,7 @@ namespace TezosNotifyBot
         public static Telegram.Bot.Types.ReplyMarkups.ReplyKeyboardMarkup BackMenu(ResourceManager resMgr, User u)
         {
             return GetMarkup(CmdGoBack(resMgr, u));
-        }
-		
-		//public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Language()
-  //      {
-  //          return new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(
-  //              new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[][] {
-  //                  new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
-  //                      new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
-  //                      {
-  //                          Text = "🇺🇸 English",
-  //                          CallbackData = "set_en"
-  //                      }
-  //                  }/*,
-  //                  new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
-  //                      new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
-  //                      {
-  //                          Text = "🇨🇳 中国",
-  //                          CallbackData = "set_cn"
-  //                      }
-  //                  }*/,
-  //                  new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
-  //                      new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
-  //                      {
-  //                          Text = "🇷🇺 Русский",
-  //                          CallbackData = "set_ru"
-  //                      }
-  //                  }/*,
-  //                  new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
-  //                      new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
-  //                      {
-  //                          Text = "🇫🇷 France",
-  //                          CallbackData = "set_ru"
-  //                      }
-  //                  }*/,
-  //                  new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton[] {
-  //                      new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
-  //                      {
-  //                          Text = "🇷🇺 Русский",
-  //                          CallbackData = ""
-  //                      }
-  //                  }
-  //              }
-  //          );
-  //      }
+        }		
 		
 		public static Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup Search(ResourceManager resMgr, User u)
 		{
@@ -195,6 +152,7 @@ namespace TezosNotifyBot
 					});
 			add((u.Explorer == 4 ? "☑️" : "") + " mininax.io", "set_explorer_4");
 			add((u.Explorer == 0 ? "☑️" : "") + " tezblock.io", "set_explorer_0");
+			add((u.Explorer == 5 ? "☑️" : "") + " teztracker.com", "set_explorer_5");
 			add((u.Explorer == 3 ? "☑️" : "") + " tzkt.io", "set_explorer_3");
 			add((u.Explorer == 1 ? "☑️" : "") + " tzstats.com", "set_explorer_1");
 
