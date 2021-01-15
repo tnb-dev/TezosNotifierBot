@@ -2184,7 +2184,7 @@ namespace TezosNotifyBot
                         else if (!newUser && !welcomeBack)
                             SendTextMessage(u.Id, resMgr.Get(Res.Welcome, u), ReplyKeyboards.MainMenu(resMgr, u));
                     }
-                    else if (Config.DevUserNames.Contains(message.From.Username) && message.ReplyToMessage != null &&
+                    else if (Config.Telegram.DevUsers.Contains(message.From.Username) && message.ReplyToMessage != null &&
                              message.ReplyToMessage.Entities.Length > 0 &&
                              message.ReplyToMessage.Entities[0].User != null)
                     {
