@@ -2962,7 +2962,7 @@ namespace TezosNotifyBot
 			{
                 foreach(var token in bcdAcc.tokens)
 				{
-                    result += token.symbol ?? token.contract.ShortAddr() + ": " + (token.balance / (decimal)Math.Pow(10, token.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture) + "\n";
+                    result += (token.symbol ?? token.contract.ShortAddr()) + ": <b>" + (token.balance / (decimal)Math.Pow(10, token.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture) + "</b>\n";
                 }
             }
 
