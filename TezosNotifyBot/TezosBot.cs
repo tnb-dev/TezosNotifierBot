@@ -2956,6 +2956,15 @@ namespace TezosNotifyBot
                 string delname = repo.GetDelegateName(ci.@delegate);
                 result += resMgr.Get(Res.Delegate, ua) + $": <a href='{t.account(ci.@delegate)}'>{delname}</a>\n";
             }
+            var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+            var bcdAcc = bcd.GetAccount(ua.Address);
+            if (bcdAcc.tokens.Count > 0)
+			{
+                foreach(var token in bcdAcc.tokens)
+				{
+                    result += token.symbol ?? token.contract.ShortAddr() + ": " + (token.balance / (decimal)Math.Pow(10, token.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture) + "\n";
+                }
+            }
 
             if (isDelegate)
             {
