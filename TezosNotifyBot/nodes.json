@@ -1,11 +1,7 @@
-﻿[
+[
   {
     "Name": "TezosUA",
     "Url": "https://mainnet-tezos.giganode.io"
-  },
-  {
-    "Name": "TNB-local",
-    "Url": "http://127.0.0.1:8732"
   },
   {
     "Name": "TezRPC",
