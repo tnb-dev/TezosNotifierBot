@@ -13,5 +13,6 @@ namespace TezosNotifyBot.BetterCallDev
         public string name { get; set; }
         public int decimals { get; set; }
         public long balance { get; set; }
+        public int level { get; set; }
     }
 }

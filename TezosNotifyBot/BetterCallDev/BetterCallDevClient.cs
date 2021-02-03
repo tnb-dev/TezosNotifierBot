@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
@@ -43,27 +44,19 @@ namespace TezosNotifyBot.BetterCallDev
 			}
 		}
 
-		public IEnumerable<Token> GetTokens(int offset)
+		public IEnumerable<Token> GetTokens(int minLevel)
 		{
-			var tokensStr = Download($"v1/tokens/mainnet?size=100&offset={offset}");
+			var tokensStr = Download($"v1/tokens/mainnet?size=100");
 			var tokens = JsonConvert.DeserializeObject<Tokens>(tokensStr);
-			foreach(var t in tokens.tokens)
+			foreach(var t in tokens.tokens.Where(o => o.level > minLevel))
 			{
 				tokensStr = Download($"v1/contract/mainnet/{t.address}/tokens");
 				var tokensList = JsonConvert.DeserializeObject<List<Token>>(tokensStr);
 				foreach (var token in tokensList)
+				{
+					token.level = t.level;
 					yield return token;
-				if (tokensList.Count == 0)
-					yield return new Token
-					{
-						contract = t.address,
-						decimals = 0,
-						network = "mainnet",
-						token_id = 0,
-						symbol = t.alias ?? "",
-						name = t.alias ?? "",
-						balance = t.balance
-					};
+				}
 			}
 		}
 

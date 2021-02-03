@@ -39,9 +39,9 @@ namespace TezosNotifyBot.Workers
 
                 try
                 {
-                    var tokensCount = db.Set<Domain.Token>().Select(t => t.ContractAddress).Distinct().Count();
+                    var minLevel = db.Set<Domain.Token>().Max(t => (int?)t.Level) ?? 0;
 
-                    foreach (var token in _bcdClient.GetTokens(tokensCount))
+                    foreach (var token in _bcdClient.GetTokens(minLevel))
                     {
                         if (!db.Set<Domain.Token>().Any(t => t.ContractAddress == token.contract && t.Token_id == token.token_id))
                         {
@@ -51,7 +51,8 @@ namespace TezosNotifyBot.Workers
                                 Decimals = token.decimals,
                                 Name = token.name,
                                 Symbol = token.symbol,
-                                Token_id = token.token_id
+                                Token_id = token.token_id,
+                                Level = token.level
                             });
                             db.SaveChanges();
                         }
