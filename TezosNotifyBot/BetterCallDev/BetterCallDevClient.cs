@@ -50,8 +50,20 @@ namespace TezosNotifyBot.BetterCallDev
 			foreach(var t in tokens.tokens)
 			{
 				tokensStr = Download($"v1/contract/mainnet/{t.address}/tokens");
-				foreach (var token in JsonConvert.DeserializeObject<List<Token>>(tokensStr))
+				var tokensList = JsonConvert.DeserializeObject<List<Token>>(tokensStr);
+				foreach (var token in tokensList)
 					yield return token;
+				if (tokensList.Count == 0)
+					yield return new Token
+					{
+						contract = t.address,
+						decimals = 0,
+						network = "mainnet",
+						token_id = 0,
+						symbol = t.alias ?? "",
+						name = t.alias ?? "",
+						balance = t.balance
+					};
 			}
 		}
 

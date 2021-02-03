@@ -39,10 +39,10 @@ namespace TezosNotifyBot.Workers
 
                 try
                 {
-                    var tokensCount = db.Set<Domain.Token>().Count();
+                    var tokensCount = db.Set<Domain.Token>().Select(t => t.ContractAddress).Distinct().Count();
 
-                    foreach(var token in _bcdClient.GetTokens(tokensCount))
-					{
+                    foreach (var token in _bcdClient.GetTokens(tokensCount))
+                    {
                         if (!db.Set<Domain.Token>().Any(t => t.ContractAddress == token.contract && t.Token_id == token.token_id))
                         {
                             db.Add(new Domain.Token
@@ -55,7 +55,7 @@ namespace TezosNotifyBot.Workers
                             });
                             db.SaveChanges();
                         }
-					}
+                    }
                 }
                 catch (Exception e)
                 {
