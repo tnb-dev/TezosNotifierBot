@@ -103,6 +103,7 @@ namespace TezosNotifyBot
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
+                    services.AddHostedService<TokensMonitorWorker>();
 
                     using var provider = services.BuildServiceProvider();
                     using var database = provider.GetRequiredService<TezosDataContext>();

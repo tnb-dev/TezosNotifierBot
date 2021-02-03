@@ -25,9 +25,10 @@ namespace TezosNotifyBot.Storage
         public DbSet<EndorsingRights> EndorsingRights { get; set; }
         public DbSet<BalanceUpdate> BalanceUpdates { get; set; }
         public DbSet<TwitterMessage> TwitterMessages { get; set; }
+        public DbSet<Token> Tokens { get; set; }
 
         #endregion
-        
+
         public TezosDataContext(DbContextOptions options) : base(options)
         {
         }
@@ -64,6 +65,7 @@ namespace TezosNotifyBot.Storage
             modelBuilder.Entity<BalanceUpdate>();
             modelBuilder.Entity<Proposal>();
             modelBuilder.Entity<ProposalVote>();
+            modelBuilder.Entity<Token>();
 
             modelBuilder.Entity<AddressConfig>()
                 .HasData(
