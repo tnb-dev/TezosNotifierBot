@@ -7,6 +7,6 @@ namespace TezosNotifyBot.BetterCallDev
 	public interface IBetterCallDevClient
 	{
 		Account GetAccount(string address);
-		IEnumerable<Token> GetTokens(int offset);
+		IEnumerable<Token> GetTokens(int minLevel);
 	}
 }
