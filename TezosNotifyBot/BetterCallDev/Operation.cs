@@ -6,8 +6,8 @@ namespace TezosNotifyBot.BetterCallDev
 {
     public class Result
     {
-        public int consumed_gas { get; set; }
-        public int storage_size { get; set; }
+        public ulong consumed_gas { get; set; }
+        public ulong storage_size { get; set; }
     }
 
     public class Parameters
@@ -38,11 +38,11 @@ namespace TezosNotifyBot.BetterCallDev
     public class Operation
     {
         public int level { get; set; }
-        public int fee { get; set; }
+        public ulong fee { get; set; }
         public int counter { get; set; }
-        public int gas_limit { get; set; }
-        public int storage_limit { get; set; }
-        public int amount { get; set; }
+        public ulong gas_limit { get; set; }
+        public ulong storage_limit { get; set; }
+        public ulong amount { get; set; }
         public int content_index { get; set; }
         public Result result { get; set; }
         public Parameters parameters { get; set; }
