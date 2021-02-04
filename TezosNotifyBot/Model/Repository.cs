@@ -145,6 +145,12 @@ namespace TezosNotifyBot.Model
                 return _db.Set<User>().SingleOrDefault(o => o.Username == userName);
         }
 
+        public Token GetToken(string address)
+        {
+            lock (_dbLock)
+                return _db.Set<Token>().FirstOrDefault(o => o.ContractAddress == address);
+        }
+
         public List<UserAddress> GetUserAddresses(string addr)
         {
             lock (_dbLock)

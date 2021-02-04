@@ -8,5 +8,6 @@ namespace TezosNotifyBot.BetterCallDev
 	{
 		Account GetAccount(string address);
 		IEnumerable<Token> GetTokens(int minLevel);
+		List<Operation> GetOperations(string ophash);
 	}
 }
