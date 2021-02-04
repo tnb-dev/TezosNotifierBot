@@ -44,7 +44,7 @@ namespace TezosNotifyBot.BetterCallDev
 			}
 		}
 
-		public IEnumerable<Token> GetTokens(int minLevel)
+		IEnumerable<Token> IBetterCallDevClient.GetTokens(int minLevel)
 		{
 			var tokensStr = Download($"v1/tokens/mainnet?size=100");
 			var tokens = JsonConvert.DeserializeObject<Tokens>(tokensStr);
@@ -58,6 +58,12 @@ namespace TezosNotifyBot.BetterCallDev
 					yield return token;
 				}
 			}
+		}
+
+		List<Operation> IBetterCallDevClient.GetOperations(string ophash)
+		{
+			var opsStr = Download($"v1/opg/{ophash}");
+			return JsonConvert.DeserializeObject<List<Operation>>(opsStr);
 		}
 
 		public class TokensToken

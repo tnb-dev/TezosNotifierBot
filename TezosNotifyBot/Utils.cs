@@ -20,6 +20,13 @@ namespace TezosNotifyBot
                 return (tz * 1000).ToString("##0.###", CultureInfo.InvariantCulture).Trim() + " mXTZ";
         }
 
+        public static string AmountToString(this decimal amount, Token token)
+		{
+            if (token == null)
+                return amount.TezToString();
+            return amount.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture).Trim() + " " + token.Symbol;
+        }
+
         public static string TezToUsd(this decimal tz, Tezos.MarketData md)
         {
             return (tz * md.price_usd).ToString("###,###,###,###,##0.00", CultureInfo.InvariantCulture).Trim();

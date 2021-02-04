@@ -431,8 +431,7 @@ namespace TezosNotifyBot
                 }
             }
 
-            List<Tuple<string, string, decimal, string>> fromToAmountHash =
-                new List<Tuple<string, string, decimal, string>>();
+            List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
             var allUsers = repo.GetUsers();
             foreach (var op in operations)
             {
@@ -715,9 +714,34 @@ namespace TezosNotifyBot
                             continue;
                         }
 
+                        if (content.metadata.internal_operation_results != null)
+						{
+                            foreach (var ior in content.metadata.internal_operation_results)
+                            {
+                                if (ior.destination != null)
+                                {
+                                    var token = repo.GetToken(ior.destination);
+                                    if (token != null)
+									{
+                                        foreach (var transfer in TokenTransfers(token, op))
+                                            fromToAmountHash.Add((transfer.from, transfer.to, transfer.amount, op.hash, token));
+									}
+                                        
+                                }
+                            }
+						}
+						{
+                            var token = repo.GetToken(to);
+                            if (token != null)
+                            {
+                                foreach (var transfer in TokenTransfers(token, op))
+                                    fromToAmountHash.Add((transfer.from, transfer.to, transfer.amount, op.hash, token));
+                            }
+                        }
+
                         if (amount == 0)
                             continue;
-                        fromToAmountHash.Add(new Tuple<string, string, decimal, string>(from, to, amount, op.hash));
+                        fromToAmountHash.Add((from, to, amount, op.hash, null));
                         // Уведомления о китах
                         foreach (var u in allUsers.Where(o =>
                             !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
@@ -846,27 +870,27 @@ namespace TezosNotifyBot
                 }
             }
 
-            var fromGroup = fromToAmountHash.GroupBy(o => o.Item1);
+            var fromGroup = fromToAmountHash.GroupBy(o => new { o.from, o.token });
             foreach (var from in fromGroup)
             {
                 //decimal total = from.Sum(o => o.Item3);
-                var fromAddresses = repo.GetUserAddresses(from.Key).Where(o => o.NotifyTransactions).ToList();
+                var fromAddresses = repo.GetUserAddresses(from.Key.from).Where(o => o.NotifyTransactions).ToList();
                 decimal fromBalance = 0;
                 bool fromDelegate = false;
                 if (fromAddresses.Count > 0)
                 {
-                    if (repo.IsDelegate(from.Key))
+                    if (repo.IsDelegate(from.Key.from))
                     {
                         fromDelegate = true;
-                        var di = addrMgr.GetDelegate(client, header.hash, from.Key, true);
+                        var di = addrMgr.GetDelegate(client, header.hash, from.Key.from, true);
                         if (di != null)
                             fromBalance = di.Bond / 1000000;
                         else
-                            fromBalance = addrMgr.GetContract(client, header.hash, from.Key).balance / 1000000M;
+                            fromBalance = addrMgr.GetContract(client, header.hash, from.Key.from).balance / 1000000M;
                     }
                     else
                     {
-                        fromBalance = addrMgr.GetContract(client, header.hash, from.Key).balance / 1000000M;
+                        fromBalance = addrMgr.GetContract(client, header.hash, from.Key.from).balance / 1000000M;
                     }
                 }
 
@@ -894,7 +918,8 @@ namespace TezosNotifyBot
                             new ContextObject
                             {
                                 u = ua.User, OpHash = from_ua.Single().Item4, Block = header.level,
-                                Amount = from_ua.Sum(o => o.Item3), md = md, ua_from = ua, ua_to = ua_to
+                                Amount = from_ua.Sum(o => o.Item3), md = md, ua_from = ua, ua_to = ua_to,
+                                Token = from.Key.token
                             });
                         tags = ua_to.HashTag();
                     }
@@ -903,7 +928,8 @@ namespace TezosNotifyBot
                         result = resMgr.Get(Res.OutgoingTransactions,
                             new ContextObject
                             {
-                                u = ua.User, ua = ua, Block = header.level, Amount = from_ua.Sum(o => o.Item3), md = md
+                                u = ua.User, ua = ua, Block = header.level, Amount = from_ua.Sum(o => o.Item3), md = md,
+                                Token = from.Key.token
                             }) + "\n";
                         int cnt = 0;
                         foreach (var to in from_ua.OrderByDescending(o => o.Item3))
@@ -911,7 +937,7 @@ namespace TezosNotifyBot
                             cnt++;
                             var targetAddr = repo.GetUserTezosAddress(ua.UserId, to.Item2);
                             result += resMgr.Get(Res.To,
-                                new ContextObject {u = ua.User, Amount = to.Item3, ua = targetAddr}) + "\n";
+                                new ContextObject {u = ua.User, Amount = to.Item3, ua = targetAddr, Token = to.token}) + "\n";
                             if (!tags.Contains(targetAddr.HashTag()) && (cnt < 6 || targetAddr.UserId == ua.UserId))
                                 tags += targetAddr.HashTag();
                             if (cnt > 40)
@@ -935,27 +961,27 @@ namespace TezosNotifyBot
                 }
             }
 
-            var toGroup = fromToAmountHash.GroupBy(o => o.Item2);
+            var toGroup = fromToAmountHash.GroupBy(o => new { o.to, o.token });
             foreach (var to in toGroup)
             {
                 //decimal total = to.Sum(o => o.Item3);
-                var toAddresses = repo.GetUserAddresses(to.Key).Where(o => o.NotifyTransactions).ToList();
+                var toAddresses = repo.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
                 decimal toBalance = 0;
                 bool toDelegate = false;
                 if (toAddresses.Count > 0)
                 {
-                    if (repo.IsDelegate(to.Key))
+                    if (repo.IsDelegate(to.Key.to))
                     {
                         toDelegate = true;
-                        var di = addrMgr.GetDelegate(client, header.hash, to.Key, true);
+                        var di = addrMgr.GetDelegate(client, header.hash, to.Key.to, true);
                         if (di != null)
                             toBalance = (di?.Bond ?? 0) / 1000000;
                         else
-                            toBalance = addrMgr.GetContract(client, header.hash, to.Key).balance / 1000000M;
+                            toBalance = addrMgr.GetContract(client, header.hash, to.Key.to).balance / 1000000M;
                     }
                     else
                     {
-                        toBalance = addrMgr.GetContract(client, header.hash, to.Key).balance / 1000000M;
+                        toBalance = addrMgr.GetContract(client, header.hash, to.Key.to).balance / 1000000M;
                     }
                 }
 
@@ -983,7 +1009,8 @@ namespace TezosNotifyBot
                             new ContextObject
                             {
                                 u = ua.User, OpHash = to_ua.Single().Item4, Block = header.level,
-                                Amount = to_ua.Sum(o => o.Item3), md = md, ua_from = ua_from, ua_to = ua
+                                Amount = to_ua.Sum(o => o.Item3), md = md, ua_from = ua_from, ua_to = ua,
+                                Token = to.Key.token
                             });
                         tags = ua_from.HashTag();
                     }
@@ -992,7 +1019,8 @@ namespace TezosNotifyBot
                         result = resMgr.Get(Res.IncomingTransactions,
                             new ContextObject
                             {
-                                u = ua.User, ua = ua, Block = header.level, Amount = to_ua.Sum(o => o.Item3), md = md
+                                u = ua.User, ua = ua, Block = header.level, Amount = to_ua.Sum(o => o.Item3), md = md,
+                                Token = to.Key.token
                             }) + "\n";
                         int cnt = 0;
                         foreach (var from in to_ua.OrderByDescending(o => o.Item3))
@@ -1000,7 +1028,7 @@ namespace TezosNotifyBot
                             cnt++;
                             var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from.Item1);
                             result += resMgr.Get(Res.From,
-                                new ContextObject {u = ua.User, Amount = from.Item3, ua = sourceAddr}) + "\n";
+                                new ContextObject {u = ua.User, Amount = from.Item3, ua = sourceAddr, Token = from.token}) + "\n";
                             if (!tags.Contains(sourceAddr.HashTag()) && (cnt < 6 || sourceAddr.UserId == ua.UserId))
                                 tags += sourceAddr.HashTag();
                             if (cnt > 40)
@@ -1039,7 +1067,28 @@ namespace TezosNotifyBot
             return true;
         }
 
-        bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
+		List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
+		{
+            List<(string from, string to, decimal amount)> result = new List<(string from, string to, decimal amount)>();
+            var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+            var ops = bcd.GetOperations(op.hash);
+            foreach(var transfer in ops.Where(o => o.destination == token.ContractAddress && o.entrypoint == "transfer" && o.status == "applied"))
+            {
+                if (transfer.parameters?.children?.Count == 3 &&
+                    transfer.parameters.children[0].name == "from" &&
+                    transfer.parameters.children[1].name == "to" &&
+                    transfer.parameters.children[2].name == "value")
+                {
+                    var from = transfer.parameters.children[0].value;
+                    var to = transfer.parameters.children[1].value;
+                    var amount = (decimal)System.Numerics.BigInteger.Parse(transfer.parameters.children[2].value) / (decimal)Math.Pow(10, token.Decimals);
+                    result.Add((from, to, amount));
+                }
+            }
+            return result;
+        }
+
+		bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
         {
             Logger.LogDebug($"ProcessBlockBakingData {header.level}");
             if (!repo.IsRightsLoaded(blockMetadata.level.cycle))

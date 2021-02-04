@@ -104,6 +104,7 @@ namespace TezosNotifyBot
 		public int Block { get; set; }
 		public int Priority { get; set; }
 		public decimal Amount { get; set; }
+		public Token Token { get; set; }
 		public UserAddress ua_from { get; set; }
 		public UserAddress ua_to { get; set; }
 		public int Minutes { get; set; }
