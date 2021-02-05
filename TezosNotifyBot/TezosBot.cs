@@ -971,7 +971,7 @@ namespace TezosNotifyBot
                     }
                     else
 					{
-                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance }) + "\n";
+                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance, Token = from.Key.token }) + "\n";
                     }
                     if (!ua.User.HideHashTags)
                         result += "\n#outgoing" + ua.HashTag() + tags;
@@ -1078,7 +1078,7 @@ namespace TezosNotifyBot
                     }
                     else
                     {
-                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance }) + "\n";
+                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance, Token = to.Key.token }) + "\n";
                     }
                     if (!ua.User.HideHashTags)
                         result += "\n#incoming" + ua.HashTag() + tags;
