@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Text;
 
 namespace TezosNotifyBot.BetterCallDev
@@ -12,7 +13,8 @@ namespace TezosNotifyBot.BetterCallDev
         public string symbol { get; set; }
         public string name { get; set; }
         public int decimals { get; set; }
-        public long balance { get; set; }
+        public string balance { get; set; }
+        public decimal Balance => (decimal)BigInteger.Parse(balance) / (decimal)Math.Pow(10, decimals);
         public int level { get; set; }
     }
 }
