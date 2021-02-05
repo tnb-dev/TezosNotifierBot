@@ -363,5 +363,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #TezosRelease;en;🦊 Tezos software update <a href='{r.Url}'>{r.Tag}</a> released: {r.Description}
 
  #gitlab
-#Tokens;en;Tokens
-#Tokens;ru;Токены
+#Tokens;en;Tokens: 
+#Tokens;ru;Токены: 
