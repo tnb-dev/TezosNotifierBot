@@ -884,7 +884,7 @@ namespace TezosNotifyBot
                     var acc = bcd.GetAccount(from.Key.from);
                     var token = acc.tokens.FirstOrDefault(o => o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
                     if (token != null)
-                        tokenBalance = (decimal)token.balance / (decimal)Math.Pow(10, token.decimals);
+                        tokenBalance = token.Balance;
                 }
                 var fromAddresses = repo.GetUserAddresses(from.Key.from).Where(o => o.NotifyTransactions).ToList();
                 decimal fromBalance = 0;
@@ -991,7 +991,7 @@ namespace TezosNotifyBot
                     var acc = bcd.GetAccount(to.Key.to);
                     var token = acc.tokens.FirstOrDefault(o => o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
                     if (token != null)
-                        tokenBalance = (decimal)token.balance / (decimal)Math.Pow(10, token.decimals);
+                        tokenBalance = token.Balance;
                 }
                 var toAddresses = repo.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
                 decimal toBalance = 0;
@@ -3045,7 +3045,7 @@ namespace TezosNotifyBot
             if (bcdAcc.tokens.Count > 0)
 			{
                 result += resMgr.Get(Res.Tokens, ua) +
-                    String.Join(", ", bcdAcc.tokens.Select(t => $"<b>{(t.balance / (decimal)Math.Pow(10, t.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
+                    String.Join(", ", bcdAcc.tokens.Select(t => $"<b>{t.Balance.ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
                 result += "\n";
             }
 

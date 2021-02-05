@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TezosNotifyBot.BetterCallDev
 {
@@ -8,7 +7,7 @@ namespace TezosNotifyBot.BetterCallDev
     {
         public string address { get; set; }
         public string network { get; set; }
-        public long balance { get; set; }
+        public ulong balance { get; set; }
         public int tx_count { get; set; }
         public DateTime last_action { get; set; }
         public IList<Token> tokens { get; set; }
