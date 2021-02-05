@@ -232,6 +232,8 @@ namespace TezosNotifyBot
 		DonateInfo,
 		TwitterQuorumReached,
 		TezosReleaseWithLink,
-		TezosRelease
+		TezosRelease,
+		Tokens,
+		TokenBalance
 	}
 }

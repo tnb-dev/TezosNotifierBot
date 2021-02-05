@@ -877,6 +877,15 @@ namespace TezosNotifyBot
             foreach (var from in fromGroup)
             {
                 //decimal total = from.Sum(o => o.Item3);
+                decimal tokenBalance = 0;
+                if (from.Key.token != null)
+				{
+                    var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+                    var acc = bcd.GetAccount(from.Key.from);
+                    var token = acc.tokens.FirstOrDefault(o => o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
+                    if (token != null)
+                        tokenBalance = (decimal)token.balance / (decimal)Math.Pow(10, token.decimals);
+                }
                 var fromAddresses = repo.GetUserAddresses(from.Key.from).Where(o => o.NotifyTransactions).ToList();
                 decimal fromBalance = 0;
                 bool fromDelegate = false;
@@ -953,10 +962,17 @@ namespace TezosNotifyBot
                     }
 
                     result += "\n";
-                    if (fromDelegate)
-                        result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
+                    if (from.Key.token == null)
+                    {
+                        if (fromDelegate)
+                            result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
+                        else
+                            result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
+                    }
                     else
-                        result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
+					{
+                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance }) + "\n";
+                    }
                     if (!ua.User.HideHashTags)
                         result += "\n#outgoing" + ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
@@ -968,6 +984,15 @@ namespace TezosNotifyBot
             foreach (var to in toGroup)
             {
                 //decimal total = to.Sum(o => o.Item3);
+                decimal tokenBalance = 0;
+                if (to.Key.token != null)
+                {
+                    var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+                    var acc = bcd.GetAccount(to.Key.to);
+                    var token = acc.tokens.FirstOrDefault(o => o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
+                    if (token != null)
+                        tokenBalance = (decimal)token.balance / (decimal)Math.Pow(10, token.decimals);
+                }
                 var toAddresses = repo.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
                 decimal toBalance = 0;
                 bool toDelegate = false;
@@ -1044,10 +1069,17 @@ namespace TezosNotifyBot
                     }
 
                     result += "\n";
-                    if (toDelegate)
-                        result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
+                    if (to.Key.token == null)
+                    {
+                        if (toDelegate)
+                            result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
+                        else
+                            result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
+                    }
                     else
-                        result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
+                    {
+                        result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance }) + "\n";
+                    }
                     if (!ua.User.HideHashTags)
                         result += "\n#incoming" + ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
@@ -3012,10 +3044,9 @@ namespace TezosNotifyBot
             var bcdAcc = bcd.GetAccount(ua.Address);
             if (bcdAcc.tokens.Count > 0)
 			{
-                foreach(var token in bcdAcc.tokens)
-				{
-                    result += (token.symbol ?? token.contract.ShortAddr()) + ": <b>" + (token.balance / (decimal)Math.Pow(10, token.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture) + "</b>\n";
-                }
+                result += resMgr.Get(Res.Tokens, ua) +
+                    String.Join(", ", bcdAcc.tokens.Select(t => $"<b>{(t.balance / (decimal)Math.Pow(10, t.decimals)).ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
+                result += "\n";
             }
 
             if (isDelegate)
