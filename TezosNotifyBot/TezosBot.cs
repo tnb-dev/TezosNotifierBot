@@ -8,12 +8,9 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using ICSharpCode.SharpZipLib.Core;
-using ICSharpCode.SharpZipLib.Zip;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using MihaZupan;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NornPool.Model;
@@ -30,7 +27,6 @@ using TezosNotifyBot.Model;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
-using TezosNotifyBot.TzStats;
 using File = System.IO.File;
 using Message = Telegram.Bot.Types.Message;
 using User = TezosNotifyBot.Domain.User;
@@ -76,7 +72,6 @@ namespace TezosNotifyBot
             return _currentConstants;
         }
 
-        TzStatsData tzStats;
         DateTime lastReceived = DateTime.Now; //Дата и время получения последнего блока
         DateTime lastWebExceptionNotify = DateTime.MinValue;
         TwitterClient twitter;
@@ -101,7 +96,6 @@ namespace TezosNotifyBot
         {
             worker = new Worker();
             worker.OnError += Worker_OnError;
-            tzStats = new TzStatsData(worker);
             try
             {
                 Commands = JsonConvert.DeserializeObject<List<Command>>(
@@ -135,10 +129,9 @@ namespace TezosNotifyBot
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 client.BlockReceived += Client_BlockReceived;
                 NotifyDev(me.Username + " v2.1 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
-                tzStats.LoadCycle(repo.GetLastBlockLevel().Item1);
-                var c = tzStats.GetCycle(repo.GetLastBlockLevel().Item1);
+                var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5); 
                 // TODO: Check why `snapshot_cycle` is null
-                NotifyDev($"Current cycle: {c.cycle}, rolls: {c.snapshot_cycle?.rolls}", 0);
+                NotifyDev($"Current cycle: {c.index}, rolls: {c.totalRolls}", 0);
                 if (Config.TwitterConsumerKey != null)
                 {
                     try
@@ -2559,9 +2552,9 @@ namespace TezosNotifyBot
                             var h = client2.GetBlockHeader(num);
                             repo.SetLastBlockLevel(num, h.priority, h.hash);
                             lastBlockChanged = true;
-                            var c = tzStats.GetCycle(repo.GetLastBlockLevel().Item1);
+                            var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5);
                             NotifyDev(
-                                $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.cycle}, rolls: {c.snapshot_cycle.rolls}",
+                                $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, rolls: {c.totalRolls}",
                                 0);
                             _currentConstants = null;
                         }
@@ -3005,7 +2998,7 @@ namespace TezosNotifyBot
             var bakerShare = bakerBalance / totalLocked;
 
             //number of rolls, participating in staking
-            var totalRolls = tzStats.GetCycle(repo.GetLastBlockLevel().Item1).rolls;
+            var totalRolls = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5).totalRolls;
 
             //how many rolls and staking balance the baker should have in order to lock the whole balance
             var bakerRollsCapacity = totalRolls * bakerShare;

@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Net;
+using System.Collections.Generic;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -20,6 +21,14 @@ namespace TezosNotifyBot.Tzkt
 		{
 			string head = Download("v1/head");
 			return JsonConvert.DeserializeObject<Head>(head);
+		}
+
+		static Dictionary<int, Cycle> cycles = new Dictionary<int, Cycle>();
+		Cycle ITzKtClient.GetCycle(int cycleIndex)
+		{
+			if (!cycles.ContainsKey(cycleIndex))
+				cycles[cycleIndex] = JsonConvert.DeserializeObject<Cycle>(Download($"v1/cycles/{cycleIndex}"));
+			return cycles[cycleIndex];
 		}
 
 		string Download(string addr)
