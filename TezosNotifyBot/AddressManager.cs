@@ -16,7 +16,7 @@ namespace TezosNotifyBot
 			_tzKtUrl = tzKtUrl;
 		}
 
-		public ContractInfo GetContract(Client client, string hash, string addr, bool enqueue = false)
+		public ContractInfo GetContract(NodeClient client, string hash, string addr, bool enqueue = false)
 		{
 			try
 			{
@@ -42,7 +42,7 @@ namespace TezosNotifyBot
 			}
 		}
 
-		public DelegateInfo GetDelegate(Client client, string hash, string addr, bool forceUpdate = false, bool enqueue = false)
+		public DelegateInfo GetDelegate(NodeClient client, string hash, string addr, bool forceUpdate = false, bool enqueue = false)
 		{
 			try
 			{
@@ -93,7 +93,7 @@ namespace TezosNotifyBot
 			return avgPerf[(cycle, addr)];
 		}
 
-		internal decimal GetRewardsForCycle(Client client, string d, DelegateInfo di, int cycle)
+		internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
 		{
 			try
 			{

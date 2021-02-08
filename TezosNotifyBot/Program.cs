@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Net.Http;
 using System.Text;
 using Gelf.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -10,9 +11,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
 using NornPool.Model;
+using Polly;
+using Polly.Extensions.Http;
 using Telegram.Bot;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
+using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Workers;
 
 namespace TezosNotifyBot
@@ -98,6 +103,17 @@ namespace TezosNotifyBot
                         return manager;
                     });
 
+                    services.AddSingleton(provider =>
+                    {
+                        var config = provider.GetService<IOptions<BotConfig>>();
+                        return config?.Value.Nodes;
+                    });
+                    services.AddSingleton<NodeManager>();
+                    
+                    services.AddHttpClient<NodeManager>()
+                        .SetHandlerLifetime(TimeSpan.FromMinutes(1))
+                        .AddPolicyHandler(GetRetryPolicy());
+
                     services.AddSingleton<TwitterClient>();
 
                     services.AddHostedService<Service>();
@@ -110,5 +126,14 @@ namespace TezosNotifyBot
 
                     database.Database.Migrate();
                 });
+
+        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .OrResult(msg => msg.StatusCode == HttpStatusCode.NotFound)
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
+                    retryAttempt)));
+        }
     }
 }

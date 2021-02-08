@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,13 +24,18 @@ using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
+using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
+using Account = TezosNotifyBot.Tzkt.Account;
 using File = System.IO.File;
 using Message = Telegram.Bot.Types.Message;
+using Operation = TezosNotifyBot.Tezos.Operation;
+using Token = TezosNotifyBot.Domain.Token;
 using User = TezosNotifyBot.Domain.User;
 
 namespace TezosNotifyBot
@@ -42,8 +49,8 @@ namespace TezosNotifyBot
 
 
         TelegramBotClient Bot;
-        Client client;
-        Client client2;
+        NodeClient client;
+        NodeClient client2;
         MarketData md = new MarketData();
 
         DateTime mdReceived;
@@ -55,8 +62,8 @@ namespace TezosNotifyBot
         bool lastBlockChanged = false;
 
         //Dictionary<string, MyTezosBaker.Baker> bakers = new Dictionary<string, MyTezosBaker.Baker>();
-        List<Node> Nodes;
-        Node CurrentNode;
+        // List<Node> Nodes;
+        // Node CurrentNode;
         int NetworkIssueMinutes = 2;
         Worker worker;
         RewardsManager rewardsManager;
@@ -75,17 +82,19 @@ namespace TezosNotifyBot
         DateTime lastReceived = DateTime.Now; //Дата и время получения последнего блока
         DateTime lastWebExceptionNotify = DateTime.MinValue;
         TwitterClient twitter;
+        private readonly NodeManager _nodeManager;
         string twitterAccountName;
         bool twitterNetworkIssueNotified = false;
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
-            TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient)
+            TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient, NodeManager nodeManager)
         {
             _serviceProvider = serviceProvider;
             Logger = logger;
             Config = config.Value;
             Bot = bot;
             twitter = twitterClient;
+            _nodeManager = nodeManager;
 
             repo = _serviceProvider.GetRequiredService<Repository>();
             addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
@@ -100,19 +109,19 @@ namespace TezosNotifyBot
             {
                 Commands = JsonConvert.DeserializeObject<List<Command>>(
                     File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "commands.json")));
-                Nodes = JsonConvert.DeserializeObject<List<Node>>(
-                    File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nodes.json")));
-                CurrentNode = Nodes[0];
+                // Nodes = JsonConvert.DeserializeObject<List<Node>>(
+                //     File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nodes.json")));
+                // CurrentNode = Nodes[0];
 
                 rewardsManager = new RewardsManager(repo);
 
-                client = CreateTezosClient();
-                client2 = CreateTezosClient();
+                // client = CreateTezosClient();
+                // client2 = CreateTezosClient();
                 {
                     var block = repo.GetLastBlockLevel();
                     lastHash = block.Item3;
                     if (lastHash == null)
-                        lastHash = client.GetBlockHeader(block.Item1).hash;
+                        lastHash = _nodeManager.Client.GetBlockHeader(block.Item1).hash;
                 }
                 twitter.OnTwit += Twitter_OnTwit;
                 twitter.OnTwitResponse += Twitter_OnTwitResponse;
@@ -197,7 +206,7 @@ namespace TezosNotifyBot
                         if (DateTime.Now.Subtract(lastWebExceptionNotify).TotalMinutes > 5)
                         {
                             LogError(ex);
-                            NotifyDev($"‼️ Node {CurrentNode.Name} issue: " + ex.Message, 0);
+                            NotifyDev($"‼️ Node {_nodeManager.Active.Name} issue: " + ex.Message, 0);
                             lastWebExceptionNotify = DateTime.Now;
                         }
 
@@ -214,11 +223,11 @@ namespace TezosNotifyBot
                         List<BlockHeader> blockHeaders = new List<BlockHeader>();
                         string checkNodeResults =
                             $"Last block {repo.GetLastBlockLevel().Item1} received {(int) DateTime.Now.Subtract(lastReceived).TotalMinutes} minutes ago. Network issue? Checking nodes...\n";
-                        foreach (var node in Nodes)
+                        foreach (var node in _nodeManager.Nodes)
                         {
                             try
                             {
-                                var bh = new Client(node.Url, Logger).GetBlockHeader("head");
+                                var bh = client.GetBlockHeader("head");
                                 if (bh != null)
                                 {
                                     blockHeaders.Add(bh);
@@ -337,7 +346,7 @@ namespace TezosNotifyBot
         {
             if (lastWebExceptionNotify != DateTime.MinValue)
             {
-                NotifyDev($"✅ Node {CurrentNode.Name} continue working", 0);
+                NotifyDev($"✅ Node {_nodeManager.Active.Name} continue working", 0);
                 lastWebExceptionNotify = DateTime.MinValue;
             }
 
@@ -873,7 +882,7 @@ namespace TezosNotifyBot
                 decimal tokenBalance = 0;
                 if (from.Key.token != null)
 				{
-                    var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+                    var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
                     var acc = bcd.GetAccount(from.Key.from);
                     var token = acc.tokens.FirstOrDefault(o => o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
                     if (token != null)
@@ -980,7 +989,7 @@ namespace TezosNotifyBot
                 decimal tokenBalance = 0;
                 if (to.Key.token != null)
                 {
-                    var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+                    var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
                     var acc = bcd.GetAccount(to.Key.to);
                     var token = acc.tokens.FirstOrDefault(o => o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
                     if (token != null)
@@ -1098,7 +1107,7 @@ namespace TezosNotifyBot
 		List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
 		{
             List<(string from, string to, decimal amount)> result = new List<(string from, string to, decimal amount)>();
-            var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+            var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
             var ops = bcd.GetOperations(op.hash);
             foreach(var transfer in ops.Where(o => o.destination == token.ContractAddress && o.entrypoint == "transfer" && o.status == "applied"))
             {
@@ -1109,7 +1118,7 @@ namespace TezosNotifyBot
                 {
                     var from = transfer.parameters.children[0].value;
                     var to = transfer.parameters.children[1].value;
-                    var amount = (decimal)System.Numerics.BigInteger.Parse(transfer.parameters.children[2].value) / (decimal)Math.Pow(10, token.Decimals);
+                    var amount = (decimal)BigInteger.Parse(transfer.parameters.children[2].value) / (decimal)Math.Pow(10, token.Decimals);
                     result.Add((from, to, amount));
                 }
             }
@@ -1548,7 +1557,7 @@ namespace TezosNotifyBot
                     url =
                         $"https://api.tzkt.io/v1/accounts?sort.desc=lastActivity&type=user&limit=10000&offset={i * 10000}";
                     txt = client2.Download(url);
-                    foreach (var a in JsonConvert.DeserializeObject<Tzkt.Account[]>(txt))
+                    foreach (var a in JsonConvert.DeserializeObject<Account[]>(txt))
                     {
                         var addr = a.address;
                         var name = a.alias;
@@ -2597,27 +2606,25 @@ namespace TezosNotifyBot
                     }
                     else if (Config.DevUserNames.Contains(message.From.Username) && message.Text == "/defaultnode")
                     {
-                        client.SetNodeUrl(Nodes[0].Url);
-                        client2.SetNodeUrl(Nodes[0].Url);
-                        NotifyDev("Switched to " + Nodes[0].Name, 0);
+                        _nodeManager.SwitchTo(0);
+                        // client.SetNodeUrl(Nodes[0].Url);
+                        // client2.SetNodeUrl(Nodes[0].Url);
+                        NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
                     }
                     else if (Config.DevUserNames.Contains(message.From.Username) && message.Text.StartsWith("/node"))
                     {
                         var n = message.Text.Substring(5);
-                        if (int.TryParse(n, out int n_i) && n_i < Nodes.Count)
+                        if (int.TryParse(n, out int n_i) && n_i < _nodeManager.Nodes.Length)
                         {
-                            var node = Nodes[n_i];
-                            client.SetNodeUrl(node.Url);
-                            client2.SetNodeUrl(node.Url);
-                            NotifyDev("Switched to " + node.Name, 0);
-                            CurrentNode = node;
+                            _nodeManager.SwitchTo(n_i);
+                            NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
                         }
                         else
                         {
-                            string result = $"Current node: {CurrentNode.Name}\n\n";
-                            for (int i = 0; i < Nodes.Count; i++)
+                            string result = $"Current node: {_nodeManager.Active.Name}\n\n";
+                            for (int i = 0; i < _nodeManager.Nodes.Length; i++)
                             {
-                                result += $"/node{i} = {Nodes[i].Name}\n<b>Status:</b> {Nodes[i].CheckStatus()}\n\n";
+                                result += $"/node{i} = {_nodeManager.Nodes[i].Name}\n<b>Status:</b> TODO: STATUS\n\n";
                             }
 
                             SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -3033,12 +3040,12 @@ namespace TezosNotifyBot
                 string delname = repo.GetDelegateName(ci.@delegate);
                 result += resMgr.Get(Res.Delegate, ua) + $": <a href='{t.account(ci.@delegate)}'>{delname}</a>\n";
             }
-            var bcd = _serviceProvider.GetService<BetterCallDev.IBetterCallDevClient>();
+            var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
             var bcdAcc = bcd.GetAccount(ua.Address);
             if (bcdAcc.tokens.Count > 0)
 			{
                 result += resMgr.Get(Res.Tokens, ua) +
-                    String.Join(", ", bcdAcc.tokens.Select(t => $"<b>{t.Balance.ToString("###,###,###,###,##0.########", System.Globalization.CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
+                    String.Join(", ", bcdAcc.tokens.Select(t => $"<b>{t.Balance.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
                 result += "\n";
             }
 
@@ -3349,11 +3356,6 @@ namespace TezosNotifyBot
             }
 
             Logger.LogError(e, msg);
-        }
-
-        Client CreateTezosClient()
-        {
-            return new Client(CurrentNode.Url, Logger);
         }
 
         string UserTitle(Telegram.Bot.Types.User u)

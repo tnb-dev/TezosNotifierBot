@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TezosNotifyBot.Model;
 
 namespace NornPool.Model
 {
@@ -23,6 +24,8 @@ namespace NornPool.Model
         public string ProxyPassword { get; set; }
 		public string UploadPath { get; set; }
 		public int CarthageStart { get; set; }
+		
+		public Node[] Nodes { get; set; }
 
 		
 		// TODO: Refactor access to this properties

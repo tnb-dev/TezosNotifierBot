@@ -28,5 +28,28 @@
     },
     "CarthageStart": 38913,
     "TzKtUrl": "https://api.tzkt.io/",
-    "BetterCallDevUrl": "https://api.better-call.dev/"
+    "BetterCallDevUrl": "https://api.better-call.dev/",
+    
+    "Nodes": [
+        {
+            "Name": "TezosUA",
+            "Url": "https://mainnet-tezos.giganode.io"
+        },
+        {
+            "Name": "TezRPC",
+            "Url": "https://rpc.tezrpc.me"
+        },
+        {
+            "Name": "Cryptonomic",
+            "Url": "https://tezos-prod.cryptonomic-infra.tech"
+        },
+        {
+            "Name": "LetzBake!",
+            "Url": "https://teznode.letzbake.com"
+        },
+        {
+            "Name": "SmartPy",
+            "Url": "https://mainnet.smartpy.io"
+        }
+    ]
 }
