@@ -967,7 +967,7 @@ namespace TezosNotifyBot
                         result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance, Token = from.Key.token }) + "\n";
                     }
                     if (!ua.User.HideHashTags)
-                        result += "\n#outgoing" + ua.HashTag() + tags;
+                        result += "\n#outgoing" + (from.Key.token != null ? " #" + from.Key.token.Symbol : "") + ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
                     repo.UpdateBalance(ua);
                 }
@@ -1074,7 +1074,7 @@ namespace TezosNotifyBot
                         result += resMgr.Get(Res.TokenBalance, new ContextObject { u = ua.User, Amount = tokenBalance, Token = to.Key.token }) + "\n";
                     }
                     if (!ua.User.HideHashTags)
-                        result += "\n#incoming" + ua.HashTag() + tags;
+                        result += "\n#incoming" + (to.Key.token != null ? " #" + to.Key.token.Symbol : "") + ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
                     repo.UpdateBalance(ua);
                 }
