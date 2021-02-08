@@ -129,7 +129,7 @@ namespace TezosNotifyBot
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 client.BlockReceived += Client_BlockReceived;
                 NotifyDev(me.Username + " v2.1 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
-                var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5); 
+                var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle); 
                 // TODO: Check why `snapshot_cycle` is null
                 NotifyDev($"Current cycle: {c.index}, rolls: {c.totalRolls}", 0);
                 if (Config.TwitterConsumerKey != null)
@@ -2552,7 +2552,7 @@ namespace TezosNotifyBot
                             var h = client2.GetBlockHeader(num);
                             repo.SetLastBlockLevel(num, h.priority, h.hash);
                             lastBlockChanged = true;
-                            var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5);
+                            var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle);
                             NotifyDev(
                                 $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, rolls: {c.totalRolls}",
                                 0);
@@ -2998,7 +2998,7 @@ namespace TezosNotifyBot
             var bakerShare = bakerBalance / totalLocked;
 
             //number of rolls, participating in staking
-            var totalRolls = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle + 5).totalRolls;
+            var totalRolls = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle).totalRolls;
 
             //how many rolls and staking balance the baker should have in order to lock the whole balance
             var bakerRollsCapacity = totalRolls * bakerShare;
