@@ -7,5 +7,6 @@ namespace TezosNotifyBot.Tzkt
 	public interface ITzKtClient
 	{
 		Head GetHead();
+		Cycle GetCycle(int cycleIndex);
 	}
 }
