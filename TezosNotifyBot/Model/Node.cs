@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TezosNotifyBot.Tezos;
 
 namespace TezosNotifyBot.Model
 {
@@ -8,19 +9,5 @@ namespace TezosNotifyBot.Model
 	{
 		public string Name { get; set; }
 		public string Url { get; set; }
-
-		internal string CheckStatus()
-		{
-			var client = new Tezos.Client(Url, null);
-			try
-			{
-				var bh = client.GetBlockHeader("head");
-				return $"{bh.level} ({bh.timestamp}) 🆗";
-			}
-			catch(Exception e)
-			{
-				return e.Message;
-			}
-		}
 	}
 }
