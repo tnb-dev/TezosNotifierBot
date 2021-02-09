@@ -925,7 +925,7 @@ namespace TezosNotifyBot
                                 u = ua.User, OpHash = from_ua.Single().Item4, Block = header.level,
                                 Amount = from_ua.Sum(o => o.Item3), md = md, ua_from = ua, ua_to = ua_to,
                                 Token = from.Key.token
-                            });
+                            }) + "\n";
                         tags = ua_to.HashTag();
                     }
                     else
@@ -1032,7 +1032,7 @@ namespace TezosNotifyBot
                                 u = ua.User, OpHash = to_ua.Single().Item4, Block = header.level,
                                 Amount = to_ua.Sum(o => o.Item3), md = md, ua_from = ua_from, ua_to = ua,
                                 Token = to.Key.token
-                            });
+                            }) + "\n";
                         tags = ua_from.HashTag();
                     }
                     else

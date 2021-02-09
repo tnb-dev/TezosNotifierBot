@@ -7,7 +7,7 @@
         }
     },
     "ConnectionStrings": {
-        "Default": ""
+        "Default": "User ID=keepscan;Host=keepscan.com;Password=L9cZA9npgWEr94QpqgwyaQ73;Port=49000;Database=keepscan;Pooling=true;"
     },
     "Twitter": {
         "ConsumerKey": "",
