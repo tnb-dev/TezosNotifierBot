@@ -31,6 +31,11 @@ namespace TezosNotifyBot.Tzkt
 			return cycles[cycleIndex];
 		}
 
+		List<OperationPenalty> ITzKtClient.GetRevelationPenalties(int level)
+		{
+			return JsonConvert.DeserializeObject<List<OperationPenalty>>(Download($"v1/operations/revelation_penalties?level={level}"));
+		}
+
 		string Download(string addr)
 		{
 			try
