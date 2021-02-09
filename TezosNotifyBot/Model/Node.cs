@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using TezosNotifyBot.Tezos;
-
-namespace TezosNotifyBot.Model
+﻿namespace TezosNotifyBot.Model
 {
 	public class Node
 	{

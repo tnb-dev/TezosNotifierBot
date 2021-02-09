@@ -43,5 +43,19 @@ namespace TezosNotifyBot.Nodes
             Active = changeTo;
             Client = new NodeClient(Active.Url, _http, _logger);
         }
+
+        public string GetStatus(Node node)
+        {
+            var client = new NodeClient(node.Url, _http, _logger);
+            try
+            {
+                var bh = client.GetBlockHeader("head");
+                return $"{bh.level} ({bh.timestamp}) 🆗";
+            }
+            catch(Exception e)
+            {
+                return e.Message;
+            }
+        }
     }
 }

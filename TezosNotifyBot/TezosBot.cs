@@ -2621,10 +2621,11 @@ namespace TezosNotifyBot
                         }
                         else
                         {
-                            string result = $"Current node: {_nodeManager.Active.Name}\n\n";
-                            for (int i = 0; i < _nodeManager.Nodes.Length; i++)
+                            var result = $"Current node: {_nodeManager.Active.Name}\n\n";
+                            for (var i = 0; i < _nodeManager.Nodes.Length; i++)
                             {
-                                result += $"/node{i} = {_nodeManager.Nodes[i].Name}\n<b>Status:</b> TODO: STATUS\n\n";
+                                var node = _nodeManager.Nodes[i];
+                                result += $"/node{i} = {node.Name}\n<b>Status:</b> {_nodeManager.GetStatus(node)}\n\n";
                             }
 
                             SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
