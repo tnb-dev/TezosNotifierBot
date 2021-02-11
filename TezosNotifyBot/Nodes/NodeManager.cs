@@ -23,7 +23,7 @@ namespace TezosNotifyBot.Nodes
         /// </summary>
         public Node Active { get; private set; }
         
-        public NodeClient Client { get; private set; }
+        public NodeClient Client { get; }
 
         public NodeManager(Node[] nodes, HttpClient http, ILogger<Node> logger)
         {
@@ -32,6 +32,7 @@ namespace TezosNotifyBot.Nodes
             
             Nodes = nodes;
             Active = Nodes[0];
+            Client = new NodeClient(Active.Url, http, logger);
         }
 
         public void SwitchTo(int index)
@@ -41,9 +42,10 @@ namespace TezosNotifyBot.Nodes
                 throw new ArgumentException($"Node in {index} index doesn't exists");
 
             Active = changeTo;
-            Client = new NodeClient(Active.Url, _http, _logger);
+            Client.SetNodeUrl(changeTo.Url);
         }
 
+        // TODO: For refactoring
         public string GetStatus(Node node)
         {
             var client = new NodeClient(node.Url, _http, _logger);
