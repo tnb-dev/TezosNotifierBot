@@ -49,8 +49,6 @@ namespace TezosNotifyBot
 
 
         TelegramBotClient Bot;
-        NodeClient client;
-        NodeClient client2;
         MarketData md = new MarketData();
 
         DateTime mdReceived;
@@ -75,7 +73,7 @@ namespace TezosNotifyBot
         Constants GetConstants()
         {
             if (_currentConstants == null)
-                _currentConstants = client2.GetConstants(lastHash);
+                _currentConstants = _nodeManager.Client.GetConstants(lastHash);
             return _currentConstants;
         }
 
@@ -115,8 +113,6 @@ namespace TezosNotifyBot
 
                 rewardsManager = new RewardsManager(repo);
 
-                // client = CreateTezosClient();
-                // client2 = CreateTezosClient();
                 {
                     var block = repo.GetLastBlockLevel();
                     lastHash = block.Item3;
@@ -136,7 +132,7 @@ namespace TezosNotifyBot
                 Bot.StartReceiving();
                 var me = await Bot.GetMeAsync();
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
-                client.BlockReceived += Client_BlockReceived;
+                _nodeManager.Client.BlockReceived += Client_BlockReceived;
                 NotifyDev(me.Username + " v2.1 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
                 var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle); 
                 // TODO: Check why `snapshot_cycle` is null
@@ -170,7 +166,7 @@ namespace TezosNotifyBot
                         {
                             try
                             {
-                                md = client.GetMarketData();
+                                md = _nodeManager.Client.GetMarketData();
                             }
                             catch
                             {
@@ -182,8 +178,8 @@ namespace TezosNotifyBot
                         var block = repo.GetLastBlockLevel();
                         lastHash = block.Item3;
                         if (lastHash == null)
-                            lastHash = client.GetBlockHeader(block.Item1).hash;
-                        lastBlock = client.Run(block.Item1);
+                            lastHash = _nodeManager.Client.GetBlockHeader(block.Item1).hash;
+                        lastBlock = _nodeManager.Client.Run(block.Item1);
                         if (repo.GetLastBlockLevel().Item1 != block.Item1)
                         {
                             lastReceived = DateTime.Now;
@@ -227,7 +223,7 @@ namespace TezosNotifyBot
                         {
                             try
                             {
-                                var bh = client.GetBlockHeader("head");
+                                var bh = _nodeManager.Client.GetBlockHeader("head");
                                 if (bh != null)
                                 {
                                     blockHeaders.Add(bh);
@@ -359,16 +355,16 @@ namespace TezosNotifyBot
 
             var prevHeader = lastHeader?.hash == header.predecessor
                 ? lastHeader
-                : client.GetBlockHeader((header.level - 1).ToString());
+                : _nodeManager.Client.GetBlockHeader((header.level - 1).ToString());
             var prevMD = lastMetadata?.level?.level == header.level - 1
                 ? lastMetadata
-                : client.GetBlockMetadata((header.level - 1).ToString());
+                : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());
             if (!ProcessBlockBakingData(prevHeader, prevMD, operations))
                 return false;
 
             if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "testing")
             {
-                var hash = client.GetCurrentProposal(prevHeader.hash);
+                var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
                 var p = repo.GetProposal(hash);
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
@@ -380,8 +376,8 @@ namespace TezosNotifyBot
                 }
 
                 // Делегат не проголосовал
-                var listings = client.GetVoteListings(prevHeader.hash);
-                var votes = client.GetBallotList(prevHeader.hash);
+                var listings = _nodeManager.Client.GetVoteListings(prevHeader.hash);
+                var votes = _nodeManager.Client.GetBallotList(prevHeader.hash);
                 foreach (var listing in listings)
                 {
                     if (!votes.Any(o => o.pkh == listing.pkh))
@@ -403,7 +399,7 @@ namespace TezosNotifyBot
             if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "proposal" &&
                 prevMD.voting_period_kind == "testing_vote")
             {
-                var hash = client.GetCurrentProposal(prevHeader.hash);
+                var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
                 var p = repo.GetProposal(hash);
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
@@ -418,7 +414,7 @@ namespace TezosNotifyBot
             if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "proposal" &&
                 prevMD.voting_period_kind == "promotion_vote")
             {
-                var hash = client.GetCurrentProposal(prevHeader.hash);
+                var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
                 var p = repo.GetProposal(hash);
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
@@ -485,10 +481,10 @@ namespace TezosNotifyBot
                     {
                         var from = content.source;
                         var props = content.proposals;
-                        var listings = client.GetVoteListings(header.hash);
+                        var listings = _nodeManager.Client.GetVoteListings(header.hash);
                         int rolls = listings.Single(o => o.pkh == from).rolls;
                         int allrolls = listings.Sum(o => o.rolls);
-                        var votes = client.GetProposals(header.hash);
+                        var votes = _nodeManager.Client.GetProposals(header.hash);
                         foreach (var hash in props)
                         {
                             var votedrolls = votes[hash];
@@ -558,7 +554,7 @@ namespace TezosNotifyBot
                         var from = content.source;
                         var hash = content.proposal;
 
-                        var listings = client.GetVoteListings(header.hash);
+                        var listings = _nodeManager.Client.GetVoteListings(header.hash);
                         int rolls = listings.Single(o => o.pkh == from).rolls;
                         int allrolls = listings.Sum(o => o.rolls);
 
@@ -607,10 +603,10 @@ namespace TezosNotifyBot
                         //	}
                         //}
                         //Проверка кворума
-                        var ballots = client.GetBallots(header.hash);
+                        var ballots = _nodeManager.Client.GetBallots(header.hash);
                         var participation = ballots.yay + ballots.nay + ballots.pass;
 
-                        var quorum = client.GetQuorum(header.hash);
+                        var quorum = _nodeManager.Client.GetQuorum(header.hash);
 
                         //NotifyDev($"<b>Voting process status</b>\n\nYay: {ballots.yay} rolls, {(100M * ballots.yay / participation).ToString("n2")}%\nNay: {ballots.nay} rolls, {(100M * ballots.nay / participation).ToString("n2")}%\nPass: {ballots.pass} rolls, {(100M * ballots.pass / participation).ToString("n2")}%\n\nTotal participation: {participation} rolls, {(100M * participation/allrolls).ToString("n2")}%, current quorum: {(quorum/100M).ToString("n2")}%", 0, Telegram.Bot.Types.Enums.ParseMode.Html);
                         if (participation * 10000 / allrolls >= quorum &&
@@ -661,7 +657,7 @@ namespace TezosNotifyBot
                                 var toAddresses = repo.GetUserAddresses(to);
                                 foreach (var ua in repo.GetUserAddresses(from).Where(o => o.NotifyDelegations))
                                 {
-                                    amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                    amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                     var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
                                     string result = resMgr.Get(Res.NewDelegation,
                                         new ContextObject
@@ -676,7 +672,7 @@ namespace TezosNotifyBot
 
                                 foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
                                 {
-                                    amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                    amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                     if (ua.DelegationAmountThreshold > amount)
                                         continue;
                                     var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
@@ -692,12 +688,12 @@ namespace TezosNotifyBot
                                 }
                             }
 
-                            var prevdelegate = client.GetContractInfo(header.hash + "~1", from)?.@delegate;
+                            var prevdelegate = _nodeManager.Client.GetContractInfo(header.hash + "~1", from)?.@delegate;
                             if (prevdelegate != null)
                             {
                                 foreach (var ua in repo.GetUserAddresses(prevdelegate).Where(o => o.NotifyDelegations))
                                 {
-                                    amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                    amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                     if (ua.DelegationAmountThreshold > amount)
                                         continue;
                                     var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
@@ -788,7 +784,7 @@ namespace TezosNotifyBot
                             var toAddresses = repo.GetUserAddresses(to);
                             foreach (var ua in repo.GetUserAddresses(from).Where(o => o.NotifyDelegations))
                             {
-                                var amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                var amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                 var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
                                 string result = resMgr.Get(Res.NewDelegation,
                                     new ContextObject
@@ -802,7 +798,7 @@ namespace TezosNotifyBot
 
                             foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
                             {
-                                var amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                var amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                 if (ua.DelegationAmountThreshold > amount)
                                     continue;
                                 var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
@@ -817,12 +813,12 @@ namespace TezosNotifyBot
                             }
                         }
 
-                        var prevdelegate = client.GetContractInfo(header.hash + "~1", from)?.@delegate;
+                        var prevdelegate = _nodeManager.Client.GetContractInfo(header.hash + "~1", from)?.@delegate;
                         if (prevdelegate != null)
                         {
                             foreach (var ua in repo.GetUserAddresses(prevdelegate).Where(o => o.NotifyDelegations))
                             {
-                                var amount = addrMgr.GetContract(client, header.hash, from).balance / 1000000M;
+                                var amount = addrMgr.GetContract(_nodeManager.Client, header.hash, from).balance / 1000000M;
                                 if (ua.DelegationAmountThreshold > amount)
                                     continue;
                                 var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
@@ -896,15 +892,15 @@ namespace TezosNotifyBot
                     if (repo.IsDelegate(from.Key.from))
                     {
                         fromDelegate = true;
-                        var di = addrMgr.GetDelegate(client, header.hash, from.Key.from, true);
+                        var di = addrMgr.GetDelegate(_nodeManager.Client, header.hash, from.Key.from, true);
                         if (di != null)
                             fromBalance = di.Bond / 1000000;
                         else
-                            fromBalance = addrMgr.GetContract(client, header.hash, from.Key.from).balance / 1000000M;
+                            fromBalance = addrMgr.GetContract(_nodeManager.Client, header.hash, from.Key.from).balance / 1000000M;
                     }
                     else
                     {
-                        fromBalance = addrMgr.GetContract(client, header.hash, from.Key.from).balance / 1000000M;
+                        fromBalance = addrMgr.GetContract(_nodeManager.Client, header.hash, from.Key.from).balance / 1000000M;
                     }
                 }
 
@@ -1003,15 +999,15 @@ namespace TezosNotifyBot
                     if (repo.IsDelegate(to.Key.to))
                     {
                         toDelegate = true;
-                        var di = addrMgr.GetDelegate(client, header.hash, to.Key.to, true);
+                        var di = addrMgr.GetDelegate(_nodeManager.Client, header.hash, to.Key.to, true);
                         if (di != null)
                             toBalance = (di?.Bond ?? 0) / 1000000;
                         else
-                            toBalance = addrMgr.GetContract(client, header.hash, to.Key.to).balance / 1000000M;
+                            toBalance = addrMgr.GetContract(_nodeManager.Client, header.hash, to.Key.to).balance / 1000000M;
                     }
                     else
                     {
-                        toBalance = addrMgr.GetContract(client, header.hash, to.Key.to).balance / 1000000M;
+                        toBalance = addrMgr.GetContract(_nodeManager.Client, header.hash, to.Key.to).balance / 1000000M;
                     }
                 }
 
@@ -1139,7 +1135,7 @@ namespace TezosNotifyBot
                 //});				
             }
 
-            var baking_rights = client.GetBakingRights(header.predecessor);
+            var baking_rights = _nodeManager.Client.GetBakingRights(header.predecessor);
             //var endorsing_rights = client.GetEndorsingRights(header.predecessor);
             // Проверка baking rights
             Logger.LogDebug($"Baking rights processing {header.level + 1}");
@@ -1163,7 +1159,7 @@ namespace TezosNotifyBot
                     var uaddrs = repo.GetUserAddresses(baking_right.@delegate);
                     ContractInfo info = null;
                     if (uaddrs.Count > 0)
-                        info = addrMgr.GetContract(client, header.hash, baking_right.@delegate);
+                        info = addrMgr.GetContract(_nodeManager.Client, header.hash, baking_right.@delegate);
 
                     long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
                     if (baking_right.level >= Config.CarthageStart)
@@ -1232,7 +1228,7 @@ namespace TezosNotifyBot
                         var uaddrs = repo.GetUserAddresses(d.Item1);
                         ContractInfo info = null;
                         if (uaddrs.Count > 0)
-                            info = addrMgr.GetContract(client, header.hash, d.Item1);
+                            info = addrMgr.GetContract(_nodeManager.Client, header.hash, d.Item1);
                         foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                         {
                             ua.Balance = info.balance / 1000000M;
@@ -1309,7 +1305,7 @@ namespace TezosNotifyBot
                         DelegateInfo di;
                         try
                         {
-                            di = addrMgr.GetDelegate(client, hash, d.Delegate, true);
+                            di = addrMgr.GetDelegate(_nodeManager.Client, hash, d.Delegate, true);
                         }
                         catch
                         {
@@ -1356,7 +1352,7 @@ namespace TezosNotifyBot
                     DelegateInfo di;
                     try
                     {
-                        di = addrMgr.GetDelegate(client, hash, d, true);
+                        di = addrMgr.GetDelegate(_nodeManager.Client, hash, d, true);
                     }
                     catch
                     {
@@ -1365,7 +1361,7 @@ namespace TezosNotifyBot
 
                     if (di != null)
                     {
-                        decimal accured = addrMgr.GetRewardsForCycle(client, d, di, blockMetadata.level.cycle - 1);
+                        decimal accured = addrMgr.GetRewardsForCycle(_nodeManager.Client, d, di, blockMetadata.level.cycle - 1);
                         repo.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long) accured);
                     }
                 }
@@ -1406,7 +1402,7 @@ namespace TezosNotifyBot
             //Завершен период подачи предложений
             if (blockMetadata.level.voting_period_position == 0 && blockMetadata.voting_period_kind == "testing_vote")
             {
-                var proposals = client.GetProposals(hash + "~2");
+                var proposals = _nodeManager.Client.GetProposals(hash + "~2");
                 Dictionary<string, List<string>> supporters = proposals
                     .Select(o => new
                         {Hash = o.Key, Delegates = repo.GetProposalVotes(o.Key, blockMetadata.level.voting_period - 1)})
@@ -1513,7 +1509,7 @@ namespace TezosNotifyBot
                 string result = "";
                 int cnt = 0;
                 string url = "https://api.tzkt.io/v1/accounts?type=delegate&limit=10000";
-                string txt = client2.Download(url);
+                string txt = _nodeManager.Client.Download(url);
                 List<string> updated = new List<string>();
 
                 foreach (var a in JsonConvert.DeserializeObject<Account[]>(txt))
@@ -1556,7 +1552,7 @@ namespace TezosNotifyBot
                 {
                     url =
                         $"https://api.tzkt.io/v1/accounts?sort.desc=lastActivity&type=user&limit=10000&offset={i * 10000}";
-                    txt = client2.Download(url);
+                    txt = _nodeManager.Client.Download(url);
                     foreach (var a in JsonConvert.DeserializeObject<Account[]>(txt))
                     {
                         var addr = a.address;
@@ -1583,7 +1579,7 @@ namespace TezosNotifyBot
                 }
 
                 url = "https://raw.githubusercontent.com/blockwatch-cc/tzstats/master/src/config/aliases.js";
-                txt = client2.Download(url);
+                txt = _nodeManager.Client.Download(url);
 
                 var matches = Regex.Matches(txt, "([tK][zT][a-zA-Z0-9]{34}):\\s{\\sname: ('|\")(.*?)\\2");
                 if (matches.Count == 0)
@@ -2086,7 +2082,7 @@ namespace TezosNotifyBot
 
         List<User> GetFollowers(string addr)
         {
-            var di = client2.GetDelegateInfo(addr);
+            var di = _nodeManager.Client.GetDelegateInfo(addr);
             var results = repo.GetUserAddresses(addr).Select(o => o.User).ToList();
             foreach (var d in di.delegated_contracts)
             {
@@ -2304,7 +2300,7 @@ namespace TezosNotifyBot
                     }
                     else if (message.Text.StartsWith("/tzkt "))
                     {
-                        var str = client2.Download(message.Text.Substring("/tzkt ".Length));
+                        var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
                         NotifyDev(str, u.Id, ParseMode.Default, true);
                     }
                     else if (message.Text.StartsWith("/forward") && u.IsAdmin(Config.Telegram))
@@ -2558,7 +2554,7 @@ namespace TezosNotifyBot
                     {
                         if (int.TryParse(message.Text.Substring("/setblock ".Length), out int num))
                         {
-                            var h = client2.GetBlockHeader(num);
+                            var h = _nodeManager.Client.GetBlockHeader(num);
                             repo.SetLastBlockLevel(num, h.priority, h.hash);
                             lastBlockChanged = true;
                             var c = _serviceProvider.GetService<ITzKtClient>().GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle);
@@ -2601,7 +2597,7 @@ namespace TezosNotifyBot
                     else if (Config.DevUserNames.Contains(message.From.Username) &&
                              message.Text.StartsWith("/processmd"))
                     {
-                        var md = client2.GetBlockMetadata(message.Text.Substring("/processmd ".Length));
+                        var md = _nodeManager.Client.GetBlockMetadata(message.Text.Substring("/processmd ".Length));
                         ProcessBlockMetadata(md, message.Text.Substring("/processmd ".Length));
                     }
                     else if (Config.DevUserNames.Contains(message.From.Username) && message.Text == "/defaultnode")
@@ -2846,13 +2842,13 @@ namespace TezosNotifyBot
         {
             var chatId = update.Message.Chat?.Id ?? update.Message.From.Id;
             string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")})\n";
-            var bh = client2.GetBlockHeader(lastHash);
-            var bm = client2.GetBlockMetadata(lastHash);
+            var bh = _nodeManager.Client.GetBlockHeader(lastHash);
+            var bm = _nodeManager.Client.GetBlockMetadata(lastHash);
             result += $"#{bh.level} ({bh.timestamp.ToString("dd.MM.yyyy HH:mm:ss")})\n";
             if (bm.voting_period_kind == "proposal")
             {
                 result += "Голосование: период подачи предложений\n";
-                var proposals = client2.GetProposals(lastHash);
+                var proposals = _nodeManager.Client.GetProposals(lastHash);
                 if (proposals.Count == 0)
                     result += "Ни одного предложения не поступило";
                 else
@@ -2927,7 +2923,7 @@ namespace TezosNotifyBot
                 name = repo.GetDelegateName(addr).Replace("…", "");
             try
             {
-                var ci = addrMgr.GetContract(client2, lastHash, addr, true);
+                var ci = addrMgr.GetContract(_nodeManager.Client, lastHash, addr, true);
                 var t = Explorer.FromId(user.Explorer);
                 if (ci != null)
                 {
@@ -3031,7 +3027,7 @@ namespace TezosNotifyBot
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
             result += $"<a href='{t.account(ua.Address)}'>" + ua.Address + "</a>\n";
-            var ci = addrMgr.GetContract(client2, lastHash, ua.Address, true);
+            var ci = addrMgr.GetContract(_nodeManager.Client, lastHash, ua.Address, true);
             if (ci != null)
                 ua.Balance = ci.balance / 1000000M;
 
@@ -3054,7 +3050,7 @@ namespace TezosNotifyBot
             {
                 try
                 {
-                    var di = addrMgr.GetDelegate(client2, lastHash, ua.Address, enqueue: true);
+                    var di = addrMgr.GetDelegate(_nodeManager.Client, lastHash, ua.Address, enqueue: true);
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
@@ -3186,7 +3182,7 @@ namespace TezosNotifyBot
                 {
                     try
                     {
-                        di = addrMgr.GetDelegate(client2, lastHash, addr, enqueue: true);
+                        di = addrMgr.GetDelegate(_nodeManager.Client, lastHash, addr, enqueue: true);
                         if (di != null)
                         {
                             if (!repo.IsDelegate(addr))
@@ -3425,8 +3421,8 @@ namespace TezosNotifyBot
         void LoadBakingEndorsingRights(string hash, int cycle)
         {
             Logger.LogInformation($"Loading rights for cycle {cycle}");
-            var br = client2.GetBakingRights(hash, cycle);
-            var er = client2.GetEndorsingRights(hash, cycle);
+            var br = _nodeManager.Client.GetBakingRights(hash, cycle);
+            var er = _nodeManager.Client.GetEndorsingRights(hash, cycle);
             repo.SaveBakingEndorsingRights(br, er);
             Logger.LogInformation($"Rights for cycle {cycle} loaded");
         }
