@@ -70,8 +70,13 @@ namespace TezosNotifyBot
                     });
 
                     services.AddHttpClient<ReleasesClient>();
-                    services.AddTransient<Tzkt.ITzKtClient>(sp => new Tzkt.TzKtClient(sp.GetService<ILogger<Tzkt.TzKtClient>>(), context.Configuration.GetValue<string>("TzKtUrl")));
-                    services.AddTransient<BetterCallDev.IBetterCallDevClient>(sp => new BetterCallDev.BetterCallDevClient(sp.GetService<ILogger<BetterCallDev.BetterCallDevClient>>(), context.Configuration.GetValue<string>("BetterCallDevUrl")));
+                    services.AddTransient<Tzkt.ITzKtClient>(sp =>
+                        new Tzkt.TzKtClient(sp.GetService<ILogger<Tzkt.TzKtClient>>(),
+                            context.Configuration.GetValue<string>("TzKtUrl")));
+                    services.AddTransient<BetterCallDev.IBetterCallDevClient>(sp =>
+                        new BetterCallDev.BetterCallDevClient(
+                            sp.GetService<ILogger<BetterCallDev.BetterCallDevClient>>(),
+                            context.Configuration.GetValue<string>("BetterCallDevUrl")));
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
@@ -108,12 +113,12 @@ namespace TezosNotifyBot
                         var config = provider.GetService<IOptions<BotConfig>>();
                         return config?.Value.Nodes;
                     });
-                    services.AddSingleton<NodeManager>();
-                    
-                    services.AddHttpClient<NodeManager>()
+
+                    services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
                         .SetHandlerLifetime(TimeSpan.FromMinutes(1))
                         .AddPolicyHandler(GetRetryPolicy());
 
+                    // services.AddSingleton<NodeManager>();
                     services.AddSingleton<TwitterClient>();
 
                     services.AddHostedService<Service>();
@@ -131,9 +136,8 @@ namespace TezosNotifyBot
         {
             return HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .OrResult(msg => msg.StatusCode == HttpStatusCode.NotFound)
-                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2,
-                    retryAttempt)));
+                .OrResult(msg => !msg.IsSuccessStatusCode)
+                .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
     }
 }
