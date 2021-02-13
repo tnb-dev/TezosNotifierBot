@@ -3073,19 +3073,25 @@ namespace TezosNotifyBot
                 }
             }
 
-            var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
-            var lastSeenOp = tzkt.GetAccountOperations(ua.Address, "limit=1&sort.desc=timestamp").FirstOrDefault();
-            var lastActiveOp = tzkt.GetAccountOperations(ua.Address, $"limit=1&sort.desc=timestamp&sender.eq={ua.Address}").FirstOrDefault();
-            if (lastSeenOp != null)
+            // Display information on Tune mode only
+            if (msgid != 0)
             {
-                var label = resMgr.Get(Res.LastSeen, ua);
-                result += $"{label}: {lastSeenOp.Timestamp.Humanize(culture: culture)}\n";
+                var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
+                var lastSeenOp = tzkt.GetAccountOperations(ua.Address, "limit=1&sort.desc=timestamp").FirstOrDefault();
+                var lastActiveOp = tzkt.GetAccountOperations(ua.Address, $"limit=1&sort.desc=timestamp&sender.eq={ua.Address}").FirstOrDefault();
+                if (lastSeenOp != null)
+                {
+                    var label = resMgr.Get(Res.LastSeen, ua);
+                    result += $"{label}: {lastSeenOp.Timestamp.Humanize(culture: culture)}\n";
+                }
+                if (lastActiveOp != null)
+                {
+                    var label = resMgr.Get(Res.LastActive, ua);
+                    result += $"{label}: {lastActiveOp.Timestamp.Humanize(culture: culture)}\n";
+                }
             }
-            if (lastActiveOp != null)
-            {
-                var label = resMgr.Get(Res.LastActive, ua);
-                result += $"{label}: {lastActiveOp.Timestamp.Humanize(culture: culture)}\n";
-            }
+            
+            
 
             if (ua.ChatId != 0)
             {

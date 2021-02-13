@@ -366,6 +366,6 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #Tokens;en;Tokens: 
 #Tokens;ru;Токены: 
 #LastSeen;en;Last seen
-#LastSeen;ru;Замечен последний раз
+#LastSeen;ru;Замечен
 #LastActive;en;Last active
-#LastActive;ru;Активность последний раз
+#LastActive;ru;Последняя активность
