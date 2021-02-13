@@ -365,3 +365,7 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
  #gitlab
 #Tokens;en;Tokens: 
 #Tokens;ru;Токены: 
+#LastSeen;en;Last seen
+#LastSeen;ru;Замечен последний раз
+#LastActive;en;Last active
+#LastActive;ru;Активность последний раз

@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Humanizer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -3019,6 +3020,9 @@ namespace TezosNotifyBot
 
         Action ViewAddress(long chatId, UserAddress ua, int msgid)
         {
+            var user = ua.User;
+            var culture = new CultureInfo(user.Language);
+            
             var t = Explorer.FromId(ua.User.Explorer);
             var isDelegate = repo.IsDelegate(ua.Address);
             var result = chatId == ua.UserId ? "" : $"ℹ️User {ua.User} [{ua.UserId}] address\n";
@@ -3067,6 +3071,20 @@ namespace TezosNotifyBot
                 catch
                 {
                 }
+            }
+
+            var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
+            var lastSeenOp = tzkt.GetAccountOperations(ua.Address, "limit=1&sort.desc=timestamp").FirstOrDefault();
+            var lastActiveOp = tzkt.GetAccountOperations(ua.Address, $"limit=1&sort.desc=timestamp&sender.eq={ua.Address}").FirstOrDefault();
+            if (lastSeenOp != null)
+            {
+                var label = resMgr.Get(Res.LastSeen, ua);
+                result += $"{label}: {lastSeenOp.Timestamp.Humanize(culture: culture)}\n";
+            }
+            if (lastActiveOp != null)
+            {
+                var label = resMgr.Get(Res.LastActive, ua);
+                result += $"{label}: {lastActiveOp.Timestamp.Humanize(culture: culture)}\n";
             }
 
             if (ua.ChatId != 0)

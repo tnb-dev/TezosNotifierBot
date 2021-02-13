@@ -234,6 +234,8 @@ namespace TezosNotifyBot
 		TezosReleaseWithLink,
 		TezosRelease,
 		Tokens,
-		TokenBalance
+		TokenBalance,
+		LastSeen,
+		LastActive
 	}
 }

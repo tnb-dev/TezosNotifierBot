@@ -1,16 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TezosNotifyBot.Tzkt
 {
-	public class OperationPenalty
+    // TODO: Add inheritance by Type field
+    // https://api.tzkt.io/#operation/Accounts_GetOperations
+    // https://github.com/JamesNK/Newtonsoft.Json/issues/1331#issuecomment-495813721
+    // https://gist.github.com/StevenLiekens/82ddcf1823ee91cf6d5edfcdb1f6a591
+    public class Operation
     {
-        public string type { get; set; }
-        public int id { get; set; }
-        public int level { get; set; }
-        public DateTime timestamp { get; set; }
-        public string block { get; set; }
+        public int Id { get; set; }
+        
+        public string Type { get; set; }
+        
+        public int Level { get; set; }
+        
+        public DateTime Timestamp { get; set; }
+        
+        public string Block { get; set; }
+        
+        public string Hash { get; set; }
+    }
+    
+	public class OperationPenalty: Operation
+    {
         public Baker baker { get; set; }
         public int missedLevel { get; set; }
         public ulong lostReward { get; set; }
