@@ -30,9 +30,6 @@ namespace TezosNotifyBot
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
             CreateHostBuilder(args).Build().Run();
-            // Console.WriteLine("Бот запущен " + DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"));
-            //          var npb = new TezosBot();
-            //          npb.Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -57,16 +54,12 @@ namespace TezosNotifyBot
 
                     services.AddLogging(builder =>
                     {
-                        if (context.HostingEnvironment.IsDevelopment() is false)
-                        {
+                        if (context.HostingEnvironment.IsDevelopment())
+                            builder.AddConsole();
+                        else
                             builder.AddGelf(options =>
                                 options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
                             );
-                        }
-                        else
-                        {
-                            builder.AddConsole();
-                        }
                     });
 
                     services.AddHttpClient<ReleasesClient>();
@@ -118,14 +111,13 @@ namespace TezosNotifyBot
                         .SetHandlerLifetime(TimeSpan.FromMinutes(1))
                         .AddPolicyHandler(GetRetryPolicy());
 
-                    // services.AddSingleton<NodeManager>();
                     services.AddSingleton<TwitterClient>();
 
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
                     services.AddHostedService<TokensMonitorWorker>();
-
+                    
                     using var provider = services.BuildServiceProvider();
                     using var database = provider.GetRequiredService<TezosDataContext>();
 

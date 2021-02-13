@@ -3,6 +3,9 @@ using Newtonsoft.Json;
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Linq.Expressions;
+using Newtonsoft.Json.Serialization;
+using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -10,10 +13,16 @@ namespace TezosNotifyBot.Tzkt
 	{
 		ILogger<TzKtClient> _logger;
 		WebClient _client;
+
+
+		private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
+		{
+			ContractResolver = new CamelCasePropertyNamesContractResolver()
+		};
+		
 		public TzKtClient(ILogger<TzKtClient> logger, string url)
 		{
-			_client = new WebClient();
-			_client.BaseAddress = url;
+			_client = new WebClient { BaseAddress = url };
 			_logger = logger;
 		}
 
@@ -50,6 +59,13 @@ namespace TezosNotifyBot.Tzkt
 				_logger.LogError(e, $"Error downloading from {_client.BaseAddress}{addr}");
 				throw;
 			}
+		}
+
+		public IEnumerable<Operation> GetAccountOperations(string address, string filter = "")
+		{
+			var response = Download($"/v1/accounts/{address}/operations?{filter}");
+
+			return JsonConvert.DeserializeObject<Operation[]>(response, _jsonSerializerSettings);
 		}
 	}
 }
