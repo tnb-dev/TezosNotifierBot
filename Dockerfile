@@ -7,6 +7,8 @@ ARG configuration=Release
 ###########################
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 
+ARG version=0.0.0-dev
+
 WORKDIR /src
 
 # Project assemblies for layer caching
@@ -25,7 +27,7 @@ COPY . .
 WORKDIR /src/TezosNotifyBot
 
 ## Publish backend assembly
-RUN dotnet publish --output /out --no-restore -v m
+RUN dotnet publish --output /out --no-restore -v m /property:Version=${version}
 
 ###########################
 #

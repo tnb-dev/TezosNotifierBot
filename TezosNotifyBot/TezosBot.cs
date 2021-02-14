@@ -99,6 +99,8 @@ namespace TezosNotifyBot
 
         public async Task Run(CancellationToken cancelToken)
         {
+            var version = GetType().Assembly.GetName().Version?.ToString(3);
+            
             worker = new Worker();
             worker.OnError += Worker_OnError;
             tzStats = new TzStatsData(worker);
@@ -134,7 +136,7 @@ namespace TezosNotifyBot
                 var me = await Bot.GetMeAsync();
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 client.BlockReceived += Client_BlockReceived;
-                NotifyDev(me.Username + " v2.1 started, last block: " + repo.GetLastBlockLevel().ToString(), 0);
+                NotifyDev($"{me.Username} v{version} started, last block: {repo.GetLastBlockLevel()}", 0);
                 tzStats.LoadCycle(repo.GetLastBlockLevel().Item1);
                 var c = tzStats.GetCycle(repo.GetLastBlockLevel().Item1);
                 // TODO: Check why `snapshot_cycle` is null
