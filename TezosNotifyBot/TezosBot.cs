@@ -2165,29 +2165,29 @@ namespace TezosNotifyBot
                     (u?.UserState == UserState.Broadcast ||
                      u?.UserState == UserState.NotifyFollowers))
                 {
-                    int count = 0;
+                    var count = 0;
                     using (var fileStream = new MemoryStream())
                     {
-                        var fileInfo = Bot.GetInfoAndDownloadFileAsync(
-                            fileId: message.Photo.OrderByDescending(o => o.Width).First().FileId,
-                            destination: fileStream
-                        ).ConfigureAwait(true).GetAwaiter().GetResult();
-                        fileStream.Seek(0, SeekOrigin.Begin);
-
-                        List<User> users = repo.GetUsers().Where(o => !o.Inactive && o.Language == u.Language).ToList();
+                        var properSize = message.Photo.OrderByDescending(o => o.Width).First();
+                        Bot.GetInfoAndDownloadFileAsync(properSize.FileId, fileStream)
+                            .ConfigureAwait(true).GetAwaiter().GetResult();
+                        
+                        var users = repo.GetUsers().Where(o => !o.Inactive && o.Language == u.Language).ToList();
                         if (u.UserState == UserState.NotifyFollowers)
                         {
                             var ua = repo.GetUserAddresses(u.Id).FirstOrDefault(o => o.Id == u.EditUserAddressId);
                             users = GetFollowers(ua.Address);
                         }
 
-                        var ifo = new InputOnlineFile(fileStream);
                         foreach (var user1 in users)
                         {
+                            fileStream.Seek(0, SeekOrigin.Begin);
+                            var photo = new InputOnlineFile(fileStream);
+                            
                             try
                             {
                                 var caption = ApplyEntities(message.Caption, message.CaptionEntities);
-                                Bot.SendPhotoAsync(user1.Id, ifo, caption: caption, parseMode: ParseMode.Html,
+                                Bot.SendPhotoAsync(user1.Id, photo, caption: caption, parseMode: ParseMode.Html,
                                         replyMarkup: ReplyKeyboards.MainMenu(resMgr, user1)).ConfigureAwait(true)
                                     .GetAwaiter().GetResult();
                                 Thread.Sleep(50);
