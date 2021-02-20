@@ -1118,14 +1118,22 @@ namespace TezosNotifyBot
                     var from = transfer.parameters.children[0].value;
                     var to = transfer.parameters.children[1].value;
 
-                    if (BigInteger.TryParse(transfer.parameters.children[2].value, out var big))
+                    if (BigInteger.TryParse(transfer.parameters.children[2].value, out var value))
                     {
-                        var amount = (decimal)big / (decimal)Math.Pow(10, token.Decimals);
-                        result.Add((from, to, amount));
+                        try
+                        {
+                            value /= new BigInteger(Math.Pow(10, token.Decimals));
+                            result.Add((from, to, (decimal) value));
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError($"Failed on BigInteger to decimal conversion: {e.Message}");
+                            throw;
+                        }
                     }
                     else
                     {
-                        Logger.LogError($"Failed to parse transfer with value {transfer.parameters.children[2].value}");
+                        Logger.LogError($"Failed to parse BigInteger transfer with value {transfer.parameters.children[2].value}");
                     }
                     
                 }
