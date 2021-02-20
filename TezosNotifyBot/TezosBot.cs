@@ -1117,8 +1117,17 @@ namespace TezosNotifyBot
                 {
                     var from = transfer.parameters.children[0].value;
                     var to = transfer.parameters.children[1].value;
-                    var amount = (decimal)BigInteger.Parse(transfer.parameters.children[2].value) / (decimal)Math.Pow(10, token.Decimals);
-                    result.Add((from, to, amount));
+
+                    if (BigInteger.TryParse(transfer.parameters.children[2].value, out var big))
+                    {
+                        var amount = (decimal)big / (decimal)Math.Pow(10, token.Decimals);
+                        result.Add((from, to, amount));
+                    }
+                    else
+                    {
+                        Logger.LogError($"Failed to parse transfer with value {transfer.parameters.children[2].value}");
+                    }
+                    
                 }
             }
             return result;
