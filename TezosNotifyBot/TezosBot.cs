@@ -1367,6 +1367,24 @@ namespace TezosNotifyBot
             if (blockMetadata.level.cycle_position == 0)
             {
                 var uad = repo.GetUserDelegates();
+
+                var penalties = _serviceProvider.GetService<ITzKtClient>().GetRevelationPenalties(blockMetadata.level.level - 1);
+                foreach(var penalty in penalties)
+				{
+                    foreach(var ua in uad.Where(a => a.Address == penalty.baker.address && a.NotifyMisses))
+					{
+                        var result = resMgr.Get(Res.RevelationPenalty,
+                                new ContextObject
+                                {
+                                    ua = ua,
+                                    u = ua.User,
+                                    Block = penalty.missedLevel,
+                                    Amount = penalty.TotalLost
+                                });
+                        SendTextMessageUA(ua, result);
+                    }
+				}
+
                 foreach (var d in uad.Select(o => o.Address).Distinct())
                 {
                     DelegateInfo di;

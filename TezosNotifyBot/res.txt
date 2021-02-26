@@ -369,3 +369,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastSeen;ru;Замечен
 #LastActive;en;Last active
 #LastActive;ru;Последняя активность
+#RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
+#RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
