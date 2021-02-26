@@ -236,6 +236,7 @@ namespace TezosNotifyBot
 		Tokens,
 		TokenBalance,
 		LastSeen,
-		LastActive
+		LastActive,
+		RevelationPenalty
 	}
 }
