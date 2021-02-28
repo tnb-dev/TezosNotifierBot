@@ -17,9 +17,23 @@ namespace TezosNotifyBot.Domain
         public string? Name { get; set; }
         public bool NotifyBakingRewards { get; set; }
         public decimal AmountThreshold { get; set; }
+
+        public bool NotifyPayout { get; set; } = true;
         public bool NotifyTransactions { get; set; }
         public bool NotifyCycleCompletion { get; set; }
         public bool NotifyDelegations { get; set; }
+        
+        /// <summary>
+        /// Is user subscribed to notifications about changing delegate's balance 
+        /// </summary>
+        /// <see cref="DelegatorsBalanceThreshold"/>
+        public bool NotifyDelegatorsBalance { get; set; }
+
+        /// <summary>
+        /// </summary>
+        /// <see cref="NotifyDelegatorsBalance"/>
+        public decimal DelegatorsBalanceThreshold { get; set; }
+        
         public decimal DelegationAmountThreshold { get; set; }
         public bool NotifyMisses { get; set; }
         public long ChatId { get; set; }

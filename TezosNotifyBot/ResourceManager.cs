@@ -65,12 +65,17 @@ namespace TezosNotifyBot
 
 		public string Get(Res name, ContextObject data)
 		{
-			string lang = data.u?.Language ?? "en";
+			return Get(name, data.u?.Language ?? "en", data);
+		}
+
+		public string Get<TContext>(Res key, string lang, TContext data)
+			where TContext: class
+		{
 			if (lang != "ru")
 				lang = "en";
-			if (!resList.ContainsKey((name.ToString(), lang)))
-				throw new ApplicationException($"Text Resource {name};{lang} not found");
-			var resStr = resList[(name.ToString(), lang)];
+			if (!resList.ContainsKey((key.ToString(), lang)))
+				throw new ApplicationException($"Text Resource {key};{lang} not found");
+			var resStr = resList[(key.ToString(), lang)];
 			if (!resStr.Contains("{"))
 				return resStr;
 			resStr = "\"" + resStr.Replace("{", "\"+").Replace("}", "+\"") + "\"";
@@ -200,7 +205,12 @@ namespace TezosNotifyBot
 		WhaleAlerts,
 		NetworkIssueAlerts,
 		VotingNotify,
+		PayoutNotifyStatus,
+		PayoutNotifyToggle,
 		ReleaseNotify,
+		DelegatorsBalanceNotifyStatus,
+		DelegatorsBalanceNotifyToggle,
+		DelegatorsBalanceThresholdButton,
 		Off,
 		Delete,
 		ManageAddress,
@@ -237,6 +247,8 @@ namespace TezosNotifyBot
 		TokenBalance,
 		LastSeen,
 		LastActive,
-		RevelationPenalty
+		RevelationPenalty,
+		Payout,
+		DelegatorsBalanceUpdate,
 	}
 }

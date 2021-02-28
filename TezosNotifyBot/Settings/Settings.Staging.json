@@ -15,5 +15,8 @@
             }
         }
     },
+    "Telegram": {
+        "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
+    },
     "TzKtUrl": "http://tzkt-api:5000/"
 }

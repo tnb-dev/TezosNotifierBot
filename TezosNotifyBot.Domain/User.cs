@@ -16,12 +16,12 @@ namespace TezosNotifyBot.Domain
         public bool HideHashTags { get; set; }
         public int WhaleAlertThreshold { get; set; }
         public bool VotingNotify { get; set; }
-
+        
         /// <summary>
         /// Is user subscribed to notifications about tezos releases
         /// </summary>
         public bool ReleaseNotify { get; set; } = false;
-        
+
         public int NetworkIssueNotify { get; set; }
         public int Explorer { get; set; }
 
