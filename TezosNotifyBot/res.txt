@@ -72,8 +72,12 @@ Full description & manual: http://tzsnt.fr/
 #Search;en;🔎 Search
 #VotingNotify;ru;{(u.VotingNotify ? "🔈" : "🔇")} Голосования
 #VotingNotify;en;{(u.VotingNotify ? "🔈" : "🔇")} Voting
+#PayoutNotify;en;{(u.PayoutNotify ? "🔈" : "🔇")} Payouts
+#PayoutNotify;ru;{(u.PayoutNotify ? "🔈" : "🔇")} Выплаты
 #ReleaseNotify;ru;{(u.ReleaseNotify ? "🦊" : "🔳")} Обновления софта
 #ReleaseNotify;en;{(u.ReleaseNotify ? "🦊" : "🔳")} Software releases
+#DelegatorsBalanceNotify;en;{(u.DelegatorsBalanceNotify ? "🔈" : "🔇")} Delegators balance
+#DelegatorsBalanceNotify;ru;{(u.DelegatorsBalanceNotify ? "🔈" : "🔇")} Изменения баланса делегатора
 % Главное меню
 #NewAddress;ru;✳️ Новый адрес
 #NewAddress;en;✳️ New Address
@@ -95,6 +99,8 @@ Full description & manual: http://tzsnt.fr/
 #SetThreshold;en;✂️ Transaction Threshold
 #SetDlgThreshold;ru;✂️ Порог делегирования
 #SetDlgThreshold;en;✂️ Delegation Threshold
+#DelegatorsBalanceThresholdButton;en;✂️ Balance Threshold
+#DelegatorsBalanceThresholdButton;ru;✂️ Порог баланса
 #RewardNotify;ru;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Вознаграждения
 #RewardNotify;en;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards
 #CycleNotify;ru;{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Завершение цикла
@@ -105,6 +111,10 @@ Full description & manual: http://tzsnt.fr/
 #TransactionNotify;en;{(ua.NotifyTransactions ? "☑️" : "🔲")} Transactions
 #DelegationNotify;ru;{(ua.NotifyDelegations ? "☑️" : "🔲")} Делегирования
 #DelegationNotify;en;{(ua.NotifyDelegations ? "☑️" : "🔲")} Delegations
+#PayoutNotifyToggle;en;{(ua.NotifyPayout ? "☑️" : "🔲")} Payouts
+#PayoutNotifyToggle;ru;{(ua.NotifyPayout ? "☑️" : "🔲")} Выплаты
+#DelegatorsBalanceNotifyToggle;en;{(ua.NotifyDelegatorsBalance ? "☑️" : "🔲")} Delegators balance
+#DelegatorsBalanceNotifyToggle;ru;{(ua.NotifyDelegatorsBalance ? "☑️" : "🔲")} Баланс делегаторов
 #WhaleAlerts;ru;🐋 Оповещения о китах
 #WhaleAlerts;en;🐋 Whale alerts
 #Explorer;ru;🌐 Эксплорер
@@ -182,6 +192,10 @@ Or use the search:
 #CycleCompletionNotifications;en;🏁 Cycle completions: {(ua.NotifyCycleCompletion ? "🔔 on" : "🔕 off")}
 #MissesNotifications;ru;🤷🏻‍♂️ Пропуски пекаря: {(ua.NotifyMisses ? "🔔 вкл" : "🔕 выкл")}
 #MissesNotifications;en;🤷🏻‍♂️ Missed baking/endorsing: {(ua.NotifyMisses ? "🔔 on" : "🔕 off")}
+#PayoutNotifyStatus;en;🤑 Payouts: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
+#PayoutNotifyStatus;ru;🤑 Выплаты: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}
+#DelegatorsBalanceNotifyStatus;en;🔺 Delegators balance: {(ua.NotifyDelegatorsBalance ? "🔔 on" : "🔕 off")}
+#DelegatorsBalanceNotifyStatus;ru;🔺 Баланс делегаторов: {(ua.NotifyDelegatorsBalance ? "🔔 вкл" : "🔕 выкл")}
 #AddressAdded;ru;✅ Добавлен <a href='{t.account(ua.Address)}'>{ua.Address}</a>{(!String.IsNullOrEmpty(ua.Name) ? " под названием <b>" + ua.Name + "</b>" : "")}. Вы будете получать уведомления по всем событиям.
 #AddressAdded;en;✅ Added <a href='{t.account(ua.Address)}'>{ua.Address}</a>{(!String.IsNullOrEmpty(ua.Name) ? " as <b>" + ua.Name + "</b>" : "")}. You will receive notifications on any events.
 #NetworkIssueAlertSet;ru;{(u.NetworkIssueNotify == 0 ? "Уведомления о сбоях сети отключены" : "Установлено время простоя сети до уведомления: " + u.NetworkIssueNotify.ToString() + " минут")}
@@ -371,3 +385,13 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastActive;ru;Последняя активность
 #RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
 #RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
+#Payout;en;🤑 New <a href='/operation'>payout</a> of 0.079 XTZ (0.30 USD) to DonateTZ from Everstake Payouts 
+Spendable Balance: 222.5 XTZ (833.71 USD / 0.0163 BTC)
+#Payout;ru;🤑 Новая <a href='/operation'>выплата</a> 22.187 XTZ (51.59 USD) к My Ledger от Everstake Payouts
+Доступный баланс: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
+#DelegatorsBalanceUpdate;en;🔺 Delegator [адрес] increased its balance with transaction by 22.187 XTZ (51.59 USD)
+                            
+Current delegate’s balance: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
+#DelegatorsBalanceUpdate;ru;🔺 Делегатор [адрес] увеличил свой баланс транзакцией на 22.187 XTZ (51.59 USD)
+                            
+Текущий баланс делегата: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)

@@ -19,7 +19,7 @@
     },
     "Telegram": {
         "BotSecret": "",
-        "DevUsers": [ "mksmfd", "tonoff", "emerido" ],
+        "DevUsers": [],
         "ActivityChat": [ -1001482752306 ]
     },
     "ReleasesWorker": {

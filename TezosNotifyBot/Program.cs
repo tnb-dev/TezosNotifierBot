@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -14,6 +15,7 @@ using NornPool.Model;
 using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
+using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
@@ -29,7 +31,16 @@ namespace TezosNotifyBot
             // TODO: It's needed?
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            CreateHostBuilder(args).Build().Run();
+            var builder = CreateHostBuilder(args).Build();
+            if (args.Contains("--migrate"))
+            {
+                using var scope = builder.Services.CreateScope();
+                using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
+
+                db.Database.Migrate();
+            }
+
+            builder.Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -72,6 +83,7 @@ namespace TezosNotifyBot
                             context.Configuration.GetValue<string>("BetterCallDevUrl")));
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
+                    services.AddTransient<TezosBotFacade>();
                     services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
 
                     services.AddSingleton(provider =>
@@ -117,11 +129,20 @@ namespace TezosNotifyBot
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
                     services.AddHostedService<TokensMonitorWorker>();
-                    
-                    using var provider = services.BuildServiceProvider();
-                    using var database = provider.GetRequiredService<TezosDataContext>();
 
-                    database.Database.Migrate();
+                    services.Scan(scan => scan
+                        .FromCallingAssembly()
+                        .AddClasses(classes => classes.AssignableTo<IUpdateHandler>())
+                        .AsSelf()
+                        .WithTransientLifetime()
+                    );
+                    services.Scan(scan => scan
+                        .FromCallingAssembly()
+                        .AddClasses(classes => classes.AssignableTo<CommandsProfile>())
+                        .As<CommandsProfile>()
+                        .WithSingletonLifetime()
+                    );
+                    services.AddSingleton<CommandsManager>();
                 });
 
         private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()

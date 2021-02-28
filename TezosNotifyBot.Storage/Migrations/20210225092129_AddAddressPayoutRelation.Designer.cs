@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TezosNotifyBot.Storage;
@@ -9,9 +10,10 @@ using TezosNotifyBot.Storage;
 namespace TezosNotifyBot.Storage.Migrations
 {
     [DbContext(typeof(TezosDataContext))]
-    partial class TezosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20210225092129_AddAddressPayoutRelation")]
+    partial class AddAddressPayoutRelation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -568,10 +570,6 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("numeric")
                         .HasColumnName("delegation_amount_threshold");
 
-                    b.Property<decimal>("DelegatorsBalanceThreshold")
-                        .HasColumnType("numeric")
-                        .HasColumnName("delegators_balance_threshold");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -600,23 +598,11 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("notify_delegations");
 
-                    b.Property<bool>("NotifyDelegatorsBalance")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("notify_delegators_balance");
-
                     b.Property<bool>("NotifyMisses")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("notify_misses");
-
-                    b.Property<bool>("NotifyPayout")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("notify_payout");
 
                     b.Property<bool>("NotifyTransactions")
                         .ValueGeneratedOnAdd()

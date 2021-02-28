@@ -42,4 +42,4 @@ WORKDIR /app
 
 EXPOSE 80
 
-ENTRYPOINT ["dotnet", "TezosNotifyBot.dll"]
+ENTRYPOINT ["dotnet", "TezosNotifyBot.dll", "--migrate"]

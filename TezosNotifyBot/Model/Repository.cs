@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
+using TezosNotifyBot.Storage.Extensions;
 using BakingRights = TezosNotifyBot.Tezos.BakingRights;
 using Delegate = TezosNotifyBot.Domain.Delegate;
 using EndorsingRights = TezosNotifyBot.Tezos.EndorsingRights;
@@ -57,7 +59,7 @@ namespace TezosNotifyBot.Model
                 return action(db);
             }
         }
-        
+
         internal void LogMessage(Telegram.Bot.Types.User from, int messageId, string text, string data)
         {
             RunIsolatedDb(db =>
@@ -135,7 +137,7 @@ namespace TezosNotifyBot.Model
 
         public User GetUser(int id)
         {
-            lock (_dbLock) 
+            lock (_dbLock)
                 return _db.Set<User>().SingleOrDefault(x => x.Id == id);
         }
 
@@ -231,7 +233,7 @@ namespace TezosNotifyBot.Model
             lock (_dbLock)
                 return _db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addressId);
         }
-        
+
         public List<UserAddress> GetUserDelegates()
         {
             lock (_dbLock)
@@ -251,7 +253,7 @@ namespace TezosNotifyBot.Model
                     user.Username = u.Username;
                     user.Lastname = u.LastName;
                     user.Firstname = u.FirstName;
-                    
+
                     lock (_dbLock)
                     {
                         _db.SaveChanges();
@@ -278,7 +280,7 @@ namespace TezosNotifyBot.Model
             lock (_dbLock)
             {
                 var conn = _db.Database.GetDbConnection();
-            
+
                 var cmd = conn.CreateCommand();
                 cmd.CommandText = sql;
                 var result = new List<string[]>();
@@ -286,7 +288,7 @@ namespace TezosNotifyBot.Model
                 {
                     conn.Open();
                     using var reader = cmd.ExecuteReader();
-                
+
                     if (reader.HasRows is false)
                     {
                         result.Add(new[] {$"{reader.RecordsAffected} records affected"});
@@ -296,7 +298,7 @@ namespace TezosNotifyBot.Model
                     var data = new string[reader.FieldCount];
                     for (var i = 0; i < data.Length; i++)
                         data[i] = reader.GetName(i);
-                
+
                     result.Add(data);
                     while (reader.Read())
                     {
@@ -376,7 +378,7 @@ namespace TezosNotifyBot.Model
                 Address = addr,
                 Name = name
             };
-            
+
             lock (_dbLock)
             {
                 _db.Add(d);
@@ -454,10 +456,13 @@ namespace TezosNotifyBot.Model
         {
             lock (_dbLock)
             {
+                if (!addr.StartsWith("tz") && !addr.StartsWith("KT"))
+                    return;
+
                 var d = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
                 if (d == null)
                 {
-                    d = new KnownAddress {Address = addr};
+                    d = new KnownAddress(addr, name);
                     _db.KnownAddresses.Add(d);
                 }
 
@@ -468,18 +473,12 @@ namespace TezosNotifyBot.Model
 
         public List<KnownAddress> GetKnownAddresses()
         {
-            return RunIsolatedDb(db =>
-            {
-                return db.KnownAddresses.OrderBy(o => o.Name).ToList();
-            });
+            return RunIsolatedDb(db => db.KnownAddresses.OrderBy(o => o.Name).ToList());
         }
 
         public List<Delegate> GetDelegates()
         {
-            return RunIsolatedDb(db =>
-            {
-                return db.Delegates.OrderBy(o => o.Name).ToList();
-            });
+            return RunIsolatedDb(db => db.Delegates.OrderBy(o => o.Name).ToList());
         }
 
         public void UpdateDelegateRewards1(string addr, int cycle, long addPlan, long addAcc)
@@ -569,10 +568,7 @@ namespace TezosNotifyBot.Model
 
         public Proposal GetProposal(string hash)
         {
-            return RunIsolatedDb(db =>
-            {
-                return db.Proposals.FirstOrDefault(o => o.Hash == hash);
-            });
+            return RunIsolatedDb(db => { return db.Proposals.FirstOrDefault(o => o.Hash == hash); });
         }
 
         public Proposal AddProposal(string hash, string addr, int votingPeriod)
@@ -755,6 +751,40 @@ namespace TezosNotifyBot.Model
         {
             lock (_dbLock)
                 return _db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == address);
+        }
+
+        public bool IsPayoutAddress(string address)
+        {
+            return RunIsolatedDb(db =>
+                db.Set<KnownAddress>().Any(x => x.Address == address && x.PayoutFor != null));
+        }
+        
+        public KnownAddress GetKnownAddressByPayout(string address)
+        {
+            return RunIsolatedDb(db =>
+            {
+                var masterAddress = db.Set<KnownAddress>()
+                    .Where(x => x.Address == address)
+                    .Select(x => x.PayoutFor)
+                    .SingleOrDefault();
+                
+                if (masterAddress is null)
+                    return null;
+                
+                return db.Set<KnownAddress>().SingleOrDefault(x => x.Address == masterAddress);
+            });
+        }
+
+        public User[] GetAddressSubscribers(string address, Expression<Func<User, bool>> predicate = null)
+        {
+            return RunIsolatedDb(db =>
+            {
+                return db.Set<UserAddress>()
+                    .Where(x => x.Address == address && x.User.Inactive == false)
+                    .Select(x => x.User)
+                    .Apply(predicate)
+                    .ToArray();
+            });
         }
     }
 }

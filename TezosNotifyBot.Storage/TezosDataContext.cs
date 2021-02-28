@@ -56,11 +56,19 @@ namespace TezosNotifyBot.Storage
                 .HasDefaultValue(0);
             
             modelBuilder.Entity<User>();
-            modelBuilder.Entity<UserAddress>();
+            modelBuilder.Entity<UserAddress>(builder =>
+            {
+                builder.Property(x => x.NotifyPayout).HasDefaultValue(true);
+                builder.Property(x => x.NotifyDelegatorsBalance).HasDefaultValue(true);
+            });
             modelBuilder.Entity<UserAddressDelegation>();
             modelBuilder.Entity<Message>();
             modelBuilder.Entity<Delegate>();
-            modelBuilder.Entity<KnownAddress>();
+            modelBuilder.Entity<KnownAddress>(builder =>
+            {
+                builder.HasKey(x => x.Address);
+                builder.HasIndex(x => x.PayoutFor);
+            });
             modelBuilder.Entity<TwitterMessage>();
             modelBuilder.Entity<BalanceUpdate>();
             modelBuilder.Entity<Proposal>();
