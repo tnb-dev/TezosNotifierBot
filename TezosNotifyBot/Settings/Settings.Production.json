@@ -15,5 +15,5 @@
             }
         }
     },
-    "TzKtUrl": "http://tzkt-api:5000/"
+    "TzKtUrl": "https://api.tzkt.io/"
 }
