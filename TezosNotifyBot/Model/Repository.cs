@@ -403,6 +403,14 @@ namespace TezosNotifyBot.Model
             }
         }
 
+        public KnownAddress GetKnownAddress(string addr)
+        {
+            return RunIsolatedDb(db =>
+            {
+                return db.Set<KnownAddress>().SingleOrDefault(x => x.Address == addr);
+            }); 
+        }
+        
         internal string GetKnownAddressName(string addr)
         {
             return RunIsolatedDb(db =>
@@ -742,6 +750,15 @@ namespace TezosNotifyBot.Model
                 return db.BalanceUpdates
                     .Where(o => o.Delegate.Address == @delegate && o.Level >= from && o.Level <= to).ToList();
             });
+        }
+
+        public void SaveMessage(Message message)
+        {
+            lock (_dbLock)
+            {
+                _db.Add(message);
+                _db.SaveChanges();
+            }
         }
 
         public AddressConfig GetAddressConfig(string address)

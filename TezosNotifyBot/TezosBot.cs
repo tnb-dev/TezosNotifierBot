@@ -50,7 +50,12 @@ namespace TezosNotifyBot
         private Repository repo;
 
 
+        /// <summary>
+        /// Try to use and extend `botClient`
+        /// </summary>
+        /// <see cref="botClient"/>
         TelegramBotClient Bot;
+        
         MarketData md = new MarketData();
 
         DateTime mdReceived;
@@ -84,12 +89,13 @@ namespace TezosNotifyBot
         TwitterClient twitter;
         private readonly NodeManager _nodeManager;
         private readonly CommandsManager commandsManager;
+        private readonly TezosBotFacade botClient;
         string twitterAccountName;
         bool twitterNetworkIssueNotified = false;
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
             TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient,
-            NodeManager nodeManager, CommandsManager commandsManager)
+            NodeManager nodeManager, CommandsManager commandsManager, TezosBotFacade botClient)
         {
             _serviceProvider = serviceProvider;
             Logger = logger;
@@ -98,6 +104,7 @@ namespace TezosNotifyBot
             twitter = twitterClient;
             _nodeManager = nodeManager;
             this.commandsManager = commandsManager;
+            this.botClient = botClient;
 
             repo = _serviceProvider.GetRequiredService<Repository>();
             addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
@@ -642,11 +649,6 @@ namespace TezosNotifyBot
                         continue;
                     if (content.kind == "transaction")
                     {
-                        var isPayoutAddress = repo.IsPayoutAddress(content.source);
-                        if (isPayoutAddress)
-                            ProcessPayoutTransaction(content);
-
-
                         var from = content.source;
                         var to = content.destination;
                         var amount = decimal.Parse(content.amount) / 1000000M;
@@ -1057,8 +1059,10 @@ namespace TezosNotifyBot
                     //string usdBalance = ua.UsdBalance(md.price_usd);
                     //string btcBalance = ua.BtcBalance(md.price_btc);
                     //string balance = ua.TezBalance();
-                    string result = "";
-                    string tags = "";
+                    var result = "";
+                    var tags = "";
+                    var operationTag = "#incoming";
+                    
                     var to_ua = to.Where(o => ua.User.WhaleThreshold == 0 || o.Item3 < ua.User.WhaleThreshold);
                     if (to_ua.Count() == 0)
                         continue;
@@ -1066,7 +1070,16 @@ namespace TezosNotifyBot
                     {
                         var from = to_ua.Single().Item1;
                         var ua_from = repo.GetUserTezosAddress(ua.UserId, from);
-                        result = resMgr.Get(Res.IncomingTransaction,
+
+                        var isPayout = repo.IsPayoutAddress(from);
+                        if (isPayout)
+                            operationTag = "#payout";
+                        
+                        var messageType = isPayout && ua_from.NotifyPayout
+                            ? Res.Payout
+                            : Res.IncomingTransaction;
+                        
+                        result = resMgr.Get(messageType,
                             new ContextObject
                             {
                                 u = ua.User, OpHash = to_ua.Single().Item4, Block = header.level,
@@ -1117,7 +1130,7 @@ namespace TezosNotifyBot
                     }
 
                     if (!ua.User.HideHashTags)
-                        result += "\n#incoming" + (to.Key.token != null ? " #" + to.Key.token.Symbol.ToLower() : "") +
+                        result += $"\n{operationTag}" + (to.Key.token != null ? " #" + to.Key.token.Symbol.ToLower() : "") +
                                   ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
                     repo.UpdateUserAddress(ua);
@@ -3581,18 +3594,5 @@ namespace TezosNotifyBot
             Logger.LogInformation($"Rights for cycle {cycle} loaded");
         }
 
-        private void ProcessPayoutTransaction(OperationContent content)
-        {
-            var masterAddress = repo.GetKnownAddressByPayout(content.source);
-            if (masterAddress is null)
-            {
-                Logger.LogWarning(
-                    $"Source address marked as payout but master address doesn't exists\n" +
-                    $"Source address in operation content: {content.source}");
-                return;
-            }
-
-            var subscribers = repo.GetAddressSubscribers(masterAddress.Address);
-        }
     }
 }
