@@ -1006,7 +1006,7 @@ namespace TezosNotifyBot
                                   (from.Key.token != null ? " #" + from.Key.token.Symbol.ToLower() : "") +
                                   ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
-                    repo.UpdateBalance(ua);
+                    repo.UpdateUserAddress(ua);
                 }
             }
 
@@ -1120,7 +1120,7 @@ namespace TezosNotifyBot
                         result += "\n#incoming" + (to.Key.token != null ? " #" + to.Key.token.Symbol.ToLower() : "") +
                                   ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
-                    repo.UpdateBalance(ua);
+                    repo.UpdateUserAddress(ua);
                 }
             }
 
@@ -1713,21 +1713,24 @@ namespace TezosNotifyBot
             try
             {
                 var message = ev.CallbackQuery.Message;
-                repo.LogMessage(ev.CallbackQuery.From, message.MessageId, null, ev.CallbackQuery.Data);
-                Logger.LogInformation(UserTitle(ev.CallbackQuery.From) + ": button " + ev.CallbackQuery.Data);
-                var u = repo.GetUser(ev.CallbackQuery.From.Id);
-                var t = Explorer.FromId(u.Explorer);
-                if (ev.CallbackQuery.Data == "donate")
+                var callbackData = ev.CallbackQuery.Data;
+                var callbackArgs = callbackData.Split(' ').Skip(1).ToArray();
+                repo.LogMessage(ev.CallbackQuery.From, message.MessageId, null, callbackData);
+                Logger.LogInformation(UserTitle(ev.CallbackQuery.From) + ": button " + callbackData);
+                var userId = ev.CallbackQuery.From.Id;
+                var user = repo.GetUser(userId);
+                var t = Explorer.FromId(user.Explorer);
+                if (callbackData == "donate")
                 {
                     var file = new InputOnlineFile(File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
                         "Resources", "DonateQR.jpg")));
-                    await Bot.SendPhotoAsync(ev.CallbackQuery.From.Id, file, resMgr.Get(Res.DonateInfo, u),
-                        ParseMode.Html, replyMarkup: ReplyKeyboards.MainMenu(resMgr, u));
+                    await Bot.SendPhotoAsync(userId, file, resMgr.Get(Res.DonateInfo, user),
+                        ParseMode.Html, replyMarkup: ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("twdelete "))
+                if (callbackData.StartsWith("twdelete "))
                 {
-                    var twitterMessageId = int.Parse(ev.CallbackQuery.Data.Substring("twdelete ".Length));
+                    var twitterMessageId = int.Parse(callbackData.Substring("twdelete ".Length));
                     var twm = repo.GetTwitterMessage(twitterMessageId);
                     if (twm != null && twm.TwitterId != null)
                     {
@@ -1737,78 +1740,79 @@ namespace TezosNotifyBot
                     }
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("deleteaddress"))
+                if (callbackData.StartsWith("deleteaddress"))
                 {
-                    var ua = repo.RemoveAddr(ev.CallbackQuery.From.Id,
-                        ev.CallbackQuery.Data.Substring("deleteaddress ".Length));
+                    var ua = repo.RemoveAddr(userId,
+                        callbackData.Substring("deleteaddress ".Length));
                     if (ua != null)
                     {
                         string result = resMgr.Get(Res.AddressDeleted, ua);
-                        if (!u.HideHashTags)
+                        if (!user.HideHashTags)
                             result += "\n\n#deleted" + ua.HashTag();
-                        SendTextMessage(u.Id, result, null, ev.CallbackQuery.Message.MessageId);
-                        NotifyUserActivity($"User {UserLink(u)} deleted [{ua.Address}]({t.account(ua.Address)})");
+                        SendTextMessage(user.Id, result, null, ev.CallbackQuery.Message.MessageId);
+                        NotifyUserActivity($"User {UserLink(user)} deleted [{ua.Address}]({t.account(ua.Address)})");
                     }
                     else
-                        SendTextMessage(u.Id, resMgr.Get(Res.AddressNotExist, u), null,
+                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("addaddress"))
+                if (callbackData.StartsWith("addaddress"))
                 {
-                    var addr = ev.CallbackQuery.Data.Substring("addaddress ".Length);
-                    OnNewAddressEntered(u, addr);
+                    var addr = callbackData.Substring("addaddress ".Length);
+                    OnNewAddressEntered(user, addr);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("setthreshold"))
+                if (callbackData.StartsWith("setthreshold"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("setthreshold ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("setthreshold ".Length));
                     if (ua != null)
                     {
-                        u.UserState = UserState.SetAmountThreshold;
-                        u.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(u);
+                        user.UserState = UserState.SetAmountThreshold;
+                        user.EditUserAddressId = ua.Id;
+                        repo.UpdateUser(user);
                         string result = resMgr.Get(Res.EnterAmountThreshold, ua);
-                        if (!u.HideHashTags)
+                        if (!user.HideHashTags)
                             result += "\n\n#txthreshold" + ua.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
+                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(u.Id, resMgr.Get(Res.AddressNotExist, u), null,
+                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("setname"))
+                if (callbackData.StartsWith("setname"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("setname ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("setname ".Length));
                     if (ua != null)
                     {
-                        u.UserState = UserState.SetName;
-                        u.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(u);
+                        user.UserState = UserState.SetName;
+                        user.EditUserAddressId = ua.Id;
+                        repo.UpdateUser(user);
                         string result = resMgr.Get(Res.EnterNewName, ua);
-                        if (!u.HideHashTags)
+                        if (!user.HideHashTags)
                             result += "\n\n#rename" + ua.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
+                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(u.Id, resMgr.Get(Res.AddressNotExist, u), null,
+                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("notifyfollowers"))
+                if (callbackData.StartsWith("notifyfollowers"))
                 {
-                    var addrId = int.Parse(ev.CallbackQuery.Data.Substring("notifyfollowers ".Length));
+                    var addrId = int.Parse(callbackData.Substring("notifyfollowers ".Length));
 
-                    var userAddress = repo.GetUserAddress(ev.CallbackQuery.From.Id, addrId);
+                    var userAddress = repo.GetUserAddress(userId, addrId);
                     if (userAddress != null)
                     {
-                        var user = repo.GetUser(ev.CallbackQuery.From.Id);
-                        user.UserState = UserState.NotifyFollowers;
-                        user.EditUserAddressId = userAddress.Id;
-                        repo.UpdateUser(user);
+                        // TODO: Maybe reuse user var? 
+                        var u = repo.GetUser(userId);
+                        u.UserState = UserState.NotifyFollowers;
+                        u.EditUserAddressId = userAddress.Id;
+                        repo.UpdateUser(u);
 
                         var result = resMgr.Get(Res.EnterMessageForAddressFollowers, userAddress);
 
@@ -1817,304 +1821,317 @@ namespace TezosNotifyBot
                         SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
                     }
                     else
-                        SendTextMessage(u.Id, resMgr.Get(Res.AddressNotExist, u), null,
+                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("setdlgthreshold"))
+                if (callbackData.StartsWith("setdlgthreshold"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("setdlgthreshold ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("setdlgthreshold ".Length));
                     if (ua != null)
                     {
-                        u.UserState = UserState.SetDlgAmountThreshold;
-                        u.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(u);
+                        user.UserState = UserState.SetDlgAmountThreshold;
+                        user.EditUserAddressId = ua.Id;
+                        repo.UpdateUser(user);
                         string result = resMgr.Get(Res.EnterDlgAmountThreshold, ua);
-                        if (!u.HideHashTags)
+                        if (!user.HideHashTags)
                             result += "\n\n#dlgthreshold" + ua.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
+                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(u.Id, resMgr.Get(Res.AddressNotExist, u), null,
+                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data == "set_explorer")
+                if (callbackData.StartsWith("toggle_payout_notify"))
                 {
-                    SendTextMessage(u.Id, resMgr.Get(Res.ChooseExplorer, u), ReplyKeyboards.ExplorerSettings(u),
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var userAddress = repo.GetUserAddress(userId, addrId);
+
+                    if (userAddress != null)
+                    {
+                        userAddress.NotifyPayout = !userAddress.NotifyPayout;
+                        repo.UpdateUserAddress(userAddress);
+                        // TODO: Update message keyboard
+                    }
+                }
+
+                if (callbackData == "set_explorer")
+                {
+                    SendTextMessage(user.Id, resMgr.Get(Res.ChooseExplorer, user), ReplyKeyboards.ExplorerSettings(user),
                         ev.CallbackQuery.Message.MessageId);
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_explorer_"))
+                else if (callbackData.StartsWith("set_explorer_"))
                 {
-                    int exp = int.Parse(ev.CallbackQuery.Data.Substring("set_explorer_".Length));
-                    if (u.Explorer != exp)
+                    int exp = int.Parse(callbackData.Substring("set_explorer_".Length));
+                    if (user.Explorer != exp)
                     {
-                        u.Explorer = exp;
-                        repo.UpdateUser(u);
-                        SendTextMessage(u.Id, resMgr.Get(Res.ChooseExplorer, u), ReplyKeyboards.ExplorerSettings(u),
+                        user.Explorer = exp;
+                        repo.UpdateUser(user);
+                        SendTextMessage(user.Id, resMgr.Get(Res.ChooseExplorer, user), ReplyKeyboards.ExplorerSettings(user),
                             ev.CallbackQuery.Message.MessageId);
                     }
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_whalealert"))
+                else if (callbackData.StartsWith("set_whalealert"))
                 {
-                    SendTextMessage(u.Id, resMgr.Get(Res.WhaleAlertsTip, u),
-                        ReplyKeyboards.WhaleAlertSettings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user),
+                        ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_wa_"))
+                else if (callbackData.StartsWith("set_wa_"))
                 {
-                    int wat = int.Parse(ev.CallbackQuery.Data.Substring("set_wa_".Length));
-                    u.WhaleAlertThreshold = wat * 1000;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, resMgr.Get(Res.WhaleAlertSet, u), null, ev.CallbackQuery.Message.MessageId);
+                    int wat = int.Parse(callbackData.Substring("set_wa_".Length));
+                    user.WhaleAlertThreshold = wat * 1000;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, ev.CallbackQuery.Message.MessageId);
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_nialert"))
+                else if (callbackData.StartsWith("set_nialert"))
                 {
-                    SendTextMessage(u.Id, resMgr.Get(Res.NetworkIssueAlertsTip, u),
-                        ReplyKeyboards.NetworkIssueAlertSettings(resMgr, u), ev.CallbackQuery.Message.MessageId);
+                    SendTextMessage(user.Id, resMgr.Get(Res.NetworkIssueAlertsTip, user),
+                        ReplyKeyboards.NetworkIssueAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_ni_"))
+                else if (callbackData.StartsWith("set_ni_"))
                 {
-                    int nin = int.Parse(ev.CallbackQuery.Data.Substring("set_ni_".Length));
-                    u.NetworkIssueNotify = nin;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, resMgr.Get(Res.NetworkIssueAlertSet, u), null,
+                    int nin = int.Parse(callbackData.Substring("set_ni_".Length));
+                    user.NetworkIssueNotify = nin;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.NetworkIssueAlertSet, user), null,
                         ev.CallbackQuery.Message.MessageId);
                 }
-                else if (ev.CallbackQuery.Data.StartsWith("set_"))
+                else if (callbackData.StartsWith("set_"))
                 {
-                    u.Language = ev.CallbackQuery.Data.Substring("set_".Length);
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, resMgr.Get(Res.Welcome, u), ReplyKeyboards.MainMenu(resMgr, u));
+                    user.Language = callbackData.Substring("set_".Length);
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("bakingon"))
+                if (callbackData.StartsWith("bakingon"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("bakingon ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("bakingon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = true;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("manageaddress"))
+                if (callbackData.StartsWith("manageaddress"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("manageaddress ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("manageaddress ".Length));
                     if (ua != null)
                     {
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("bakingoff"))
+                if (callbackData.StartsWith("bakingoff"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("bakingoff ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("bakingoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = false;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("cycleon"))
+                if (callbackData.StartsWith("cycleon"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("cycleon ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("cycleon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = true;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("cycleoff"))
+                if (callbackData.StartsWith("cycleoff"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("cycleoff ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("cycleoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = false;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("tranon"))
+                if (callbackData.StartsWith("tranon"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("tranon ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("tranon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyTransactions = true;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("tranoff"))
+                if (callbackData.StartsWith("tranoff"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("tranoff ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("tranoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyTransactions = false;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("dlgon"))
+                if (callbackData.StartsWith("dlgon"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("dlgon ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("dlgon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyDelegations = true;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("dlgoff"))
+                if (callbackData.StartsWith("dlgoff"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("dlgoff ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("dlgoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyDelegations = false;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("misseson"))
+                if (callbackData.StartsWith("misseson"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("misseson ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("misseson ".Length));
                     if (ua != null)
                     {
                         ua.NotifyMisses = true;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("missesoff"))
+                if (callbackData.StartsWith("missesoff"))
                 {
-                    var ua = repo.GetUserAddresses(ev.CallbackQuery.From.Id).FirstOrDefault(o =>
-                        o.Id.ToString() == ev.CallbackQuery.Data.Substring("missesoff ".Length));
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("missesoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyMisses = false;
-                        repo.UpdateBalance(ua);
-                        ViewAddress(u.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, u));
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("hidehashtags"))
+                if (callbackData.StartsWith("hidehashtags"))
                 {
-                    u.HideHashTags = true;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.HideHashTags = true;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("showhashtags"))
+                if (callbackData.StartsWith("showhashtags"))
                 {
-                    u.HideHashTags = false;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.HideHashTags = false;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("showvotingnotify"))
+                if (callbackData.StartsWith("showvotingnotify"))
                 {
-                    u.VotingNotify = true;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.VotingNotify = true;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("hidevotingnotify"))
+                if (callbackData.StartsWith("hidevotingnotify"))
                 {
-                    u.VotingNotify = false;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.VotingNotify = false;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("tezos_release_on"))
+                if (callbackData.StartsWith("tezos_release_on"))
                 {
-                    u.ReleaseNotify = true;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.ReleaseNotify = true;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (ev.CallbackQuery.Data.StartsWith("tezos_release_off"))
+                if (callbackData.StartsWith("tezos_release_off"))
                 {
-                    u.ReleaseNotify = false;
-                    repo.UpdateUser(u);
-                    SendTextMessage(u.Id, "Settings", ReplyKeyboards.Settings(resMgr, u, Config.Telegram),
+                    user.ReleaseNotify = false;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (Config.DevUserNames.Contains(u.Username))
+                if (Config.DevUserNames.Contains(user.Username))
                 {
-                    if (ev.CallbackQuery.Data.StartsWith("broadcast"))
+                    if (callbackData.StartsWith("broadcast"))
                     {
-                        u.UserState = UserState.Broadcast;
-                        SendTextMessage(u.Id, $"Enter your message for [{u.Language}] bot users",
-                            ReplyKeyboards.BackMenu(resMgr, u));
+                        user.UserState = UserState.Broadcast;
+                        SendTextMessage(user.Id, $"Enter your message for [{user.Language}] bot users",
+                            ReplyKeyboards.BackMenu(resMgr, user));
                     }
 
-                    if (ev.CallbackQuery.Data.StartsWith("getuserlist"))
+                    if (callbackData.StartsWith("getuserlist"))
                     {
-                        OnSql(u, "select * from \"user\"");
+                        OnSql(user, "select * from \"user\"");
                     }
 
-                    if (ev.CallbackQuery.Data.StartsWith("getuseraddresses"))
+                    if (callbackData.StartsWith("getuseraddresses"))
                     {
-                        OnSql(u, "select * from user_address");
+                        OnSql(user, "select * from user_address");
                     }
 
-                    if (ev.CallbackQuery.Data.StartsWith("getusermessages"))
+                    if (callbackData.StartsWith("getusermessages"))
                     {
-                        OnSql(u, "select * from message");
+                        OnSql(user, "select * from message");
                     }
 
-                    if (ev.CallbackQuery.Data.StartsWith("cmd"))
+                    if (callbackData.StartsWith("cmd"))
                     {
-                        var cmd = Commands[int.Parse(ev.CallbackQuery.Data.Substring("cmd".Length))];
+                        var cmd = Commands[int.Parse(callbackData.Substring("cmd".Length))];
                         var process = new Process()
                         {
                             StartInfo = new ProcessStartInfo
@@ -2142,13 +2159,13 @@ namespace TezosNotifyBot
                                 pos += resultSplit.Length;
                                 if (resultSplit.Trim() == "")
                                     continue;
-                                SendTextMessage(u.Id, resultSplit, ReplyKeyboards.MainMenu(resMgr, u));
+                                SendTextMessage(user.Id, resultSplit, ReplyKeyboards.MainMenu(resMgr, user));
                             } while (pos < result.Length);
                         }
                         catch (Exception ex)
                         {
                             LogError(ex);
-                            SendTextMessage(u.Id, "❗️" + ex.Message, ReplyKeyboards.MainMenu(resMgr, u));
+                            SendTextMessage(user.Id, "❗️" + ex.Message, ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
                 }
@@ -2778,7 +2795,7 @@ namespace TezosNotifyBot
                                 out decimal amount) && amount >= 0)
                             {
                                 ua.AmountThreshold = amount;
-                                repo.UpdateBalance(ua);
+                                repo.UpdateUserAddress(ua);
                                 SendTextMessage(user.Id, resMgr.Get(Res.ThresholdEstablished, ua),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                             }
@@ -2793,7 +2810,7 @@ namespace TezosNotifyBot
                                 out decimal amount) && amount >= 0)
                             {
                                 ua.DelegationAmountThreshold = amount;
-                                repo.UpdateBalance(ua);
+                                repo.UpdateUserAddress(ua);
                                 SendTextMessage(user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                             }
@@ -2807,7 +2824,7 @@ namespace TezosNotifyBot
                             if (ua != null)
                             {
                                 ua.Name = message.Text.Trim();
-                                repo.UpdateBalance(ua);
+                                repo.UpdateUserAddress(ua);
                                 string result = resMgr.Get(Res.AddressRenamed, ua);
                                 if (!ua.User.HideHashTags)
                                     result += "\n\n#rename" + ua.HashTag();
@@ -3225,7 +3242,7 @@ namespace TezosNotifyBot
             else
             {
                 result += resMgr.Get(Res.TransactionNotifications, ua) + "\n";
-                result += resMgr.Get(Res.AmountThreshold, ua);
+                result += resMgr.Get(Res.AmountThreshold, ua) + "\n";
 
                 if (!isDelegate)
                     result += resMgr.Get(Res.PayoutNotifyStatus, ua);

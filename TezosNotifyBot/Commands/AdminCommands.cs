@@ -1,7 +1,7 @@
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Commands.Admin;
 
-namespace TezosNotifyBot
+namespace TezosNotifyBot.Commands
 {
     public class AdminCommands: CommandsProfile
     {

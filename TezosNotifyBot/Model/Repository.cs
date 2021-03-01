@@ -317,7 +317,7 @@ namespace TezosNotifyBot.Model
             }
         }
 
-        internal void UpdateBalance(UserAddress ua)
+        internal void UpdateUserAddress(UserAddress ua)
         {
             lock (_dbLock)
                 _db.SaveChanges();
@@ -456,9 +456,6 @@ namespace TezosNotifyBot.Model
         {
             lock (_dbLock)
             {
-                if (!addr.StartsWith("tz") && !addr.StartsWith("KT"))
-                    return;
-
                 var d = _db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
                 if (d == null)
                 {
