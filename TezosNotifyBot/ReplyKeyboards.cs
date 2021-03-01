@@ -246,16 +246,22 @@ namespace TezosNotifyBot
                 });
                 buttons.Add(new[]
                 {
+                    InlineKeyboardButton.WithCallbackData(
+                        text: resMgr.Get(Res.PayoutNotifyToggle, ua), 
+                        callbackData: $"toggle_payout_notify {id}"
+                    ),
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.RenameAddress, u),
                         CallbackData = "setname " + id
                     },
-                    new InlineKeyboardButton
-                    {
-                        Text = resMgr.Get(Res.Delete, u),
-                        CallbackData = "deleteaddress " + id
-                    }
+                });
+                buttons.Add(new []
+                {
+                    InlineKeyboardButton.WithCallbackData(
+                        text: resMgr.Get(Res.Delete, u), 
+                        callbackData: $"deleteaddress {id}"
+                    )
                 });
             }
 

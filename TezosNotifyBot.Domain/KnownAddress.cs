@@ -3,7 +3,7 @@ namespace TezosNotifyBot.Domain
 {
     public class KnownAddress
     {
-        public KnownAddress(string name, string address)
+        public KnownAddress(string address, string name)
         {
             Name = name;
             Address = address;

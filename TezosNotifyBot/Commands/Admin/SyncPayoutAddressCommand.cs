@@ -35,7 +35,7 @@ namespace TezosNotifyBot.Commands.Admin
             {
                 var sql = "UPDATE known_address " +
                           $"SET payout_for = '{knownAddress.Address}' " +
-                          $"WHERE name ilike '%{knownAddress.Name.Escape()}%Payout%' and address != '{knownAddress.Address}'";
+                          $"WHERE name ilike '{knownAddress.Name.Escape()} Payout%' and address != '{knownAddress.Address}'";
 
                 updated += await DbContext.Database.ExecuteSqlRawAsync(sql);
             }
