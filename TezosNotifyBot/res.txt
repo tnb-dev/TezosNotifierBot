@@ -254,6 +254,8 @@ Or use the search:
 #IncomingTransactions;en;{(Token == null ? "✅" : "🔸")} Incoming {(Token != null ? "token " : "")}<a href='{t.block(Block)}'>{(Token != null ? "transfers" : "transactions")}</a> of <b>{Amount.AmountToString(Token)}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
 #IncomingTransaction;ru;{(Token == null ? "✅" : "🔸")} Входящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
 #IncomingTransaction;en;{(Token == null ? "✅" : "🔸")} Incoming {(Token != null ? "token " : "")}<a href='{t.op(OpHash)}'>{(Token != null ? "transfer" : "transaction")}</a> of <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#Payout;en;🤑 New <a href='{t.op(OpHash)}'>payout</a> of {Amount.AmountToString(Token)} ({Amount.TezToUsd(md)} USD) to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> 
+#Payout;ru;🤑 Новая <a href='{t.op(OpHash)}'>выплата</a> {Amount.AmountToString(Token)} ({Amount.TezToUsd(md)} USD) к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
 #From;ru;▫️<b>{Amount.AmountToString(Token)}</b> от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #From;en;▫️<b>{Amount.AmountToString(Token)}</b> from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #NotAllShown;ru;ℹ️ Не все операции показаны, полный список <a href='{t.block(Block)}'>здесь</a>
@@ -385,10 +387,6 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastActive;ru;Последняя активность
 #RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
 #RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
-#Payout;en;🤑 New <a href='/operation'>payout</a> of 0.079 XTZ (0.30 USD) to DonateTZ from Everstake Payouts 
-Spendable Balance: 222.5 XTZ (833.71 USD / 0.0163 BTC)
-#Payout;ru;🤑 Новая <a href='/operation'>выплата</a> 22.187 XTZ (51.59 USD) к My Ledger от Everstake Payouts
-Доступный баланс: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
 #DelegatorsBalanceUpdate;en;🔺 Delegator [адрес] increased its balance with transaction by 22.187 XTZ (51.59 USD)
                             
 Current delegate’s balance: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
