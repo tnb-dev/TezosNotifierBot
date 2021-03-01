@@ -26,6 +26,7 @@ services:
       - Twitter__ConsumerKey
       - Twitter__ConsumerKeySecret
       - Telegram__BotSecret
+      - TzKtUrl
       - ConnectionStrings__Default=$DB
 
   bi:
