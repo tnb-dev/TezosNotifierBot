@@ -1857,6 +1857,25 @@ namespace TezosNotifyBot
                             ev.CallbackQuery.Message.MessageId);
                 }
 
+                if (callbackData.StartsWith("change_delegators_balance_threshold "))
+                {
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var userAddress = repo.GetUserAddress(userId, addrId);
+                    if (userAddress == null)
+                    {
+                        SendTextMessage(userId, resMgr.Get(Res.AddressNotExist, user), null,
+                            ev.CallbackQuery.Message.MessageId);
+                    }
+                    else
+                    {
+                        user.UserState = UserState.SetDelegatorsBalanceThreshold;
+                        user.EditUserAddressId = addrId;
+                        repo.UpdateUser(user);
+                        var text = resMgr.Get(Res.EnterDelegatorsBalanceThreshold, userAddress);
+                        SendTextMessage(user.Id, text, ReplyKeyboards.BackMenu(resMgr, user));
+                    }
+                }
+
                 if (callbackData.StartsWith("toggle_payout_notify"))
                 {
                     var addrId = int.Parse(callbackArgs[0]);
@@ -2831,6 +2850,21 @@ namespace TezosNotifyBot
                                 SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
+                        else if (user.UserState == UserState.SetDelegatorsBalanceThreshold)
+                        {
+                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            if (ua != null && decimal.TryParse(message.Text.Replace(" ", "").Replace(",", "."),
+                                out var amount) && amount >= 0)
+                            {
+                                ua.DelegatorsBalanceThreshold = amount;
+                                repo.UpdateUserAddress(ua);
+                                SendTextMessage(user.Id, resMgr.Get(Res.ChangedDelegatorsBalanceThreshold, ua),
+                                    ReplyKeyboards.MainMenu(resMgr, user));
+                            }
+                            else
+                                SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
+                                    ReplyKeyboards.MainMenu(resMgr, user));
+                        }
                         else if (user.UserState == UserState.SetName)
                         {
                             var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
@@ -3258,7 +3292,7 @@ namespace TezosNotifyBot
                 result += resMgr.Get(Res.AmountThreshold, ua) + "\n";
 
                 if (!isDelegate)
-                    result += resMgr.Get(Res.PayoutNotifyStatus, ua);
+                    result += resMgr.Get(Res.PayoutNotifyStatus, ua) + "\n";
             }
 
             if (isDelegate)
@@ -3280,16 +3314,20 @@ namespace TezosNotifyBot
 
                     if (ua.NotifyMisses)
                         result += "🤷🏻‍♂️";
-                    
+
                     if (ua.NotifyDelegatorsBalance)
+                    {
                         result += "🔺";
+                        if (ua.DelegatorsBalanceThreshold > 0)
+                            result += "✂️";
+                    }
                 }
                 else
                 {
-                    result += "\n";
                     result += resMgr.Get(Res.DelegationNotifications, ua) + "\n";
                     result += resMgr.Get(Res.DelegationAmountThreshold, ua) + "\n";
                     result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
+                    result += resMgr.Get(Res.DelegatorsBalanceThreshold, ua) + "\n";
                     result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";

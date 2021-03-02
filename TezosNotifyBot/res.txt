@@ -99,6 +99,8 @@ Full description & manual: http://tzsnt.fr/
 #SetThreshold;en;✂️ Transaction Threshold
 #SetDlgThreshold;ru;✂️ Порог делегирования
 #SetDlgThreshold;en;✂️ Delegation Threshold
+#DelegatorsBalanceThreshold;ru;✂️ Порог баланса делегаторов: <b>{ua.DelegatorsBalanceThreshold.TezToString()}</b>
+#DelegatorsBalanceThreshold;en;✂️ Delegators balance threshold: <b>{ua.DelegatorsBalanceThreshold.TezToString()}</b>
 #DelegatorsBalanceThresholdButton;en;✂️ Balance Threshold
 #DelegatorsBalanceThresholdButton;ru;✂️ Порог баланса
 #RewardNotify;ru;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Вознаграждения
@@ -178,6 +180,10 @@ Or use the search:
 #ThresholdEstablished;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> transaction amount threshold of {ua.AmountThreshold.TezToString()} was set. You will receive notifications about transactions above {ua.AmountThreshold.TezToString()}
 #DlgThresholdEstablished;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> установлен порог в {ua.DelegationAmountThreshold.TezToString()} для получения уведомлений. Вы будете получать уведомление о делегированиях на сумму более {ua.DelegationAmountThreshold.TezToString()}
 #DlgThresholdEstablished;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> delegation amount threshold {ua.DelegationAmountThreshold.TezToString()} was set. You will receive notifications about delegations above {ua.DelegationAmountThreshold.TezToString()}
+#EnterDelegatorsBalanceThreshold;ru;Введите минимальную сумму изменения баланса делегатора для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> для получения уведомлений
+#EnterDelegatorsBalanceThreshold;en;Enter minimum amount of delegators balance update for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> to receive notifications
+#ChangedDelegatorsBalanceThreshold;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> установлен порог в {ua.DelegatorsBalanceThreshold.TezToString()} для получения уведомлений. Вы будете получать уведомление об изменении баланса делегатора на сумму более {ua.DelegatorsBalanceThreshold.TezToString()}
+#ChangedDelegatorsBalanceThreshold;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> delegation amount threshold {ua.DelegatorsBalanceThreshold.TezToString()} was set. You will receive notifications about delegators balance update above {ua.DelegatorsBalanceThreshold.TezToString()}
 #AddressRenamed;ru;Для адреса <a href='{t.account(ua.Address)}'>{ua.Address}</a> установлено название {ua.DisplayName()}
 #AddressRenamed;en;Address <a href='{t.account(ua.Address)}'>{ua.Address}</a> named as {ua.DisplayName()}
 #Events;ru;События:
