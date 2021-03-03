@@ -1050,7 +1050,18 @@ namespace TezosNotifyBot
 
                 foreach (var ua in toAddresses)
                 {
-                    if (ua.AmountThreshold > to.Sum(o => o.Item3))
+                    #region Delegators balance update
+
+                    var amount = to.Sum(o => o.Item3);
+                    var contract = addrMgr.GetContract(_nodeManager.Client, lastHash, ua.Address, true);
+                    if (contract.@delegate != null)
+                    {
+                        HandleDelegatorsBalance();
+                    }
+
+                    #endregion
+                    
+                    if (ua.AmountThreshold > amount)
                         continue;
                     if (!toDelegate)
                         ua.Balance = toBalance;
@@ -1134,6 +1145,34 @@ namespace TezosNotifyBot
                                   ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
                     repo.UpdateUserAddress(ua);
+
+                    void HandleDelegatorsBalance()
+                    {
+                        var senderAddr = to.First().Item1;
+                        var isPayout = repo.IsPayoutAddress(senderAddr);
+                        // TODO: Uncomment after done
+                        // if (isPayout is false)
+                        //     return;
+                        
+                        var sender = repo.GetUserTezosAddress(ua.UserId, senderAddr);
+                        var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
+                            .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
+                        
+                        foreach (var userAddress in delegatesAddr)
+                        {
+                            var textData = new ContextObject
+                            {
+                                u = ua.User,
+                                md = md,
+                                OpHash = to.First().Item4,
+                                Amount = amount
+                            };
+                            var text = resMgr.Get(Res.DelegatorsBalance, textData);
+
+                            // TODO: Using ChatId instead of UserId?
+                            SendTextMessage(userAddress.UserId, text);
+                        }
+                    }
                 }
             }
 

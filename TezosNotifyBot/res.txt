@@ -393,9 +393,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastActive;ru;Последняя активность
 #RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
 #RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
-#DelegatorsBalanceUpdate;en;🔺 Delegator [адрес] increased its balance with transaction by 22.187 XTZ (51.59 USD)
-                            
-Current delegate’s balance: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
-#DelegatorsBalanceUpdate;ru;🔺 Делегатор [адрес] увеличил свой баланс транзакцией на 22.187 XTZ (51.59 USD)
-                            
-Текущий баланс делегата: 51,351.42 XTZ (119,392.05 USD / 5.1762 BTC)
+#DelegatorsBalance;en;🔺 Delegator [адрес] increased its balance with transaction by 22.187 XTZ (51.59 USD)
+#DelegatorsBalance;ru;🔺 Делегатор [адрес] увеличил свой баланс транзакцией на 22.187 XTZ (51.59 USD)

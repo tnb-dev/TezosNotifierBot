@@ -252,6 +252,6 @@ namespace TezosNotifyBot
 		LastActive,
 		RevelationPenalty,
 		Payout,
-		DelegatorsBalanceUpdate,
+		DelegatorsBalance,
 	}
 }
