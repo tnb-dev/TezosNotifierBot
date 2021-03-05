@@ -1527,7 +1527,7 @@ namespace TezosNotifyBot
                 // Notification of the availability of the award to the delegator
                 var userAddressDelegators = repo.GetDelegators();
                 var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
-                int cycle = blockMetadata.level.cycle - _currentConstants.preserved_cycles - 1;
+                int cycle = blockMetadata.level.cycle - 6;
                 foreach (var addr in addrs)
 				{
                     var rewards = tzKtClient.GetDelegatorRewards(addr, cycle);
