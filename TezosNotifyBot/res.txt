@@ -399,3 +399,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #AwardAvailable;ru;🧊 Вознаграждение{Amount.TezToString()} для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> за {Cycle} цикл на пути к делегату <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. Оно будет разморожено и доступно для выплаты через 5 циклов
 #AwardNotify;ru;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Вознаграждения
 #AwardNotify;en;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Awards
+#AwardAvailableNotifyStatus;en;🤑 Awards: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
+#AwardAvailableNotifyStatus;ru;🤑 Вознаграждения: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}

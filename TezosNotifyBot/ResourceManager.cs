@@ -254,6 +254,7 @@ namespace TezosNotifyBot
 		Payout,
 		DelegatorsBalance,
 		AwardAvailable,
-		AwardNotify
+		AwardNotify,
+		AwardAvailableNotifyStatus
 	}
 }
