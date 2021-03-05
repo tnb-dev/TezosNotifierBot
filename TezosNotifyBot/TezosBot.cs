@@ -1540,7 +1540,8 @@ namespace TezosNotifyBot
                                 u = ua.User,
                                 Cycle = cycle,
                                 Amount = rewards.TotalRewards,
-                                ua_to = repo.GetUserTezosAddress(ua.UserId, rewards.baker.address)
+                                ua_to = repo.GetUserTezosAddress(ua.UserId, rewards.baker.address),
+                                ua = ua
                             };
                             var message = resMgr.Get(Res.AwardAvailable, context);
                             if (!ua.User.HideHashTags)
