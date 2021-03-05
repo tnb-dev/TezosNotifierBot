@@ -253,5 +253,7 @@ namespace TezosNotifyBot
 		RevelationPenalty,
 		Payout,
 		DelegatorsBalance,
+		AwardAvailable,
+		AwardNotify
 	}
 }

@@ -37,7 +37,7 @@ namespace TezosNotifyBot.Domain
         public decimal DelegationAmountThreshold { get; set; }
         public bool NotifyMisses { get; set; }
         public long ChatId { get; set; }
-
+        public bool NotifyAwardAvailable { get; set; }
         //public string UsdBalance(decimal price_usd)
         //{
         //    return (Balance * price_usd).ToString("### ### ### ### ##0.00", CultureInfo.InvariantCulture).Trim();

@@ -10,5 +10,6 @@ namespace TezosNotifyBot.Tzkt
 		Cycle GetCycle(int cycleIndex);
 		List<OperationPenalty> GetRevelationPenalties(int level);
 		IEnumerable<Operation> GetAccountOperations(string address, string filter = "");
+		Rewards GetDelegatorRewards(string address, int cycle);
 	}
 }
