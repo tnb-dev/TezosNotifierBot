@@ -51,6 +51,6 @@ namespace TezosNotifyBot.Tzkt
         public long revelationRewards { get; set; }
         public long revelationLostRewards { get; set; }
         public long revelationLostFees { get; set; }
-        public decimal TotalRewards => balance / 1000000M * stakingBalance * (ownBlockRewards + extraBlockRewards + endorsementRewards + ownBlockFees + extraBlockFees + doubleBakingRewards - doubleBakingLostRewards - doubleBakingLostFees + doubleEndorsingRewards - doubleEndorsingLostRewards - doubleEndorsingLostFees + revelationRewards - revelationLostRewards - revelationLostFees);
+        public decimal TotalRewards => balance / 1000000M / stakingBalance * (ownBlockRewards + extraBlockRewards + endorsementRewards + ownBlockFees + extraBlockFees + doubleBakingRewards - doubleBakingLostRewards - doubleBakingLostFees + doubleEndorsingRewards - doubleEndorsingLostRewards - doubleEndorsingLostFees + revelationRewards - revelationLostRewards - revelationLostFees);
     }
 }
