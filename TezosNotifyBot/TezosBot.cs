@@ -1459,8 +1459,8 @@ namespace TezosNotifyBot
             {
                 var uad = repo.GetUserDelegates();
 
-                var penalties = _serviceProvider.GetService<ITzKtClient>()
-                    .GetRevelationPenalties(blockMetadata.level.level - 1);
+                var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
+                var penalties = tzKtClient.GetRevelationPenalties(blockMetadata.level.level - 1);
                 foreach (var penalty in penalties)
                 {
                     foreach (var ua in uad.Where(a => a.Address == penalty.baker.address && a.NotifyMisses))
@@ -1523,14 +1523,35 @@ namespace TezosNotifyBot
                 }
 
                 LoadAddressList();
-                //for (int i = 1; i < 4; i++)
-                //{
-                //	if (!repo.IsRightsLoaded(blockMetadata.level.cycle + i))
-                //		LoadBakingEndorsingRights(hash, blockMetadata.level.cycle + i);
-                //}
+
+                // Notification of the availability of the award to the delegator
+                var userAddressDelegators = repo.GetDelegators();
+                var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
+                int cycle = blockMetadata.level.cycle - _currentConstants.preserved_cycles - 1;
+                foreach (var addr in addrs)
+				{
+                    var rewards = tzKtClient.GetDelegatorRewards(addr, cycle);
+                    if (rewards != null)
+					{
+                        foreach(var ua in userAddressDelegators.Where(o => o.Address == addr))
+						{
+                            var context = new ContextObject
+                            {
+                                u = ua.User,
+                                Cycle = cycle,
+                                Amount = rewards.TotalRewards,
+                                ua_to = repo.GetUserTezosAddress(ua.UserId, rewards.baker.address)
+                            };
+                            var message = resMgr.Get(Res.AwardAvailable, context);
+                            if (!ua.User.HideHashTags)
+                                message += "\n#award " + ua.HashTag() + context.ua_to.HashTag();
+
+                            SendTextMessageUA(ua, message);
+                        }
+					}
+                }
             }
 
-            //Завершен период подачи предложений
             if (blockMetadata.level.voting_period_position == 0 && blockMetadata.voting_period_kind == "testing_vote")
             {
                 var proposals = _nodeManager.Client.GetProposals(hash + "~2");
@@ -2065,6 +2086,34 @@ namespace TezosNotifyBot
                     if (ua != null)
                     {
                         ua.NotifyTransactions = false;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("awardon"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("awardon ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyAwardAvailable = true;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("awardoff"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("awardoff ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyAwardAvailable = false;
                         repo.UpdateUserAddress(ua);
                         ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }

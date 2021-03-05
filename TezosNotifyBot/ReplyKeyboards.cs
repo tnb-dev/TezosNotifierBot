@@ -252,12 +252,17 @@ namespace TezosNotifyBot
                     ),
                     new InlineKeyboardButton
                     {
-                        Text = resMgr.Get(Res.RenameAddress, u),
-                        CallbackData = "setname " + id
-                    },
+                        Text = resMgr.Get(Res.AwardNotify, ua),
+                        CallbackData = (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
+                    }
                 });
                 buttons.Add(new []
                 {
+                    new InlineKeyboardButton
+                    {
+                        Text = resMgr.Get(Res.RenameAddress, u),
+                        CallbackData = "setname " + id
+                    },
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.Delete, u), 
                         callbackData: $"deleteaddress {id}"

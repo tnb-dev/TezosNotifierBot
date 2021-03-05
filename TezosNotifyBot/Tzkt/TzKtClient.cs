@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
+using System.Linq;
 using System.Net;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -43,6 +44,11 @@ namespace TezosNotifyBot.Tzkt
 		List<OperationPenalty> ITzKtClient.GetRevelationPenalties(int level)
 		{
 			return JsonConvert.DeserializeObject<List<OperationPenalty>>(Download($"v1/operations/revelation_penalties?level={level}"));
+		}
+
+		Rewards ITzKtClient.GetDelegatorRewards(string address, int cycle)
+		{
+			return JsonConvert.DeserializeObject<List<Rewards>>(Download($"v1/rewards/delegators/{address}?cycle={cycle}")).FirstOrDefault();
 		}
 
 		string Download(string addr)
