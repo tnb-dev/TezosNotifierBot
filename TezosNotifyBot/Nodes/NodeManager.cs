@@ -59,5 +59,18 @@ namespace TezosNotifyBot.Nodes
                 return e.Message;
             }
         }
+
+        public BlockHeader GetNodeHeader(Node node)
+        {
+            var client = new NodeClient(node.Url, _http, _logger);
+            try
+            {
+                return client.GetBlockHeader("head");
+            }
+            catch(Exception e)
+            {
+                return null;
+            }
+        }
     }
 }
