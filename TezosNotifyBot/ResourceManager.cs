@@ -114,6 +114,8 @@ namespace TezosNotifyBot
 		public UserAddress ua_to { get; set; }
 		public int Minutes { get; set; }
 		public int Cycle { get; set; }
+		
+		public UserAddress Delegate { get; set; }
 
 		public static implicit operator ContextObject(User user) => new ContextObject { u = user };
 		public static implicit operator ContextObject(UserAddress userAddress) => new ContextObject { u = userAddress.User, ua = userAddress };

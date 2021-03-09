@@ -1089,7 +1089,8 @@ namespace TezosNotifyBot
                             ua = receiver,
                             OpHash = to.First().Item4,
                             Block = header.level,
-                            Amount = amount
+                            Amount = amount,
+                            Delegate = delegateAddress,
                         };
                         var text = new StringBuilder();
                         text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
