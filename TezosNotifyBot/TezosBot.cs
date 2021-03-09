@@ -1068,9 +1068,11 @@ namespace TezosNotifyBot
                     var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
                         .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
                         
-                    var receiver = repo.GetUserAddresses(receiverAddr).FirstOrDefault();
-                    if (receiver == null)
-                        receiver = repo.GetUserTezosAddress(0, receiverAddr);
+                    var receiver = new UserAddress
+                    {
+                        Address = receiverAddr, 
+                        Balance = addrMgr.GetBalance(_nodeManager.Client, lastHash, receiverAddr)
+                    };
                     
                     foreach (var delegateAddress in delegatesAddr)
                     {
@@ -1092,11 +1094,8 @@ namespace TezosNotifyBot
                         var text = new StringBuilder();
                         text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
 
-                        if (receiver.Id != 0)
-                        {
-                            text.AppendLine();
-                            text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
-                        }
+                        text.AppendLine();
+                        text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
 
                         if (delegateAddress.User.HideHashTags is false)
                         {
