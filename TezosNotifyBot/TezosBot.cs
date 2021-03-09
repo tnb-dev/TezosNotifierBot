@@ -239,7 +239,7 @@ namespace TezosNotifyBot
                         {
                             try
                             {
-                                var bh = _nodeManager.Client.GetBlockHeader("head");
+                                var bh = _nodeManager.GetNodeHeader(node);
                                 if (bh != null)
                                 {
                                     blockHeaders.Add(bh);
@@ -426,7 +426,7 @@ namespace TezosNotifyBot
                     SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                 }
             }
-
+    
             if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "proposal" &&
                 prevMD.voting_period_kind == "promotion_vote")
             {
