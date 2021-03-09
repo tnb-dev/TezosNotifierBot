@@ -1077,8 +1077,8 @@ namespace TezosNotifyBot
                         var tags = new List<string>
                         {
                             "delegator_balance", 
-                            receiver.DisplayName(), 
-                            delegateAddress.DisplayName()
+                            receiver.HashTag(), 
+                            delegateAddress.HashTag()
                         };
                         var textData = new ContextObject
                         {
