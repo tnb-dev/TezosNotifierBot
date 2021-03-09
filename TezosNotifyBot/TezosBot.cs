@@ -1076,7 +1076,7 @@ namespace TezosNotifyBot
                     {
                         var tags = new List<string>
                         {
-                            "delegator_balance", 
+                            "#delegator_balance", 
                             receiver.HashTag(), 
                             delegateAddress.HashTag()
                         };
@@ -1101,7 +1101,7 @@ namespace TezosNotifyBot
                         if (delegateAddress.User.HideHashTags is false)
                         {
                             text.AppendLine();
-                            text.AppendLine(tags.Select(x => $"#{x.ToLowerInvariant()}").Join(" "));
+                            text.AppendLine(tags.Join(" "));
                         }
 
                         // TODO: Using ChatId instead of UserId?
