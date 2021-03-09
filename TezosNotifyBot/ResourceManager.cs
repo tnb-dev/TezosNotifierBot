@@ -253,6 +253,7 @@ namespace TezosNotifyBot
 		RevelationPenalty,
 		Payout,
 		DelegatorsBalance,
+		CurrentDelegatorBalance,
 		AwardAvailable,
 		AwardNotify,
 		AwardAvailableNotifyStatus

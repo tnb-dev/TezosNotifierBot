@@ -779,32 +779,5 @@ namespace TezosNotifyBot.Model
                 db.Set<KnownAddress>().Any(x => x.Address == address && x.PayoutFor != null));
         }
         
-        public KnownAddress GetKnownAddressByPayout(string address)
-        {
-            return RunIsolatedDb(db =>
-            {
-                var masterAddress = db.Set<KnownAddress>()
-                    .Where(x => x.Address == address)
-                    .Select(x => x.PayoutFor)
-                    .SingleOrDefault();
-                
-                if (masterAddress is null)
-                    return null;
-                
-                return db.Set<KnownAddress>().SingleOrDefault(x => x.Address == masterAddress);
-            });
-        }
-
-        public User[] GetAddressSubscribers(string address, Expression<Func<User, bool>> predicate = null)
-        {
-            return RunIsolatedDb(db =>
-            {
-                return db.Set<UserAddress>()
-                    .Where(x => x.Address == address && x.User.Inactive == false)
-                    .Select(x => x.User)
-                    .Apply(predicate)
-                    .ToArray();
-            });
-        }
     }
 }
