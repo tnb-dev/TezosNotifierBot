@@ -1101,7 +1101,7 @@ namespace TezosNotifyBot
                         if (delegateAddress.User.HideHashTags is false)
                         {
                             text.AppendLine();
-                            text.AppendLine(tags.Join(" "));
+                            text.AppendLine(tags.Select(x => x.Trim()).Join(" "));
                         }
 
                         // TODO: Using ChatId instead of UserId?
