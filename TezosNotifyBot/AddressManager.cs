@@ -42,6 +42,11 @@ namespace TezosNotifyBot
 			}
 		}
 
+		public decimal GetBalance(NodeClient client, string hash, string addr)
+		{
+			return GetContract(client, hash, addr).balance / 1000000M;
+		}
+
 		public DelegateInfo GetDelegate(NodeClient client, string hash, string addr, bool forceUpdate = false, bool enqueue = false)
 		{
 			try
