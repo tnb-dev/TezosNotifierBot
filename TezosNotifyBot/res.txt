@@ -393,8 +393,10 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastActive;ru;Последняя активность
 #RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
 #RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
-#DelegatorsBalance;en;🔺 Delegator [адрес] increased its balance with transaction by 22.187 XTZ (51.59 USD)
-#DelegatorsBalance;ru;🔺 Делегатор [адрес] увеличил свой баланс транзакцией на 22.187 XTZ (51.59 USD)
+#DelegatorsBalance;en;🔺 Delegator <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> increased its balance with <a href='{t.op(OpHash)}'>transaction</a> by {Amount} XTZ ({Amount.TezToUsd(md)} USD)
+#DelegatorsBalance;ru;🔺 Делегатор <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> увеличил свой баланс <a href='{t.op(OpHash)}'>транзакцией</a> на {Amount} XTZ ({Amount.TezToUsd(md)} USD)
+#CurrentDelegatorBalance;ru;Текущий баланс делегата: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
+#CurrentDelegatorBalance;en;Current delegate’s balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
 #AwardAvailable;en;🧊 Award {Amount.TezToString()} for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> for {Cycle} cycle on the way to the <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. It will be unfrozen and available for payout after 5 cycles
 #AwardAvailable;ru;🧊 Вознаграждение{Amount.TezToString()} для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> за {Cycle} цикл на пути к делегату <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. Оно будет разморожено и доступно для выплаты через 5 циклов
 #AwardNotify;ru;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Вознаграждения

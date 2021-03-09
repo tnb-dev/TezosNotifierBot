@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Numerics;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -1048,19 +1049,68 @@ namespace TezosNotifyBot
                     }
                 }
 
+                var amount = to.Sum(o => o.Item3);
+                
+                var contract = addrMgr.GetContract(_nodeManager.Client, lastHash, to.Key.to, true);
+                if (contract.@delegate != null)
+                {
+                    HandleDelegatorsBalance();
+                }
+                
+                void HandleDelegatorsBalance()
+                {
+                    var receiverAddr = to.Key.to;
+                    var senderAddr = to.First().Item1;
+                    var isPayout = repo.IsPayoutAddress(senderAddr);
+                    if (isPayout)
+                        return;
+                    
+                    var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
+                        .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
+                        
+                    var receiver = repo.GetUserAddresses(receiverAddr).FirstOrDefault();
+                    if (receiver == null)
+                        receiver = repo.GetUserTezosAddress(0, receiverAddr);
+                    
+                    foreach (var delegateAddress in delegatesAddr)
+                    {
+                        var tags = new List<string>
+                        {
+                            "delegator_balance", 
+                            receiver.DisplayName(), 
+                            delegateAddress.DisplayName()
+                        };
+                        var textData = new ContextObject
+                        {
+                            u = delegateAddress.User,
+                            md = md,
+                            ua = receiver,
+                            OpHash = to.First().Item4,
+                            Block = header.level,
+                            Amount = amount
+                        };
+                        var text = new StringBuilder();
+                        text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
+
+                        if (receiver.Id != 0)
+                        {
+                            text.AppendLine();
+                            text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
+                        }
+
+                        if (delegateAddress.User.HideHashTags is false)
+                        {
+                            text.AppendLine();
+                            text.AppendLine(tags.Select(x => $"#{x.ToLowerInvariant()}").Join(" "));
+                        }
+
+                        // TODO: Using ChatId instead of UserId?
+                        SendTextMessage(delegateAddress.UserId, text.ToString());
+                    }
+                }
+                
                 foreach (var ua in toAddresses)
                 {
-                    #region Delegators balance update
-
-                    var amount = to.Sum(o => o.Item3);
-                    var contract = addrMgr.GetContract(_nodeManager.Client, lastHash, ua.Address, true);
-                    if (contract.@delegate != null)
-                    {
-                        HandleDelegatorsBalance();
-                    }
-
-                    #endregion
-                    
                     if (ua.AmountThreshold > amount)
                         continue;
                     if (!toDelegate)
@@ -1145,34 +1195,6 @@ namespace TezosNotifyBot
                                   ua.HashTag() + tags;
                     SendTextMessageUA(ua, result);
                     repo.UpdateUserAddress(ua);
-
-                    void HandleDelegatorsBalance()
-                    {
-                        var senderAddr = to.First().Item1;
-                        var isPayout = repo.IsPayoutAddress(senderAddr);
-                        // TODO: Uncomment after done
-                        // if (isPayout is false)
-                        //     return;
-                        
-                        var sender = repo.GetUserTezosAddress(ua.UserId, senderAddr);
-                        var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
-                            .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
-                        
-                        foreach (var userAddress in delegatesAddr)
-                        {
-                            var textData = new ContextObject
-                            {
-                                u = ua.User,
-                                md = md,
-                                OpHash = to.First().Item4,
-                                Amount = amount
-                            };
-                            var text = resMgr.Get(Res.DelegatorsBalance, textData);
-
-                            // TODO: Using ChatId instead of UserId?
-                            SendTextMessage(userAddress.UserId, text);
-                        }
-                    }
                 }
             }
 
@@ -1946,7 +1968,21 @@ namespace TezosNotifyBot
                     {
                         userAddress.NotifyPayout = !userAddress.NotifyPayout;
                         repo.UpdateUserAddress(userAddress);
+                        ViewAddress(user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
+                    }
+                }
+                
+                if (callbackData.StartsWith("toggle_delegators_balance"))
+                {
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var userAddress = repo.GetUserAddress(userId, addrId);
+
+                    if (userAddress != null)
+                    {
+                        userAddress.NotifyDelegatorsBalance = !userAddress.NotifyDelegatorsBalance;
+                        repo.UpdateUserAddress(userAddress);
                         // TODO: Update message keyboard
+                        ViewAddress(user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
                     }
                 }
 
