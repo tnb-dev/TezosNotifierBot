@@ -168,10 +168,12 @@ namespace TezosNotifyBot.Model
         }
 
         public List<UserAddress> GetDelegators()
-		{
+        {
             lock (_dbLock)
-                return _db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive && !_db.Delegates.Any(d => d.Address == o.Address) && o.NotifyAwardAvailable).Include(o => o.User).ToList();
-		}
+                return _db.UserAddresses
+                    .Where(o => !o.IsDeleted && !o.User.Inactive && !_db.Delegates.Any(d => d.Address == o.Address) &&
+                                o.NotifyAwardAvailable).Include(o => o.User).ToList();
+        }
 
         public UserAddress GetUserTezosAddress(int userId, string addr)
         {
@@ -411,12 +413,9 @@ namespace TezosNotifyBot.Model
 
         public KnownAddress GetKnownAddress(string addr)
         {
-            return RunIsolatedDb(db =>
-            {
-                return db.Set<KnownAddress>().SingleOrDefault(x => x.Address == addr);
-            }); 
+            return RunIsolatedDb(db => { return db.Set<KnownAddress>().SingleOrDefault(x => x.Address == addr); });
         }
-        
+
         internal string GetKnownAddressName(string addr)
         {
             return RunIsolatedDb(db =>
@@ -776,8 +775,10 @@ namespace TezosNotifyBot.Model
         public bool IsPayoutAddress(string address)
         {
             return RunIsolatedDb(db =>
-                db.Set<KnownAddress>().Any(x => x.Address == address && x.PayoutFor != null));
+            {
+                return db.Set<KnownAddress>().Any(x => x.Address == address && x.PayoutFor != null) ||
+                       IsDelegate(address);
+            });
         }
-        
     }
 }
