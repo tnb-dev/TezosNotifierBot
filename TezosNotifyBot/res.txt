@@ -226,10 +226,10 @@ Or use the search:
 #NewProposal;en;💡 <a href='{t.op(OpHash)}'>Injected</a> new proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> by <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls
 #SupplyProposal;ru;👍 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>поддержал</a> предложение <a href='{t.url_vote(Block)}'>{p.Name}</a>
 
-{p.VotedRolls} роллов поддержало, {(100 * p.VotedRolls / TotalRolls).ToString("n1")}% от общего количества
+{p.VotedRolls} роллов поддержало, {(100M * p.VotedRolls / TotalRolls).ToString("n1")}% от общего количества
 #SupplyProposal;en;👍 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>upvoted</a> proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
 
-{p.VotedRolls} rolls voted, {(100 * p.VotedRolls / TotalRolls).ToString("n1")}% of total rolls
+{p.VotedRolls} rolls voted, {(100M * p.VotedRolls / TotalRolls).ToString("n1")}% of total rolls
 #QuorumReached;ru;🎉 Кворум по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a> достигнут!
 #QuorumReached;en;🎉 Quorum on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> reached!
 #TestingVoteSuccess;ru;✌️ Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> одобрено. Начинается период тестирования.
@@ -399,5 +399,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #AwardAvailable;ru;🧊 Вознаграждение{Amount.TezToString()} для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> за {Cycle} цикл на пути к делегату <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. Оно будет разморожено и доступно для выплаты через 5 циклов
 #AwardNotify;ru;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Вознаграждения
 #AwardNotify;en;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Awards
-#AwardAvailableNotifyStatus;en;🤑 Awards: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
-#AwardAvailableNotifyStatus;ru;🤑 Вознаграждения: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}
+#AwardAvailableNotifyStatus;en;🧊 Awards: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
+#AwardAvailableNotifyStatus;ru;🧊 Вознаграждения: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}
