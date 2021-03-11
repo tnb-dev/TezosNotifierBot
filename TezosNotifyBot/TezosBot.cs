@@ -1567,7 +1567,7 @@ namespace TezosNotifyBot
                             };
                             var message = resMgr.Get(Res.AwardAvailable, context);
                             if (!ua.User.HideHashTags)
-                                message += "\n#award " + ua.HashTag() + context.ua_to.HashTag();
+                                message += "\n\n#award " + ua.HashTag() + context.ua_to.HashTag();
 
                             SendTextMessageUA(ua, message);
                         }
