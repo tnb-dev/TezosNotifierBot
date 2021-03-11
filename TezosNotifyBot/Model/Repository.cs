@@ -776,7 +776,9 @@ namespace TezosNotifyBot.Model
         {
             return RunIsolatedDb(db =>
             {
-                return db.Set<KnownAddress>().Any(x => x.Address == address && x.PayoutFor != null) ||
+                return db.Set<KnownAddress>().Any(x =>
+                           x.Address == address &&
+                           EF.Functions.ILike(x.Name, "%payout%")) ||
                        IsDelegate(address);
             });
         }
