@@ -79,5 +79,7 @@ namespace TezosNotifyBot.Domain
         public int Delegators;
         public decimal AveragePerformance;
         public decimal Performance;
+
+        public decimal InflationValue => Balance * 7 / 128 / 100;
     }
 }
