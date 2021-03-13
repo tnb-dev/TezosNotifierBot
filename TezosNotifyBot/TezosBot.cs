@@ -1065,15 +1065,18 @@ namespace TezosNotifyBot
                     if (isPayout)
                         return;
                     
-                    var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
-                        .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
-                        
                     var receiver = new UserAddress
                     {
                         Address = receiverAddr, 
                         Balance = addrMgr.GetBalance(_nodeManager.Client, lastHash, receiverAddr)
                     };
                     
+                    if (amount < receiver.InflationValue)
+                        return;
+                    
+                    var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
+                        .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
+                        
                     foreach (var delegateAddress in delegatesAddr)
                     {
                         var tags = new List<string>
