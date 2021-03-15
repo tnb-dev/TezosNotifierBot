@@ -3459,6 +3459,8 @@ namespace TezosNotifyBot
                         if (ua.DelegatorsBalanceThreshold > 0)
                             result += "✂️";
                     }
+
+                    result += "\n";
                 }
                 else
                 {
