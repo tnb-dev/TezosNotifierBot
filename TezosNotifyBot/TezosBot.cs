@@ -1132,14 +1132,18 @@ namespace TezosNotifyBot
                         continue;
                     if (to_ua.Count() == 1)
                     {
+                        
                         var from = to_ua.Single().Item1;
                         var ua_from = repo.GetUserTezosAddress(ua.UserId, from);
 
-                        var isPayout = repo.IsPayoutAddress(from);
-                        if (isPayout)
+                        var isSenderPayout = repo.IsPayoutAddress(from);
+                        var isReceiverPayout = repo.IsPayoutAddress(ua.Address);
+                        
+                        var isPayoutOperation = isSenderPayout && isReceiverPayout is false;
+                        if (isPayoutOperation)
                             operationTag = "#payout";
                         
-                        var messageType = isPayout && ua_from.NotifyPayout
+                        var messageType = isPayoutOperation && ua_from.NotifyPayout
                             ? Res.Payout
                             : Res.IncomingTransaction;
                         
