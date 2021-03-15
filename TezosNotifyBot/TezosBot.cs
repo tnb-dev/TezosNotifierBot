@@ -1502,6 +1502,8 @@ namespace TezosNotifyBot
                                 Block = penalty.missedLevel,
                                 Amount = penalty.TotalLost
                             });
+                        if (!ua.User.HideHashTags)
+                            result += "\n\n#missed_revelation" + ua.HashTag();
                         SendTextMessageUA(ua, result);
                     }
                 }
