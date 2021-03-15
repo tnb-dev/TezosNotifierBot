@@ -3469,11 +3469,11 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
-                    result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count;
+                    result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count + "\n";
                 }
 
                 if (!ua.User.HideHashTags)
-                    result += "\n\n" + ua.HashTag();
+                    result += "\n" + ua.HashTag();
                 return () => SendTextMessage(chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
@@ -3483,7 +3483,7 @@ namespace TezosNotifyBot
             else
             {
                 if (!ua.User.HideHashTags)
-                    result += "\n\n" + ua.HashTag();
+                    result += "\n" + ua.HashTag();
                 string name = "";
                 if (ci?.@delegate != null && !repo.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
                     name = repo.GetDelegateName(ci.@delegate);
