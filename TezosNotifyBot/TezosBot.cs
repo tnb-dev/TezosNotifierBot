@@ -3421,6 +3421,8 @@ namespace TezosNotifyBot
                     result += "🤑";
                 if (ua.NotifyAwardAvailable && !isDelegate)
                     result += "🧊";
+                
+                result += "\n";
             }
             else
             {
