@@ -2593,7 +2593,6 @@ namespace TezosNotifyBot
 {addr1} {name1}
 {addr2} {name2}
 ...etc - add public known addresses
-/names - show public known addresses
 /defaultnode - switch to localnode
 /node - list and check nodes
 /setdelegatename {addr} {name} - set delegate name
@@ -2837,7 +2836,7 @@ namespace TezosNotifyBot
                             _currentConstants = null;
                         }
                     }
-                    else if (message.Text.StartsWith("/names") && Config.DevUserNames.Contains(message.From.Username))
+                    else if (message.Text.StartsWith("/names") && Config.Telegram.DevUsers.Contains(message.From.Username))
                     {
                         var t = Explorer.FromId(0);
                         var data = message.Text.Substring("/names".Length).Trim().Split('\n');
@@ -2856,17 +2855,6 @@ namespace TezosNotifyBot
 
                         if (result != "")
                             NotifyDev("Установлены названия:\n\n" + result, 0, ParseMode.Html);
-                        else
-                        {
-                            foreach (var item in repo.GetKnownAddresses())
-                            {
-                                result +=
-                                    $"<a href='{t.account(item.Address)}'>{item.Address.ShortAddr()}</a> {item.Name}";
-                            }
-
-                            SendTextMessage(user.Id, "Известные адреса:\n" + result,
-                                ReplyKeyboards.MainMenu(resMgr, user));
-                        }
                     }
                     else if (Config.DevUserNames.Contains(message.From.Username) &&
                              message.Text.StartsWith("/processmd"))
