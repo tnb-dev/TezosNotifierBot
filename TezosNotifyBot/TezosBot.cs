@@ -2649,7 +2649,7 @@ namespace TezosNotifyBot
                         if (int.TryParse(message.Text.Substring("/msglist".Length).Trim(), out int userid))
                         {
                             OnSql(user,
-                                $"select * from Messages where UserId = {userid} and CreateDate >= DATE('now', '-1 month') order by CreateDate");
+                                $"select * from message where user_id = {userid} and create_date >= 'now'::timestamp - '1 month'::interval order by create_date");
                         }
                         else
                             SendTextMessage(user.Id, "Command syntax:\n/msglist {userid}",
