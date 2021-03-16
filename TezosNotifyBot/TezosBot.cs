@@ -3481,7 +3481,7 @@ namespace TezosNotifyBot
                 if (!ua.User.HideHashTags)
                     // One new line for `address tune` and two for `inline mode`
                     // TODO: Change `result` from string to StringBuilder
-                    result += new string('\n', msgid == 0 ? 1 : 2) + ua.HashTag();
+                    result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
                 return () => SendTextMessage(chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
@@ -3491,7 +3491,7 @@ namespace TezosNotifyBot
             else
             {
                 if (!ua.User.HideHashTags)
-                    result += new string('\n', msgid == 0 ? 1 : 2) + ua.HashTag();
+                    result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
                 string name = "";
                 if (ci?.@delegate != null && !repo.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
                     name = repo.GetDelegateName(ci.@delegate);
