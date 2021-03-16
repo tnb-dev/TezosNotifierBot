@@ -3491,7 +3491,7 @@ namespace TezosNotifyBot
             else
             {
                 if (!ua.User.HideHashTags)
-                    result += "\n" + ua.HashTag();
+                    result += new string('\n', msgid == 0 ? 1 : 2) + ua.HashTag();
                 string name = "";
                 if (ci?.@delegate != null && !repo.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
                     name = repo.GetDelegateName(ci.@delegate);
