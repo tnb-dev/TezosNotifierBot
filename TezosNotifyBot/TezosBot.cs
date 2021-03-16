@@ -3426,8 +3426,6 @@ namespace TezosNotifyBot
                     result += "🤑";
                 if (ua.NotifyAwardAvailable && !isDelegate)
                     result += "🧊";
-                
-                result += "\n";
             }
             else
             {
@@ -3467,7 +3465,6 @@ namespace TezosNotifyBot
                             result += "✂️";
                     }
 
-                    result += "\n";
                 }
                 else
                 {
@@ -3482,7 +3479,9 @@ namespace TezosNotifyBot
                 }
 
                 if (!ua.User.HideHashTags)
-                    result += "\n" + ua.HashTag();
+                    // One new line for `address tune` and two for `inline mode`
+                    // TODO: Change `result` from string to StringBuilder
+                    result += new string('\n', msgid == 0 ? 1 : 2) + ua.HashTag();
                 return () => SendTextMessage(chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
