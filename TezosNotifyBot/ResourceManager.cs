@@ -107,6 +107,7 @@ namespace TezosNotifyBot
 		public string OpHash { get; set; }
 		public int TotalRolls { get; set; }
 		public int Block { get; set; }
+		public int Period { get; set; }
 		public int Priority { get; set; }
 		public decimal Amount { get; set; }
 		public Token Token { get; set; }

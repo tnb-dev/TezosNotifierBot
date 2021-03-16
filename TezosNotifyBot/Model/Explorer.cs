@@ -11,8 +11,8 @@ namespace TezosNotifyBot.Model
 		public string block(int blocknumber) => string.Format(blockurl, blocknumber);
 		public string account(string addr) => string.Format(accounturl, addr);
 		public string op(string ophash) => string.Format(opurl, ophash);
-		public string url_vote(int blocknumber) => string.Format("https://www.tezosagora.org/period/{0}?utm_source=tezosnotifierbot", new Level(blocknumber).Period);
-
+		public string url_vote(int period) => string.Format("https://www.tezosagora.org/period/{0}?utm_source=tezosnotifierbot", period);
+		
 		public override string ToString() => name;
 
 		public int id { get; set; }
