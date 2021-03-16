@@ -222,38 +222,38 @@ Or use the search:
 #Delegate;en;Delegate
 #AveragePerformance;ru;Ср. эффективность за 10 циклов: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #AveragePerformance;en;Avg. 10-cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
-#NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами
-#NewProposal;en;💡 <a href='{t.op(OpHash)}'>Injected</a> new proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> by <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls
-#SupplyProposal;ru;👍 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>поддержал</a> предложение <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами
+#NewProposal;en;💡 <a href='{t.op(OpHash)}'>Injected</a> new proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> by <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls
+#SupplyProposal;ru;👍 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>поддержал</a> предложение <a href='{t.url_vote(Period)}'>{p.Name}</a>
 
 {p.VotedRolls} роллов поддержало, {(100M * p.VotedRolls / TotalRolls).ToString("n1")}% от общего количества
-#SupplyProposal;en;👍 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>upvoted</a> proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
+#SupplyProposal;en;👍 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>upvoted</a> proposal <a href='{t.url_vote(Period)}'>{p.Name}</a>
 
 {p.VotedRolls} rolls voted, {(100M * p.VotedRolls / TotalRolls).ToString("n1")}% of total rolls
-#QuorumReached;ru;🎉 Кворум по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a> достигнут!
-#QuorumReached;en;🎉 Quorum on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> reached!
-#TestingVoteSuccess;ru;✌️ Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> одобрено. Начинается период тестирования.
-#TestingVoteSuccess;en;✌️ Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> approved. Testing period begins.
-#TestingVoteFailed;ru;😐 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
-#TestingVoteFailed;en;😐 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> declined. The proposal period begins.
-#PromotionVoteSuccess;ru;🥳 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> одобрено. Новый протокол внедрен. Начинается период подачи предложений.
-#PromotionVoteSuccess;en;🥳 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> approved. New protocol implemented. The proposal period begins.
-#PromotionVoteFailed;ru;🚽 Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
-#PromotionVoteFailed;en;🚽 Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> declined. The proposal period begins.
-#DelegateDidNotVoted;ru;😴 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не проголосовал по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#DelegateDidNotVoted;en;😴 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> didn't vote on proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_yay;ru;🙋‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ДА» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_yay;en;🙋‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «YAY» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_nay;ru;🙅‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «НЕТ» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_nay;en;🙅‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «NAY» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_pass;ru;🙆‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ПАС» по предложению <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#BallotProposal_pass;en;🙆‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «PASS» on the proposal <a href='{t.url_vote(Block)}'>{p.Name}</a>
-#ProposalSelectedForVoting;ru;Предложение <a href='{t.url_vote(Block)}'>{p.Name}</a> выносится на голосование
-#ProposalSelectedForVoting;en;Proposal <a href='{t.url_vote(Block)}'>{p.Name}</a> is selected for voting
-#ProposalSelectedForVotingOne;ru;💡 Завершен период подачи предложений.{(p.Delegates.Count > 0 ? " Предложение <a href='" + t.url_vote(Block) + "'>" + p.Name + "</a> поддержали: " : "")}
-#ProposalSelectedForVotingOne;en;💡 Proposal period has been completed.{(p.Delegates.Count > 0 ? " Proposal <a href='" + t.url_vote(Block) + "'>" + p.Name + "</a> supported by: " : "")}
-#ProposalSelectedItem;ru;<a href='{t.url_vote(Block)}'>{p.Name}</a> - {p.VotedRolls} роллов{(p.Delegates.Count > 0 ? ", поддержали: " : "")}
-#ProposalSelectedItem;en;<a href='{t.url_vote(Block)}'>{p.Name}</a> - {p.VotedRolls} rolls{(p.Delegates.Count > 0 ? ", supported by: " : "")}
+#QuorumReached;ru;🎉 Кворум по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a> достигнут!
+#QuorumReached;en;🎉 Quorum on the proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> reached!
+#TestingVoteSuccess;ru;✌️ Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> одобрено. Начинается период тестирования.
+#TestingVoteSuccess;en;✌️ Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> approved. Testing period begins.
+#TestingVoteFailed;ru;😐 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
+#TestingVoteFailed;en;😐 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> declined. The proposal period begins.
+#PromotionVoteSuccess;ru;🥳 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> одобрено. Новый протокол внедрен. Начинается период подачи предложений.
+#PromotionVoteSuccess;en;🥳 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> approved. New protocol implemented. The proposal period begins.
+#PromotionVoteFailed;ru;🚽 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
+#PromotionVoteFailed;en;🚽 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> declined. The proposal period begins.
+#DelegateDidNotVoted;ru;😴 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не проголосовал по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#DelegateDidNotVoted;en;😴 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> didn't vote on proposal <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_yay;ru;🙋‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ДА» по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_yay;en;🙋‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «YAY» on the proposal <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_nay;ru;🙅‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «НЕТ» по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_nay;en;🙅‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «NAY» on the proposal <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_pass;ru;🙆‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>проголосовал</a> «ПАС» по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#BallotProposal_pass;en;🙆‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls <a href='{t.op(OpHash)}'>voted</a> «PASS» on the proposal <a href='{t.url_vote(Period)}'>{p.Name}</a>
+#ProposalSelectedForVoting;ru;Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> выносится на голосование
+#ProposalSelectedForVoting;en;Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> is selected for voting
+#ProposalSelectedForVotingOne;ru;💡 Завершен период подачи предложений.{(p.Delegates.Count > 0 ? " Предложение <a href='" + t.url_vote(Period) + "'>" + p.Name + "</a> поддержали: " : "")}
+#ProposalSelectedForVotingOne;en;💡 Proposal period has been completed.{(p.Delegates.Count > 0 ? " Proposal <a href='" + t.url_vote(Period) + "'>" + p.Name + "</a> supported by: " : "")}
+#ProposalSelectedItem;ru;<a href='{t.url_vote(Period)}'>{p.Name}</a> - {p.VotedRolls} роллов{(p.Delegates.Count > 0 ? ", поддержали: " : "")}
+#ProposalSelectedItem;en;<a href='{t.url_vote(Period)}'>{p.Name}</a> - {p.VotedRolls} rolls{(p.Delegates.Count > 0 ? ", supported by: " : "")}
 #ProposalSelectedMany;ru;💡 Завершен период подачи предложений. Были поданы предложения:
 #ProposalSelectedMany;en;💡 Proposal period has been completed. Proposals have been submitted:
 #IncomingTransactions;ru;{(Token == null ? "✅" : "🔸")} Входящие <a href='{t.block(Block)}'>транзакции</a> на сумму <b>{Amount.AmountToString(Token)}</b> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
@@ -336,25 +336,25 @@ All bakers need to check their software!
 Block: {t.block(Block)}
 #TwitterNewProposal;en;💡 Injected new #Tezos proposal {p.Name} by {ua.DisplayName()} with {ua.Rolls} rolls
 
-Proposal: {t.url_vote(Block)}
+Proposal: {t.url_vote(Period)}
 #TwitterProposalPeriodComplete;en;💡 #Tezos proposal period has been completed. 
 
 Proposal {p.Name} is selected for voting.
 
-Proposal: {t.url_vote(Block)}
+Proposal: {t.url_vote(Period)}
 #TwitterProposalPeriodCompleteMany;en;💡 #Tezos proposal period has been completed. Proposals have been submitted:
 PsBABY5…GmrbU - 33145 rolls
 PsBABY5…mRS9f - 9522 rolls
 
 Proposal {p.Name} is selected for voting.
 
-Proposal: {t.url_vote(Block)}
+Proposal: {t.url_vote(Period)}
 #TwitterProposalApproved;en;🥳 #Tezos proposal {p.Name} approved. New protocol implemented. The proposal period begins.
 
-Proposal: {t.url_vote(Block)}
+Proposal: {t.url_vote(Period)}
 #TwitterProposalApprovedForTest;en;✌️ #Tezos proposal {p.Name} approved. Testing period begins.
 
-Proposal: {t.url_vote(Block)}
+Proposal: {t.url_vote(Period)}
 #TwitterTnbPromo;en;🤖 Check out our Telegram bot https://t.me/TezosNotifierBot for #Tezos network monitoring. Here you can subscribe to the addresses you are interested in and receive relevant notifications.
 #TwitterDoubleBaking;en;😱 Delegate {ua_from.DisplayName()} made double baking/endorsement of block {Block} and lost {Amount.TezToString()} and should immediately stop both baking and endorsing ‼️
 👮 Delegate {ua_to.DisplayName()} detected double baking/endorsement and rewarded {(Amount / 2).TezToString()}

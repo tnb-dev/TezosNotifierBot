@@ -20,8 +20,6 @@
 
 		public int Height { get; }
 
-		public int Period => (Height - 1) / PeriodSize;
-
 		public static implicit operator Level(int level) => new Level(level);
 
 		public static implicit operator int(Level level) => level.Height;

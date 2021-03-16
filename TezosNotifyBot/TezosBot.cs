@@ -386,7 +386,7 @@ namespace TezosNotifyBot
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
                     var result = resMgr.Get(Res.TestingVoteSuccess,
-                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period});
                     if (!u.HideHashTags)
                         result += "\n\n#proposal" + p.HashTag();
                     SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -421,7 +421,7 @@ namespace TezosNotifyBot
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
                     var result = resMgr.Get(Res.TestingVoteFailed,
-                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
                     if (!u.HideHashTags)
                         result += "\n\n#proposal" + p.HashTag();
                     SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -437,7 +437,7 @@ namespace TezosNotifyBot
                 {
                     var result = blockMetadata.next_protocol == hash
                         ? resMgr.Get(Res.PromotionVoteSuccess,
-                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level})
+                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period })
                         : resMgr.Get(Res.PromotionVoteFailed,
                             new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
                     if (!u.HideHashTags)
@@ -519,7 +519,9 @@ namespace TezosNotifyBot
                                     var result = resMgr.Get(Res.NewProposal,
                                         new ContextObject
                                         {
-                                            ua = ua, p = p, u = u, OpHash = op.hash, Block = blockMetadata.level.level
+                                            ua = ua, p = p, u = u, OpHash = op.hash,
+                                            Block = blockMetadata.level.level,
+                                            Period = blockMetadata.level.voting_period
                                         });
                                     if (!u.HideHashTags)
                                         result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -536,7 +538,8 @@ namespace TezosNotifyBot
                                                 Address = from, Name = repo.GetDelegateName(from),
                                                 StakingBalance = rolls * 8000
                                             },
-                                            p = p, OpHash = op.hash
+                                            p = p, OpHash = op.hash,
+                                            Period = blockMetadata.level.voting_period
                                         });
                                     twitter.TweetAsync(twText);
                                 }
@@ -553,7 +556,8 @@ namespace TezosNotifyBot
                                             new ContextObject
                                             {
                                                 ua = ua, p = p, u = ua.User, OpHash = op.hash, TotalRolls = allrolls,
-                                                Block = blockMetadata.level.level
+                                                Block = blockMetadata.level.level,
+                                                Period = blockMetadata.level.voting_period
                                             });
                                         if (!ua.User.HideHashTags)
                                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -600,7 +604,8 @@ namespace TezosNotifyBot
                                     new ContextObject
                                     {
                                         ua = ua, p = p, u = ua.User, OpHash = op.hash, TotalRolls = allrolls,
-                                        Block = blockMetadata.level.level
+                                        Block = blockMetadata.level.level,
+                                        Period = blockMetadata.level.voting_period
                                     });
                                 if (!ua.User.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -632,7 +637,7 @@ namespace TezosNotifyBot
                             foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                             {
                                 var result = resMgr.Get(Res.QuorumReached,
-                                    new ContextObject {u = u, p = p, Block = blockMetadata.level.level});
+                                    new ContextObject {u = u, p = p, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
                                 if (!u.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag();
                                 SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -640,7 +645,7 @@ namespace TezosNotifyBot
 
                             {
                                 var twText = resMgr.Get(Res.TwitterQuorumReached,
-                                    new ContextObject {p = p, Block = blockMetadata.level.level});
+                                    new ContextObject {p = p, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
                                 twitter.TweetAsync(twText);
                             }
                         }
@@ -1609,7 +1614,7 @@ namespace TezosNotifyBot
                         p.VotedRolls = proposals.Single().Value;
                         string tags = "";
                         string result = resMgr.Get(Res.ProposalSelectedForVotingOne,
-                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
                         if (addrList.Count() > 0)
                         {
                             tags = String.Join("", addrList.Select(o => o.HashTag()));
@@ -1620,7 +1625,7 @@ namespace TezosNotifyBot
                         }
 
                         result += resMgr.Get(Res.ProposalSelectedForVoting,
-                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
 
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag() + tags;
@@ -1652,7 +1657,7 @@ namespace TezosNotifyBot
                             p.Delegates = addrList;
                             propItems +=
                                 resMgr.Get(Res.ProposalSelectedItem,
-                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level}) + "\n" +
+                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period }) + "\n" +
                                 delegateListString;
                         }
 
@@ -1668,10 +1673,10 @@ namespace TezosNotifyBot
                             p.Delegates = addrList;
                             string result =
                                 resMgr.Get(Res.ProposalSelectedMany,
-                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level}) + "\n" +
+                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period }) + "\n" +
                                 propItems + "\n\n" +
                                 resMgr.Get(Res.ProposalSelectedForVoting,
-                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+                                    new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
                             if (!u.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + tags;
                             SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
