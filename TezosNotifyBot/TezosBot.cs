@@ -1057,7 +1057,7 @@ namespace TezosNotifyBot
                 var amount = to.Sum(o => o.Item3);
                 
                 var contract = addrMgr.GetContract(_nodeManager.Client, lastHash, to.Key.to, true);
-                if (contract.@delegate != null)
+                if (contract.@delegate != null && to.Key.token != null)
                 {
                     HandleDelegatorsBalance();
                 }
