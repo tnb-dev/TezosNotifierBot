@@ -90,3 +90,32 @@ Deploy Release:
     DOCKER_VERSION: $CI_COMMIT_TAG
   environment:
     name: release
+    
+Restart Release:
+  stage: service
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f deploy/compose.yml -p tezos-bot-release restart bot
+  only:
+    refs:
+      - tags
+  tags:
+    - deployer
+  when: manual
+  environment:
+    name: release
+
+
+Shutdown Release:
+  stage: service
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker-compose -f deploy/compose.yml -p tezos-bot-release stop bot
+  only:
+    refs:
+      - tags
+  tags:
+    - deployer
+  when: manual
+  environment:
+    name: release
