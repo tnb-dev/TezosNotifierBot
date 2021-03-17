@@ -43,12 +43,14 @@ namespace TezosNotifyBot.Tzkt
 
 		List<OperationPenalty> ITzKtClient.GetRevelationPenalties(int level)
 		{
-			return JsonConvert.DeserializeObject<List<OperationPenalty>>(Download($"v1/operations/revelation_penalties?level={level}"));
+			var str = Download($"v1/operations/revelation_penalties?level={level}");
+			return JsonConvert.DeserializeObject<List<OperationPenalty>>(str);
 		}
 
 		Rewards ITzKtClient.GetDelegatorRewards(string address, int cycle)
 		{
-			return JsonConvert.DeserializeObject<List<Rewards>>(Download($"v1/rewards/delegators/{address}?cycle={cycle}")).FirstOrDefault();
+			var str = Download($"v1/rewards/delegators/{address}?cycle={cycle}");
+			return JsonConvert.DeserializeObject<List<Rewards>>(str)?.FirstOrDefault();
 		}
 
 		string Download(string addr)
