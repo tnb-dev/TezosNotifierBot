@@ -2593,7 +2593,6 @@ namespace TezosNotifyBot
 {addr1} {name1}
 {addr2} {name2}
 ...etc - add public known addresses
-/names - show public known addresses
 /defaultnode - switch to localnode
 /node - list and check nodes
 /setdelegatename {addr} {name} - set delegate name
@@ -2649,7 +2648,7 @@ namespace TezosNotifyBot
                         if (int.TryParse(message.Text.Substring("/msglist".Length).Trim(), out int userid))
                         {
                             OnSql(user,
-                                $"select * from Messages where UserId = {userid} and CreateDate >= DATE('now', '-1 month') order by CreateDate");
+                                $"select * from message where user_id = {userid} and create_date >= 'now'::timestamp - '1 month'::interval order by create_date");
                         }
                         else
                             SendTextMessage(user.Id, "Command syntax:\n/msglist {userid}",
@@ -2837,7 +2836,7 @@ namespace TezosNotifyBot
                             _currentConstants = null;
                         }
                     }
-                    else if (message.Text.StartsWith("/names") && Config.DevUserNames.Contains(message.From.Username))
+                    else if (message.Text.StartsWith("/names") && Config.Telegram.DevUsers.Contains(message.From.Username))
                     {
                         var t = Explorer.FromId(0);
                         var data = message.Text.Substring("/names".Length).Trim().Split('\n');
@@ -2856,17 +2855,6 @@ namespace TezosNotifyBot
 
                         if (result != "")
                             NotifyDev("Установлены названия:\n\n" + result, 0, ParseMode.Html);
-                        else
-                        {
-                            foreach (var item in repo.GetKnownAddresses())
-                            {
-                                result +=
-                                    $"<a href='{t.account(item.Address)}'>{item.Address.ShortAddr()}</a> {item.Name}";
-                            }
-
-                            SendTextMessage(user.Id, "Известные адреса:\n" + result,
-                                ReplyKeyboards.MainMenu(resMgr, user));
-                        }
                     }
                     else if (Config.DevUserNames.Contains(message.From.Username) &&
                              message.Text.StartsWith("/processmd"))
@@ -3426,8 +3414,6 @@ namespace TezosNotifyBot
                     result += "🤑";
                 if (ua.NotifyAwardAvailable && !isDelegate)
                     result += "🧊";
-                
-                result += "\n";
             }
             else
             {
@@ -3467,7 +3453,6 @@ namespace TezosNotifyBot
                             result += "✂️";
                     }
 
-                    result += "\n";
                 }
                 else
                 {
@@ -3482,7 +3467,9 @@ namespace TezosNotifyBot
                 }
 
                 if (!ua.User.HideHashTags)
-                    result += "\n" + ua.HashTag();
+                    // One new line for `address tune` and two for `inline mode`
+                    // TODO: Change `result` from string to StringBuilder
+                    result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
                 return () => SendTextMessage(chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
@@ -3492,7 +3479,7 @@ namespace TezosNotifyBot
             else
             {
                 if (!ua.User.HideHashTags)
-                    result += "\n" + ua.HashTag();
+                    result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
                 string name = "";
                 if (ci?.@delegate != null && !repo.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
                     name = repo.GetDelegateName(ci.@delegate);
