@@ -7,11 +7,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Storage;
 using Message = TezosNotifyBot.Domain.Message;
+using User = Telegram.Bot.Types.User;
 
 namespace TezosNotifyBot.Workers
 {
@@ -41,17 +43,26 @@ namespace TezosNotifyBot.Workers
                     // Выбираем сообщения которые были созданы для отложенной отправки
                     var messages = await db.Set<Message>()
                         .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null)
+                        .Where(x => !x.User.Inactive)
                         .OrderBy(x => x.Id)
                         .Take(30)
                         .ToArrayAsync(stoppingToken);
 
                     foreach (var message in messages)
                     {
-                        var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text,
-                            ParseMode.Html, true);
+                        try
+                        {
+                            var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text,
+                                ParseMode.Html, true);
 
-                        message.Sent(id.MessageId);
+                            message.Sent(id.MessageId);
 
+                        }
+                        catch (ApiRequestException e)
+                        {
+                            var user = await db.Set<Domain.User>().SingleOrDefaultAsync(x => x.Id == message.UserId);
+                            user.Inactive = true;
+                        }
                         await db.SaveChangesAsync();
                     }
                 }
