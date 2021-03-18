@@ -15,7 +15,7 @@ using Message = TezosNotifyBot.Domain.Message;
 
 namespace TezosNotifyBot.Workers
 {
-    public class BroadcastWorker: BackgroundService
+    public class BroadcastWorker : BackgroundService
     {
         private readonly ILogger<BroadcastWorker> _logger;
         private readonly IServiceProvider _provider;
@@ -24,7 +24,7 @@ namespace TezosNotifyBot.Workers
         public BroadcastWorker(TelegramBotClient bot, ILogger<BroadcastWorker> logger, IServiceProvider provider)
         {
             Bot = bot;
-            
+
             _logger = logger;
             _provider = provider;
         }
@@ -36,22 +36,30 @@ namespace TezosNotifyBot.Workers
                 using var scope = _provider.CreateScope();
                 await using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
 
-                // Выбираем сообщения которые были созданы для отложенной отправки
-                var messages = await db.Set<Message>()
-                    .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null)
-                    .OrderBy(x => x.Id)
-                    .Take(30)
-                    .ToArrayAsync(stoppingToken);
-                
-                foreach (var message in messages)
+                try
                 {
-                    var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text, ParseMode.Html, true);
-                    
-                    message.Sent(id.MessageId);
-                    
-                    await db.SaveChangesAsync();
+                    // Выбираем сообщения которые были созданы для отложенной отправки
+                    var messages = await db.Set<Message>()
+                        .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null)
+                        .OrderBy(x => x.Id)
+                        .Take(30)
+                        .ToArrayAsync(stoppingToken);
+
+                    foreach (var message in messages)
+                    {
+                        var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text,
+                            ParseMode.Html, true);
+
+                        message.Sent(id.MessageId);
+
+                        await db.SaveChangesAsync();
+                    }
                 }
-                
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Failed to send messages");
+                }
+
                 // Wait one second
                 await Task.Delay(1000, stoppingToken);
             }
