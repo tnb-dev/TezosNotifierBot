@@ -36,15 +36,15 @@ namespace TezosNotifyBot.Workers
             while (stoppingToken.IsCancellationRequested is false)
             {
                 using var scope = _provider.CreateScope();
-                await using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
+                using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
 
                 try
                 {
                     // Выбираем сообщения которые были созданы для отложенной отправки
                     var messages = await db.Set<Message>()
-                        .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null)
+                        .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
                         .Where(x => !x.User.Inactive)
-                        .OrderBy(x => x.Id)
+                        .OrderBy(x => x.CreateDate)
                         .Take(30)
                         .ToArrayAsync(stoppingToken);
 
@@ -60,15 +60,22 @@ namespace TezosNotifyBot.Workers
                         }
                         catch (ApiRequestException e)
                         {
-                            var user = await db.Set<Domain.User>().SingleOrDefaultAsync(x => x.Id == message.UserId);
+                            var user = await db.Set<Domain.User>()
+                                .SingleOrDefaultAsync(x => x.Id == message.UserId);
+                            
                             user.Inactive = true;
+                        }
+                        catch (Exception e)
+                        {
+                            message.SentFailed();
+                            _logger.LogError(e, "Failed to send push message");
                         }
                         await db.SaveChangesAsync();
                     }
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to send messages");
+                    _logger.LogError(e, "Failed to read push message stack from database");
                 }
 
                 // Wait one second
