@@ -63,7 +63,10 @@ namespace TezosNotifyBot.Storage
                 builder.Property(x => x.NotifyAwardAvailable).HasDefaultValue(true);
             });
             modelBuilder.Entity<UserAddressDelegation>();
-            modelBuilder.Entity<Message>();
+            modelBuilder.Entity<Message>(builder =>
+            {
+                builder.HasIndex(x => x.CreateDate);
+            });
             modelBuilder.Entity<Delegate>();
             modelBuilder.Entity<KnownAddress>(builder =>
             {
