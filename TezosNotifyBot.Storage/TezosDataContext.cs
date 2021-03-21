@@ -65,6 +65,8 @@ namespace TezosNotifyBot.Storage
             modelBuilder.Entity<UserAddressDelegation>();
             modelBuilder.Entity<Message>(builder =>
             {
+                builder.Property(x => x.Status)
+                    .HasDefaultValueSql("0");
                 builder.HasIndex(x => x.CreateDate);
             });
             modelBuilder.Entity<Delegate>();
