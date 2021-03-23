@@ -658,13 +658,11 @@ namespace TezosNotifyBot
                         var from = content.source;
                         var to = content.destination;
                         var amount = decimal.Parse(content.amount) / 1000000M;
-                        if (amount == 0 && content.metadata.internal_operation_results != null &&
-                            content.metadata.internal_operation_results.Count > 0 &&
-                            content.metadata.internal_operation_results[0].kind == "transaction")
+                        
+                        if (content.metadata.internal_operation_results != null)
                         {
-                            from = content.metadata.internal_operation_results[0].source;
-                            to = content.metadata.internal_operation_results[0].destination;
-                            amount = decimal.Parse(content.metadata.internal_operation_results[0].amount) / 1000000M;
+                            foreach (var ior in content.metadata.internal_operation_results.Where(r => r.kind == "transaction" && r.amount != "0"))
+                                fromToAmountHash.Add((ior.source, ior.destination, decimal.Parse(ior.amount) / 1000000M, op.hash, null));
                         }
 
                         if (amount == 0 && content.metadata.internal_operation_results != null &&
