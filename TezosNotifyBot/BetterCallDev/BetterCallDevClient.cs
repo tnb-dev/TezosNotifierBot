@@ -63,7 +63,7 @@ namespace TezosNotifyBot.BetterCallDev
 		List<Operation> IBetterCallDevClient.GetOperations(string ophash)
 		{
 			var opsStr = Download($"v1/opg/{ophash}");
-			return JsonConvert.DeserializeObject<List<Operation>>(opsStr);
+			return JsonConvert.DeserializeObject<List<Operation>>(opsStr) ?? new List<Operation>();
 		}
 
 		public class TokensToken
