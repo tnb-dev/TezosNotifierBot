@@ -761,7 +761,10 @@ namespace TezosNotifyBot
                             if (token != null)
                             {
                                 foreach (var transfer in TokenTransfers(token, op))
-                                    fromToAmountHash.Add((transfer.from, transfer.to, transfer.amount, op.hash, token));
+                                {
+                                    if (!fromToAmountHash.Contains((transfer.from, transfer.to, transfer.amount, op.hash, token)))
+                                        fromToAmountHash.Add((transfer.from, transfer.to, transfer.amount, op.hash, token));
+                                }
                             }
                         }
 
