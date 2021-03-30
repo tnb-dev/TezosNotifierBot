@@ -403,3 +403,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #AwardNotify;en;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Awards
 #AwardAvailableNotifyStatus;en;🧊 Awards: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
 #AwardAvailableNotifyStatus;ru;🧊 Вознаграждения: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}
+#Mint;en;🔨 <b>{Amount.AmountToString(Token)}</b> <a href='{t.block(Block)}'>minted</a> for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
+#Mint;ru;🔨 <b>{Amount.AmountToString(Token)}</b> <a href='{t.block(Block)}'>отчеканено</a> для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>

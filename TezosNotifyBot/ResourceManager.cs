@@ -259,6 +259,7 @@ namespace TezosNotifyBot
 		CurrentDelegatorBalance,
 		AwardAvailable,
 		AwardNotify,
-		AwardAvailableNotifyStatus
+		AwardAvailableNotifyStatus,
+		Mint
 	}
 }

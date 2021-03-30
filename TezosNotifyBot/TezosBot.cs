@@ -899,7 +899,7 @@ namespace TezosNotifyBot
                 }
             }
 
-            var fromGroup = fromToAmountHash.GroupBy(o => new {o.from, o.token});
+            var fromGroup = fromToAmountHash.Where(o => o.from != "").GroupBy(o => new {o.from, o.token});
             foreach (var from in fromGroup)
             {
                 //decimal total = from.Sum(o => o.Item3);
@@ -1137,27 +1137,50 @@ namespace TezosNotifyBot
                     {
                         
                         var from = to_ua.Single().Item1;
-                        var ua_from = repo.GetUserTezosAddress(ua.UserId, from);
+                        if (from == "")
+                        {
+                            result = resMgr.Get(Res.Mint,
+                                new ContextObject
+                                {
+                                    u = ua.User,
+                                    OpHash = to_ua.Single().Item4,
+                                    Block = header.level,
+                                    Amount = to_ua.Sum(o => o.Item3),
+                                    md = md,
+                                    ua = ua,
+                                    Token = to.Key.token
+                                }) + "\n";
+                            operationTag = "#mint";
+                        }
+                        else
+                        {
+                            var ua_from = repo.GetUserTezosAddress(ua.UserId, from);
 
-                        var isSenderPayout = repo.IsPayoutAddress(from);
-                        var isReceiverPayout = repo.IsPayoutAddress(ua.Address);
-                        
-                        var isPayoutOperation = isSenderPayout && isReceiverPayout is false;
-                        if (isPayoutOperation)
-                            operationTag = "#payout";
-                        
-                        var messageType = isPayoutOperation && ua_from.NotifyPayout
-                            ? Res.Payout
-                            : Res.IncomingTransaction;
-                        
-                        result = resMgr.Get(messageType,
-                            new ContextObject
-                            {
-                                u = ua.User, OpHash = to_ua.Single().Item4, Block = header.level,
-                                Amount = to_ua.Sum(o => o.Item3), md = md, ua_from = ua_from, ua_to = ua,
-                                Token = to.Key.token
-                            }) + "\n";
-                        tags = ua_from.HashTag();
+                            var isSenderPayout = repo.IsPayoutAddress(from);
+                            var isReceiverPayout = repo.IsPayoutAddress(ua.Address);
+
+                            var isPayoutOperation = isSenderPayout && isReceiverPayout is false;
+                            if (isPayoutOperation)
+                                operationTag = "#payout";
+
+                            var messageType = isPayoutOperation && ua_from.NotifyPayout
+                                ? Res.Payout
+                                : Res.IncomingTransaction;
+
+                            result = resMgr.Get(messageType,
+                                new ContextObject
+                                {
+                                    u = ua.User,
+                                    OpHash = to_ua.Single().Item4,
+                                    Block = header.level,
+                                    Amount = to_ua.Sum(o => o.Item3),
+                                    md = md,
+                                    ua_from = ua_from,
+                                    ua_to = ua,
+                                    Token = to.Key.token
+                                }) + "\n";
+                            tags = ua_from.HashTag();
+                        }
                     }
                     else
                     {
@@ -1230,7 +1253,7 @@ namespace TezosNotifyBot
             var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
             var ops = bcd.GetOperations(op.hash);
             foreach (var transfer in ops.Where(o =>
-                o.destination == token.ContractAddress && o.entrypoint == "transfer" && o.status == "applied"))
+                o.destination == token.ContractAddress && (o.entrypoint == "transfer" || o.entrypoint == "mint") && o.status == "applied"))
             {
                 if (transfer.parameters?.Count == 1 &&
                     transfer.parameters[0].children?.Count == 3 &&
@@ -1260,11 +1283,38 @@ namespace TezosNotifyBot
                             $"Failed to parse BigInteger transfer with value {transfer.parameters[0].children[2].value}");
                     }
                 }
+                if (transfer.parameters?.Count == 1 &&
+                    transfer.parameters[0].name == "mint" &&
+                    transfer.parameters[0].children?.Count == 2 &&
+                    transfer.parameters[0].children[0].name == "to" &&
+                    transfer.parameters[0].children[1].name == "value")
+                {
+                    var to = transfer.parameters[0].children[0].value;
+
+                    if (BigInteger.TryParse(transfer.parameters[0].children[1].value, out var value))
+                    {
+                        try
+                        {
+                            value /= new BigInteger(Math.Pow(10, token.Decimals));
+                            result.Add(("", to, (decimal)value));
+                        }
+                        catch (Exception e)
+                        {
+                            Logger.LogError($"Failed on BigInteger to decimal conversion: {e.Message}");
+                            throw;
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogError(
+                            $"Failed to parse BigInteger transfer with value {transfer.parameters[0].children[1].value}");
+                    }
+                }
             }
 
             return result;
         }
-
+        
         bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
         {
             Logger.LogDebug($"ProcessBlockBakingData {header.level}");
