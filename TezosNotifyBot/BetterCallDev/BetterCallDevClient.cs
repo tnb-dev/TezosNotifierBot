@@ -20,7 +20,7 @@ namespace TezosNotifyBot.BetterCallDev
 
 		Account IBetterCallDevClient.GetAccount(string address)
 		{
-			string account = Download($"v1/account/mainnet/{address}");
+			string account = Download($"v1/account/mainnet/{address}/token_balances");
 			return JsonConvert.DeserializeObject<Account>(account);
 		}
 
