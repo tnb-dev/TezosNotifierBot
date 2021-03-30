@@ -1232,15 +1232,16 @@ namespace TezosNotifyBot
             foreach (var transfer in ops.Where(o =>
                 o.destination == token.ContractAddress && o.entrypoint == "transfer" && o.status == "applied"))
             {
-                if (transfer.parameters?.children?.Count == 3 &&
-                    transfer.parameters.children[0].name == "from" &&
-                    transfer.parameters.children[1].name == "to" &&
-                    transfer.parameters.children[2].name == "value")
+                if (transfer.parameters?.Count == 1 &&
+                    transfer.parameters[0].children?.Count == 3 &&
+                    transfer.parameters[0].children[0].name == "from" &&
+                    transfer.parameters[0].children[1].name == "to" &&
+                    transfer.parameters[0].children[2].name == "value")
                 {
-                    var from = transfer.parameters.children[0].value;
-                    var to = transfer.parameters.children[1].value;
+                    var from = transfer.parameters[0].children[0].value;
+                    var to = transfer.parameters[0].children[1].value;
 
-                    if (BigInteger.TryParse(transfer.parameters.children[2].value, out var value))
+                    if (BigInteger.TryParse(transfer.parameters[0].children[2].value, out var value))
                     {
                         try
                         {
@@ -1256,7 +1257,7 @@ namespace TezosNotifyBot
                     else
                     {
                         Logger.LogError(
-                            $"Failed to parse BigInteger transfer with value {transfer.parameters.children[2].value}");
+                            $"Failed to parse BigInteger transfer with value {transfer.parameters[0].children[2].value}");
                     }
                 }
             }

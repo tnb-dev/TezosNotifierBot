@@ -6,14 +6,16 @@ namespace TezosNotifyBot.BetterCallDev
 {
     public class Result
     {
-        public ulong consumed_gas { get; set; }
-        public ulong storage_size { get; set; }
+        public int consumed_gas { get; set; }
+        public int storage_size { get; set; }
+        public int? paid_storage_size_diff { get; set; }
     }
 
-    public class Parameters
+    public class Parameter
     {
         public string prim { get; set; }
         public string type { get; set; }
+        public string name { get; set; }
         public IList<Child> children { get; set; }
     }
 
@@ -22,16 +24,17 @@ namespace TezosNotifyBot.BetterCallDev
         public string prim { get; set; }
         public string type { get; set; }
         public string name { get; set; }
+        public IList<Child> children { get; set; }
         public string from { get; set; }
         public string diff_type { get; set; }
         public string value { get; set; }
-        public IList<Child> children { get; set; }
-    }
+    }   
 
     public class StorageDiff
     {
         public string prim { get; set; }
         public string type { get; set; }
+        public string name { get; set; }
         public IList<Child> children { get; set; }
     }
 
@@ -45,7 +48,7 @@ namespace TezosNotifyBot.BetterCallDev
         public ulong amount { get; set; }
         public int content_index { get; set; }
         public Result result { get; set; }
-        public Parameters parameters { get; set; }
+        public List<Parameter> parameters { get; set; }
         public StorageDiff storage_diff { get; set; }
         public DateTime timestamp { get; set; }
         public string id { get; set; }
