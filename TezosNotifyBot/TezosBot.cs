@@ -908,7 +908,7 @@ namespace TezosNotifyBot
                 {
                     var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
                     var acc = bcd.GetAccount(from.Key.from);
-                    var token = acc.tokens.FirstOrDefault(o =>
+                    var token = acc.balances.FirstOrDefault(o =>
                         o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
                     if (token != null)
                         tokenBalance = token.Balance;
@@ -1025,7 +1025,7 @@ namespace TezosNotifyBot
                 {
                     var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
                     var acc = bcd.GetAccount(to.Key.to);
-                    var token = acc.tokens.FirstOrDefault(o =>
+                    var token = acc.balances.FirstOrDefault(o =>
                         o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
                     if (token != null)
                         tokenBalance = token.Balance;
@@ -3332,11 +3332,11 @@ namespace TezosNotifyBot
 
             var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
             var bcdAcc = bcd.GetAccount(ua.Address);
-            if (bcdAcc.tokens.Count > 0)
+            if (bcdAcc.balances.Count > 0)
             {
                 result += resMgr.Get(Res.Tokens, ua) +
                           String.Join(", ",
-                              bcdAcc.tokens.Select(t =>
+                              bcdAcc.balances.Select(t =>
                                   $"<b>{t.Balance.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
                 result += "\n";
             }

@@ -1,15 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 
 namespace TezosNotifyBot.BetterCallDev
 {
+    public class TokenBalance
+    {
+        public string contract { get; set; }
+        public string network { get; set; }
+        public int level { get; set; }
+        public int token_id { get; set; }
+        public string symbol { get; set; }
+        public string name { get; set; }
+        public int decimals { get; set; }
+        public string description { get; set; }
+        public string artifact_uri { get; set; }
+        public string thumbnail_uri { get; set; }
+        public string balance { get; set; }
+        public decimal Balance => (decimal)BigInteger.Parse(balance) / (decimal)Math.Pow(10, decimals);
+    }
     public class Account
     {
-        public string address { get; set; }
-        public string network { get; set; }
-        public ulong balance { get; set; }
-        public int tx_count { get; set; }
-        public DateTime last_action { get; set; }
-        public IList<Token> tokens { get; set; }
+        public IList<TokenBalance> balances { get; set; }
+        public int total { get; set; }
     }
 }
