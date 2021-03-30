@@ -46,7 +46,7 @@ namespace TezosNotifyBot.BetterCallDev
 
 		IEnumerable<Token> IBetterCallDevClient.GetTokens(int minLevel)
 		{
-			var tokensStr = Download($"v1/tokens/mainnet?size=100");
+			var tokensStr = Download($"v1/tokens/mainnet?size=10");
 			var tokens = JsonConvert.DeserializeObject<Tokens>(tokensStr);
 			foreach(var t in tokens.tokens.Where(o => o.level > minLevel))
 			{
