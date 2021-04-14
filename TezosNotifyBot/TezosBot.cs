@@ -262,7 +262,7 @@ namespace TezosNotifyBot
                         {
                             checkNodeResults += "Network issue!";
                             Logger.LogWarning(checkNodeResults);
-
+                            /*
                             var lastBH = blockHeaders.OrderByDescending(o => o.level).FirstOrDefault();
                             foreach (var user1 in repo.GetUsers()
                                 .Where(o => o.NetworkIssueNotify > 0 && !o.NetworkIssueNotified))
@@ -295,7 +295,7 @@ namespace TezosNotifyBot
                                     twitter.TweetAsync(twText);
                                     twitterNetworkIssueNotified = true;
                                 }
-                            }
+                            }*/
                         }
                         else
                         {
