@@ -70,10 +70,10 @@ namespace TezosNotifyBot.Workers
 
                 async Task PublishTwitter(TezosRelease release)
                 {
-                    var desc = release.Description is null 
-                        ? "." 
+                    var desc = release.Description is null
+                        ? "."
                         : $": {release.Description.Ellipsis(128)}";
-                    
+
                     var text =
                         $"🦊 #Tezos software update {release.Name} released{desc}" +
                         "\n\n" +
@@ -131,7 +131,8 @@ namespace TezosNotifyBot.Workers
 
             return results.Select(json =>
             {
-                var announce = json.Assets.Links.FirstOrDefault();
+                var announce = json.Assets.Links.FirstOrDefault(x =>
+                    x.Url.StartsWith("https://tezos.gitlab.io/releases") || x.Name == "Announcement");
 
                 return new TezosRelease
                 {
@@ -173,6 +174,7 @@ namespace TezosNotifyBot.Workers
         private class AssetsLink
         {
             [JsonPropertyName("url")] public string Url { get; set; }
+            [JsonPropertyName("name")] public string Name { get; set; }
         }
     }
 }
