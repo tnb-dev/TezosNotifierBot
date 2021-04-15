@@ -148,7 +148,15 @@ namespace TezosNotifyBot
                 var me = await Bot.GetMeAsync();
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 _nodeManager.Client.BlockReceived += Client_BlockReceived;
-                NotifyDev($"{me.Username} v{version} started, last block: {repo.GetLastBlockLevel()}", 0);
+
+                
+                var message = new StringBuilder();
+                message.AppendLine($"{me.Username} v{version} started, last block: {repo.GetLastBlockLevel()}");
+                message.AppendLine();
+                message.AppendLine($"Using TzKt api: {(Config.TzKtUrl.Contains("localhost") ? "local" : Config.TzKtUrl)}");
+                message.AppendLine($"Using BCD api: {(Config.BetterCallDevUrl.Contains("localhost") ? "local" : Config.BetterCallDevUrl)}");
+                
+                NotifyDev(message.ToString(), 0);
 
                 var cycle = _serviceProvider.GetRequiredService<ITzKtClient>()
                     .GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle);

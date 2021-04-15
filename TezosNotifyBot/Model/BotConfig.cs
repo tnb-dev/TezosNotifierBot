@@ -15,7 +15,9 @@ namespace NornPool.Model
 		public TwitterOptions Twitter { get; set; }
 		
 		public TelegramOptions Telegram { get; set; }
-		
+
+		public string TzKtUrl { get; set; }
+		public string BetterCallDevUrl { get; set; }
 		
         public string ProxyType { get; set; }
         public string ProxyAddress { get; set; }
