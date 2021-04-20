@@ -14,7 +14,7 @@ namespace TezosNotifyBot.BetterCallDev
         public string name { get; set; }
         public int decimals { get; set; }
         public string balance { get; set; }
-        public decimal Balance => (decimal)BigInteger.Parse(balance) / (decimal)Math.Pow(10, decimals);
+        public decimal Balance => (decimal)(BigInteger.Parse(balance) / BigInteger.Parse("1".PadRight(decimals + 1, '0')));
         public int level { get; set; }
     }
 }

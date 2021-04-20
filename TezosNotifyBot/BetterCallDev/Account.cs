@@ -17,7 +17,7 @@ namespace TezosNotifyBot.BetterCallDev
         public string artifact_uri { get; set; }
         public string thumbnail_uri { get; set; }
         public string balance { get; set; }
-        public decimal Balance => (decimal)BigInteger.Parse(balance) / (decimal)Math.Pow(10, decimals);
+        public decimal Balance => (decimal)(BigInteger.Parse(balance) / BigInteger.Parse("1".PadRight(decimals + 1, '0')));
     }
     public class Account
     {
