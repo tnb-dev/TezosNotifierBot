@@ -78,6 +78,7 @@ namespace TezosNotifyBot.Model
             });
         }
 
+
         internal Message GetMessage(int messageId)
         {
             lock (_dbLock)
