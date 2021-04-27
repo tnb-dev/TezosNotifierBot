@@ -50,6 +50,18 @@
         {
             "Name": "SmartPy",
             "Url": "https://mainnet.smartpy.io"
+        },
+        {
+            "Name": "Blockscale",
+            "Url": "https://rpc.tzbeta.net"
+        },
+        {
+            "Name": "ECAD Labs",
+            "Url": "https://api.tez.ie/rpc/mainnet"
+        },
+        {
+            "Name": "Teznode (LetzBake!)",
+            "Url": "https://teznode.letzbake.com"
         }
     ]
 }
