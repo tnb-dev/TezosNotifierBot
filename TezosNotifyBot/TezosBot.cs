@@ -665,7 +665,8 @@ namespace TezosNotifyBot
                     {
                         var from = content.source;
                         var to = content.destination;
-                        if (to == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton")
+                        if (to == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" ||
+                            to == "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9")
                             continue;
                         var amount = decimal.Parse(content.amount) / 1000000M;
                         
