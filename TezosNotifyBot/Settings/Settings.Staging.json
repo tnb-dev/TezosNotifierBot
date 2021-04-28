@@ -19,5 +19,5 @@
         "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
     },
     "TzKtUrl": "http://tzkt-api:5000/",
-    "BetterCallDevUrl": "https://better-call.dev/"
+    "BetterCallDevUrl": "https://api.better-call.dev/"
 }
