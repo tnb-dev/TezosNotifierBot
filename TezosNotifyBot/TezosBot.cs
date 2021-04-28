@@ -3400,7 +3400,7 @@ namespace TezosNotifyBot
             {
                 result += resMgr.Get(Res.Tokens, ua) +
                           String.Join(", ",
-                              bcdAcc.balances.Select(t =>
+                              bcdAcc.balances.Where(t => t.symbol != null || (t.contract ?? "").Length > 32).Select(t =>
                                   $"<b>{t.Balance.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
                 result += "\n";
             }
