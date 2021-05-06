@@ -24,6 +24,8 @@ namespace TezosNotifyBot
 					return client.GetContractInfo(hash, addr);
 
 				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
+				if (str == "")
+					return new ContractInfo();
 				var contract = JsonConvert.DeserializeObject<TzKt.Account>(str);
 				return new ContractInfo
 				{
@@ -54,6 +56,8 @@ namespace TezosNotifyBot
 				if (_tzKtUrl == null)
 					return client.GetDelegateInfo(addr, hash);
 				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
+				if (str == "")
+					return null;
 				var @delegate = JsonConvert.DeserializeObject<TzKt.Account>(str);
 				if (@delegate.type != "delegate")
 					return null;
