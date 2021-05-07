@@ -39,6 +39,20 @@ namespace TezosNotifyBot.BetterCallDev
 				catch (Exception e)
 				{
 					_logger.LogError(e, $"Error downloading from {_client.BaseAddress}{addr}");
+					System.Threading.Thread.Sleep(3000);
+					try
+					{
+						_logger.LogDebug($"retry download {_client.BaseAddress}{addr}");
+						var result = _client.DownloadString(addr);
+						_logger.LogDebug($"retry download complete: {_client.BaseAddress}{addr}");
+						return result;
+					}
+					catch (Exception e1)
+					{
+						_logger.LogError(e1, $"Error retry downloading from {_client.BaseAddress}{addr}");
+
+						throw;
+					}
 					throw;
 				}
 			}
