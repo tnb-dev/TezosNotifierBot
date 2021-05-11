@@ -314,6 +314,7 @@ namespace TezosNotifyBot
                     int wait = 60000 - (int) DateTime.Now.Subtract(lastReceived).TotalMilliseconds;
                     if (wait > 10)
                     {
+                        wait = 5000;
                         Logger.LogDebug($"Waiting {wait} milliseconds");
                         Thread.Sleep(wait);
                     }
@@ -1452,18 +1453,18 @@ namespace TezosNotifyBot
             }
             else
             {
-                foreach (var d in endorsing_rights)
-                {
-                    var uaddrs = repo.GetUserAddresses(d.Item1);
-                    foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
-                    {
-                        var result = resMgr.Get(Res.SkippedEndorsing,
-                            new ContextObject {u = ua.User, ua = ua, Block = header.level});
-                        if (!ua.User.HideHashTags)
-                            result += "\n\n#notendorsed" + ua.HashTag();
-                        SendTextMessageUA(ua, result);
-                    }
-                }
+                //foreach (var d in endorsing_rights)
+                //{
+                //    var uaddrs = repo.GetUserAddresses(d.Item1);
+                //    foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
+                //    {
+                //        var result = resMgr.Get(Res.SkippedEndorsing,
+                //            new ContextObject {u = ua.User, ua = ua, Block = header.level});
+                //        if (!ua.User.HideHashTags)
+                //            result += "\n\n#notendorsed" + ua.HashTag();
+                //        SendTextMessageUA(ua, result);
+                //    }
+                //}
             }
 
             Logger.LogDebug($"Updating rewards {header.level}");
