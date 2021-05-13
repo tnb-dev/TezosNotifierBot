@@ -1416,8 +1416,8 @@ namespace TezosNotifyBot
             var priority = header.priority;
             Logger.LogDebug($"Endorsements processing {header.level + 1}");
             var endorsing_rights = repo.GetEndorsingRights(header.level);
-            if (operations.Any(o => o.contents.Any(o1 => o1.kind == "endorsement")))
-            {
+            //if (operations.Any(o => o.contents.Any(o1 => o1.kind == "endorsement")))
+            //{
                 foreach (var d in endorsing_rights)
                 {
                     //repo.UpdateDelegateRewards(d.@delegate, blockMetadata.level.cycle, (uint)(2000000 / (priority + 1)) * (uint)d.slots.Count, 0);
@@ -1450,9 +1450,9 @@ namespace TezosNotifyBot
                         }
                     }
                 }
-            }
-            else
-            {
+            //}
+            //else
+            //{
                 //foreach (var d in endorsing_rights)
                 //{
                 //    var uaddrs = repo.GetUserAddresses(d.Item1);
@@ -1465,7 +1465,7 @@ namespace TezosNotifyBot
                 //        SendTextMessageUA(ua, result);
                 //    }
                 //}
-            }
+            //}
 
             Logger.LogDebug($"Updating rewards {header.level}");
             foreach (var bu in blockMetadata.balance_updates.Where(o =>
