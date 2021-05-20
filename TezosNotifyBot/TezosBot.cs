@@ -666,9 +666,6 @@ namespace TezosNotifyBot
                     {
                         var from = content.source;
                         var to = content.destination;
-                        if (to == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" ||
-                            to == "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9")
-                            continue;
                         var amount = decimal.Parse(content.amount) / 1000000M;
                         
                         if (content.metadata.internal_operation_results != null)
@@ -754,7 +751,7 @@ namespace TezosNotifyBot
                                 if (ior.destination != null)
                                 {
                                     var token = repo.GetToken(ior.destination);
-                                    if (token != null)
+                                    if (token != null && to != "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && to != "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9")
                                     {
                                         foreach (var transfer in TokenTransfers(token, op))
                                         {
@@ -770,7 +767,7 @@ namespace TezosNotifyBot
 
                         {
                             var token = repo.GetToken(to);
-                            if (token != null)
+                            if (token != null && to != "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && to != "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9")
                             {
                                 foreach (var transfer in TokenTransfers(token, op))
                                 {
