@@ -385,7 +385,7 @@ namespace TezosNotifyBot
             var prevMD = lastMetadata?.level?.level == header.level - 1
                 ? lastMetadata
                 : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());
-            if (!ProcessBlockBakingData(prevHeader, prevMD, operations))
+            if (!ProcessBlockBakingData(prevHeader, prevMD))
                 return false;
 
             if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "testing")
@@ -1327,11 +1327,13 @@ namespace TezosNotifyBot
             return result;
         }
         
-        bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
+        bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata)
         {
             Logger.LogDebug($"ProcessBlockBakingData {header.level}");
-            
-            var rights = _serviceProvider.GetService<ITzKtClient>().GetRights(header.level);
+
+            var tzktClient = _serviceProvider.GetService<ITzKtClient>();
+            var operations = tzktClient.GetEndorsements(header.level);
+            var rights = tzktClient.GetRights(header.level);
             var baking_rights = rights.Where(r => r.type == "baking");
             var endorsing_rights = rights.Where(r => r.type == "endorsing");
 
@@ -1438,14 +1440,8 @@ namespace TezosNotifyBot
                 rewardsManager.BalanceUpdate(bu.@delegate,
                     header.priority == 0 ? RewardsManager.RewardType.Baking : RewardsManager.RewardType.StolenBaking,
                     header.level + 1, bu.change);
-            foreach (var bu in operations
-                .SelectMany(o =>
-                    o.contents.Where(o1 => o1.metadata.balance_updates != null)
-                        .SelectMany(o1 => o1.metadata.balance_updates)).Where(o =>
-                    o.kind == "freezer" && o.category == "rewards" &&
-                    (o.level ?? o.cycle) == blockMetadata.level.cycle))
-                rewardsManager.BalanceUpdate(bu.@delegate, RewardsManager.RewardType.Endorsing, header.level + 1,
-                    bu.change, endorsing_rights.SingleOrDefault(o => o.baker.address == bu.@delegate)?.slots ?? 0);
+            foreach (var op in operations)
+                rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.rewards, op.slots);
 
             ProcessBlockMetadata(blockMetadata, header.hash);
             Logger.LogInformation("Block " + (header.level + 1).ToString() + " baking data processed");

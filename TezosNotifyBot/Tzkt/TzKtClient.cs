@@ -58,7 +58,11 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/rights?level={level}");
 			return JsonConvert.DeserializeObject<List<Right>>(str);
 		}
-
+		List<Operation> ITzKtClient.GetEndorsements(int level)
+		{
+			var str = Download($"v1/operations/endorsements?level={level}");
+			return JsonConvert.DeserializeObject<List<Operation>>(str);
+		}
 		string Download(string addr)
 		{
 			try
