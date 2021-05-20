@@ -1333,42 +1333,33 @@ namespace TezosNotifyBot
         bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
         {
             Logger.LogDebug($"ProcessBlockBakingData {header.level}");
-            if (!repo.IsRightsLoaded(blockMetadata.level.cycle))
-                LoadBakingEndorsingRights(header.hash, blockMetadata.level.cycle);
-            if (!repo.IsRightsLoaded(blockMetadata.level.cycle + 1))
-            {
-                LoadBakingEndorsingRights(header.hash, blockMetadata.level.cycle + 1);
-                //worker.Run($"LoadBakingEndorsingRights({blockMetadata.level.cycle + 1})", () =>
-                //{
-                //	if (!repo.IsRightsLoaded(blockMetadata.level.cycle + 1))
-                //});				
-            }
+            
+            var rights = _serviceProvider.GetService<ITzKtClient>().GetRights(header.level);
+            var baking_rights = rights.Where(r => r.type == "baking");
+            var endorsing_rights = rights.Where(r => r.type == "endorsing");
 
-            var baking_rights = _nodeManager.Client.GetBakingRights(header.predecessor);
-            //var endorsing_rights = client.GetEndorsingRights(header.predecessor);
             // Проверка baking rights
             Logger.LogDebug($"Baking rights processing {header.level + 1}");
-            int slots = operations.Where(o => o.contents.Any(o1 => o1.kind == "endorsement"))
-                .SelectMany(o => o.contents).Sum(o => o.metadata.slots.Count);
+            int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots);
             if (header.level <= 655360)
                 slots = 32;
             foreach (var baking_right in baking_rights)
             {
-                if (baking_right.priority == 0 && baking_right.@delegate != blockMetadata.baker)
+                if (baking_right.priority == 0 && baking_right.status == "missed")
                 {
                     long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
                     if (baking_right.level >= Config.CarthageStart)
                         rewards = 80000000L * slots / 32 / 2;
-                    rewardsManager.BalanceUpdate(baking_right.@delegate, RewardsManager.RewardType.MissedBaking,
+                    rewardsManager.BalanceUpdate(baking_right.baker.address, RewardsManager.RewardType.MissedBaking,
                         header.level + 1, rewards);
                 }
 
-                if (baking_right.@delegate != blockMetadata.baker)
+                if (baking_right.status == "missed")
                 {
-                    var uaddrs = repo.GetUserAddresses(baking_right.@delegate);
+                    var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                     ContractInfo info = null;
                     if (uaddrs.Count > 0)
-                        info = addrMgr.GetContract(_nodeManager.Client, header.hash, baking_right.@delegate);
+                        info = addrMgr.GetContract(_nodeManager.Client, header.hash, baking_right.baker.address);
 
                     long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
                     if (baking_right.level >= Config.CarthageStart)
@@ -1390,13 +1381,13 @@ namespace TezosNotifyBot
                 {
                     if (baking_right.priority > 0)
                     {
-                        var uaddrs = repo.GetUserAddresses(baking_right.@delegate);
+                        var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                         foreach (var ua in uaddrs)
                         {
                             var result = resMgr.Get(Res.StoleBaking,
                                 new ContextObject
                                 {
-                                    u = ua.User, ua = ua, Block = header.level, Priority = baking_right.priority,
+                                    u = ua.User, ua = ua, Block = header.level, Priority = baking_right.priority.Value,
                                     Amount = (blockMetadata.balance_updates.Where(o =>
                                                       o.kind == "freezer" && o.category == "rewards" &&
                                                       (o.level ?? o.cycle) == blockMetadata.level.cycle)
@@ -1415,57 +1406,34 @@ namespace TezosNotifyBot
 
             var priority = header.priority;
             Logger.LogDebug($"Endorsements processing {header.level + 1}");
-            var endorsing_rights = repo.GetEndorsingRights(header.level);
-            //if (operations.Any(o => o.contents.Any(o1 => o1.kind == "endorsement")))
-            //{
-                foreach (var d in endorsing_rights)
-                {
-                    //repo.UpdateDelegateRewards(d.@delegate, blockMetadata.level.cycle, (uint)(2000000 / (priority + 1)) * (uint)d.slots.Count, 0);
-                    if (!operations.Any(o =>
-                        o.contents.Any(o1 => o1.kind == "endorsement" && o1.metadata.@delegate == d.Item1)))
-                    {
-                        long rewards = (uint) (2000000 / (priority + 1)) * (uint) d.Item2;
-                        if (header.level >= Config.CarthageStart)
-                        {
-                            rewards = 80000000 * d.Item2 / 32 / 2;
-                            if (priority > 0)
-                                rewards = rewards * 2 / 3;
-                        }
 
-                        rewardsManager.BalanceUpdate(d.Item1, RewardsManager.RewardType.MissedEndorsing,
-                            header.level + 1, rewards, d.Item2);
-                        var uaddrs = repo.GetUserAddresses(d.Item1);
-                        ContractInfo info = null;
-                        if (uaddrs.Count > 0)
-                            info = addrMgr.GetContract(_nodeManager.Client, header.hash, d.Item1);
-                        foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
-                        {
-                            ua.Balance = info.balance / 1000000M;
-                            var result = resMgr.Get(Res.MissedEndorsing,
-                                new ContextObject
-                                    {u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M});
-                            if (!ua.User.HideHashTags)
-                                result += "\n\n#missed_endorsing" + ua.HashTag();
-                            SendTextMessageUA(ua, result);
-                        }
-                    }
+            foreach (var d in endorsing_rights.Where(r => r.status == "missed"))
+            {
+                long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
+                if (header.level >= Config.CarthageStart)
+                {
+                    rewards = 80000000 * d.slots / 32 / 2;
+                    if (priority > 0)
+                        rewards = rewards * 2 / 3;
                 }
-            //}
-            //else
-            //{
-                //foreach (var d in endorsing_rights)
-                //{
-                //    var uaddrs = repo.GetUserAddresses(d.Item1);
-                //    foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
-                //    {
-                //        var result = resMgr.Get(Res.SkippedEndorsing,
-                //            new ContextObject {u = ua.User, ua = ua, Block = header.level});
-                //        if (!ua.User.HideHashTags)
-                //            result += "\n\n#notendorsed" + ua.HashTag();
-                //        SendTextMessageUA(ua, result);
-                //    }
-                //}
-            //}
+
+                rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
+                    header.level + 1, rewards, d.slots);
+                var uaddrs = repo.GetUserAddresses(d.baker.address);
+                ContractInfo info = null;
+                if (uaddrs.Count > 0)
+                    info = addrMgr.GetContract(_nodeManager.Client, header.hash, d.baker.address);
+                foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
+                {
+                    ua.Balance = info.balance / 1000000M;
+                    var result = resMgr.Get(Res.MissedEndorsing,
+                        new ContextObject
+                        { u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M });
+                    if (!ua.User.HideHashTags)
+                        result += "\n\n#missed_endorsing" + ua.HashTag();
+                    SendTextMessageUA(ua, result);
+                }
+            }
 
             Logger.LogDebug($"Updating rewards {header.level}");
             foreach (var bu in blockMetadata.balance_updates.Where(o =>
@@ -1480,7 +1448,7 @@ namespace TezosNotifyBot
                     o.kind == "freezer" && o.category == "rewards" &&
                     (o.level ?? o.cycle) == blockMetadata.level.cycle))
                 rewardsManager.BalanceUpdate(bu.@delegate, RewardsManager.RewardType.Endorsing, header.level + 1,
-                    bu.change, endorsing_rights.SingleOrDefault(o => o.Item1 == bu.@delegate)?.Item2 ?? 0);
+                    bu.change, endorsing_rights.SingleOrDefault(o => o.baker.address == bu.@delegate)?.slots ?? 0);
 
             ProcessBlockMetadata(blockMetadata, header.hash);
             Logger.LogInformation("Block " + (header.level + 1).ToString() + " baking data processed");
@@ -3820,15 +3788,5 @@ namespace TezosNotifyBot
                 await Bot.SendTextMessageAsync(message.Chat.Id, "Данные не загружены: " + e.Message);
             }
         }
-
-        void LoadBakingEndorsingRights(string hash, int cycle)
-        {
-            Logger.LogInformation($"Loading rights for cycle {cycle}");
-            var br = _nodeManager.Client.GetBakingRights(hash, cycle);
-            var er = _nodeManager.Client.GetEndorsingRights(hash, cycle);
-            repo.SaveBakingEndorsingRights(br, er);
-            Logger.LogInformation($"Rights for cycle {cycle} loaded");
-        }
-
     }
 }

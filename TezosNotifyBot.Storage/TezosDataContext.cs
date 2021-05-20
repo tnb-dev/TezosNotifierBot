@@ -21,8 +21,8 @@ namespace TezosNotifyBot.Storage
         public DbSet<Proposal> Proposals { get; set; }
         public DbSet<KnownAddress> KnownAddresses { get; set; }
         public DbSet<ProposalVote> ProposalVotes { get; set; }
-        public DbSet<BakingRights> BakingRights { get; set; }
-        public DbSet<EndorsingRights> EndorsingRights { get; set; }
+        //public DbSet<BakingRights> BakingRights { get; set; }
+        //public DbSet<EndorsingRights> EndorsingRights { get; set; }
         public DbSet<BalanceUpdate> BalanceUpdates { get; set; }
         public DbSet<TwitterMessage> TwitterMessages { get; set; }
         public DbSet<Token> Tokens { get; set; }

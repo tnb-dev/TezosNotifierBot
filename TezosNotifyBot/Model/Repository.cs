@@ -618,7 +618,7 @@ namespace TezosNotifyBot.Model
             });
         }
 
-        public void SaveBakingEndorsingRights(BakingRights[] br, EndorsingRights[] er)
+        /*public void SaveBakingEndorsingRights(BakingRights[] br, EndorsingRights[] er)
         {
             RunIsolatedDb(db =>
             {
@@ -656,7 +656,7 @@ namespace TezosNotifyBot.Model
 
                 db.SaveChanges();
             });
-        }
+        }*/
 
         public void AddBalanceUpdate(string @delegate, int type, int level, long amount, int slots)
         {
@@ -722,7 +722,7 @@ namespace TezosNotifyBot.Model
             });
         }
 
-        public bool IsRightsLoaded(int cycle)
+        /*public bool IsRightsLoaded(int cycle)
         {
             var from = cycle * 4096 + 1;
             return RunIsolatedDb(db => db.BakingRights.Any(o => o.Level == from));
@@ -736,9 +736,9 @@ namespace TezosNotifyBot.Model
                     .Select(o => new {o.Delegate.Address, o.SlotCount}).ToList()
                     .Select(o => new Tuple<string, int>(o.Address, o.SlotCount)).ToList();
             });
-        }
+        }*/
 
-        public List<Tuple<string, int>> GetCycleBakingRights(int cycle)
+       /* public List<Tuple<string, int>> GetCycleBakingRights(int cycle)
         {
             var from = cycle * 4096 + 1;
             var to = from + 4095;
@@ -748,7 +748,7 @@ namespace TezosNotifyBot.Model
                     .Select(o => new {o.Delegate.Address, o.Level}).ToList()
                     .Select(o => new Tuple<string, int>(o.Address, o.Level)).ToList();
             });
-        }
+        }*/
 
         public List<BalanceUpdate> GetBalanceUpdates(string @delegate, int cycle)
         {
