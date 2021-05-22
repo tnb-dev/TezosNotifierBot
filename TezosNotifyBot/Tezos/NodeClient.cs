@@ -229,7 +229,7 @@ namespace TezosNotifyBot.Tezos
             };
         }
 
-        public BakingRights[] GetBakingRights(string hash)
+       /* public BakingRights[] GetBakingRights(string hash)
         {
             string str = Download(_url + "/chains/main/blocks/" + hash + "/helpers/baking_rights");
             return JsonConvert.DeserializeObject<BakingRights[]>(str);
@@ -252,7 +252,7 @@ namespace TezosNotifyBot.Tezos
         {
             string str = Download($"{_url}/chains/main/blocks/{hash}/helpers/endorsing_rights?cycle={cycle}");
             return JsonConvert.DeserializeObject<EndorsingRights[]>(str);
-        }
+        }*/
 
         public string[] GetDelegates(string hash)
         {

@@ -19,7 +19,12 @@ namespace TezosNotifyBot.Tzkt
         public string Block { get; set; }
         
         public string Hash { get; set; }
-    }
+
+        public Baker @delegate { get; set; }
+        public int slots { get; set; }
+        public int deposit { get; set; }
+        public int rewards { get; set; }
+}
     
 	public class OperationPenalty: Operation
     {
