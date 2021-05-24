@@ -21,7 +21,7 @@ namespace TezosNotifyBot.BetterCallDev
     }
     public class Account
     {
-        public IList<TokenBalance> balances { get; set; }
+        public IList<TokenBalance> balances { get; set; } = new List<TokenBalance>();
         public int total { get; set; }
     }
 }
