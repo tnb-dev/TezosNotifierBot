@@ -13,7 +13,7 @@ namespace TezosNotifyBot.Tzkt
 		public long balance { get; set; }
 		public object frozenDeposits { get; set; }
 		public object frozenRewards { get; set; }
-		public int frozenFees { get; set; }
+		public uint frozenFees { get; set; }
 		public int counter { get; set; }
 		public int activationLevel { get; set; }
 		public DateTime activationTime { get; set; }
