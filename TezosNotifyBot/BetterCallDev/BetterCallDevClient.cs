@@ -20,8 +20,9 @@ namespace TezosNotifyBot.BetterCallDev
 
 		Account IBetterCallDevClient.GetAccount(string address)
 		{
-			string account = Download($"v1/account/mainnet/{address}/token_balances");
-			return JsonConvert.DeserializeObject<Account>(account);
+			return new Account();
+			//string account = Download($"v1/account/mainnet/{address}/token_balances");
+			//return JsonConvert.DeserializeObject<Account>(account);
 		}
 
 		string Download(string addr)
@@ -60,7 +61,8 @@ namespace TezosNotifyBot.BetterCallDev
 
 		IEnumerable<Token> IBetterCallDevClient.GetTokens(int minLevel)
 		{
-			var tokensStr = Download($"v1/tokens/mainnet?size=10");
+			return new List<Token>();
+			/*var tokensStr = Download($"v1/tokens/mainnet?size=10");
 			var tokens = JsonConvert.DeserializeObject<Tokens>(tokensStr);
 			foreach(var t in tokens.tokens.Where(o => o.level > minLevel))
 			{
@@ -71,7 +73,7 @@ namespace TezosNotifyBot.BetterCallDev
 					token.level = t.level;
 					yield return token;
 				}
-			}
+			}*/
 		}
 
 		List<Operation> IBetterCallDevClient.GetOperations(string ophash)
