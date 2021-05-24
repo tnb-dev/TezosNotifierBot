@@ -11,9 +11,9 @@ namespace TezosNotifyBot.Tzkt
 		public string publicKey { get; set; }
 		public bool revealed { get; set; }
 		public long balance { get; set; }
-		public object frozenDeposits { get; set; }
-		public object frozenRewards { get; set; }
-		public int frozenFees { get; set; }
+		public ulong frozenDeposits { get; set; }
+		public ulong frozenRewards { get; set; }
+		public ulong frozenFees { get; set; }
 		public int counter { get; set; }
 		public int activationLevel { get; set; }
 		public DateTime activationTime { get; set; }
