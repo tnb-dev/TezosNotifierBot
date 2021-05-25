@@ -408,14 +408,14 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #RightsAssigned;en;👉 In the current {Cycle} cycle, baking and endorsing rights have been assigned.
 #RightsAssigned;ru;👉 В текущем {Cycle} цикле назначены права на выпечку и подтверждение блоков.
 #RightsAssignedItem;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:{
-(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n\n - baking of " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " blocks, the nearest " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " block on " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp.ToString("MMMMM dd a\\t HH:mm", CultureInfo.GetCultureInfo("en")) : "")+
-(Rights.Count(o => o.type == "endorsing") > 0 ? "\n\n - endorsing of " + Rights.Count(o => o.type == "endorsing").ToString() + " blocks, the nearest " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " block on " + Rights.Where(o => o.type == "endorsing").First().timestamp.ToString("MMMMM dd a\\t HH:mm", CultureInfo.GetCultureInfo("en")) : "")+
-(Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n\n - nothing assigned 👃" : "")
+(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n - baking of " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " blocks, the nearest " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " block on " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp.ToString("MMMMM dd a\\t HH:mm", CultureInfo.GetCultureInfo("en")) : "")+
+(Rights.Count(o => o.type == "endorsing") > 0 ? "\n - endorsing of " + Rights.Count(o => o.type == "endorsing").ToString() + " blocks, the nearest " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " block on " + Rights.Where(o => o.type == "endorsing").First().timestamp.ToString("MMMMM dd a\\t HH:mm", CultureInfo.GetCultureInfo("en")) : "")+
+(Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n - nothing assigned 👃" : "")
 }
 #RightsAssignedItem;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:{
-(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n\n - на выпечку " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " блок " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp.ToString("dd MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) : "")+
-(Rights.Count(o => o.type == "endorsing") > 0 ? "\n\n - на подтверждение " + Rights.Count(o => o.type == "endorsing").ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " блок " + Rights.Where(o => o.type == "endorsing").First().timestamp.ToString("dd MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) : "")+
-(Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n\n - ничего не назначено 👃" : "")
+(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n - на выпечку " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " блок " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp.ToString("dd MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) : "")+
+(Rights.Count(o => o.type == "endorsing") > 0 ? "\n - на подтверждение " + Rights.Count(o => o.type == "endorsing").ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " блок " + Rights.Where(o => o.type == "endorsing").First().timestamp.ToString("dd MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) : "")+
+(Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n - ничего не назначено 👃" : "")
 }
 #NotifyRightsAssigned;ru;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Назначенные права
 #NotifyRightsAssigned;en;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Rights assigned
