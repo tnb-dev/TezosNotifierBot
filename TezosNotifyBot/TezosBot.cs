@@ -1339,7 +1339,7 @@ namespace TezosNotifyBot
 
             // Проверка baking rights
             Logger.LogDebug($"Baking rights processing {header.level + 1}");
-            int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots);
+            int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots.Value);
             if (header.level <= 655360)
                 slots = 32;
             foreach (var baking_right in baking_rights)
@@ -1411,13 +1411,13 @@ namespace TezosNotifyBot
                 long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
                 if (header.level >= Config.CarthageStart)
                 {
-                    rewards = 80000000 * d.slots / 32 / 2;
+                    rewards = 80000000 * d.slots.Value / 32 / 2;
                     if (priority > 0)
                         rewards = rewards * 2 / 3;
                 }
 
                 rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
-                    header.level + 1, rewards, d.slots);
+                    header.level + 1, rewards, d.slots.Value);
                 var uaddrs = repo.GetUserAddresses(d.baker.address);
                 ContractInfo info = null;
                 if (uaddrs.Count > 0)
