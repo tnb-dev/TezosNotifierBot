@@ -12,6 +12,7 @@ namespace TezosNotifyBot.Tzkt
 		IEnumerable<Operation> GetAccountOperations(string address, string filter = "");
 		Rewards GetDelegatorRewards(string address, int cycle);
 		List<Right> GetRights(int level);
+		List<Right> GetRights(string baker, int cycle);
 		List<Operation> GetEndorsements(int level);
 	}
 }

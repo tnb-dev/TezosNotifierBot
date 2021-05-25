@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using System.Globalization;
 
 namespace TezosNotifyBot
 {
@@ -117,6 +118,7 @@ namespace TezosNotifyBot
 		public int Cycle { get; set; }
 		
 		public UserAddress Delegate { get; set; }
+		public List<Tzkt.Right> Rights { get; set; }
 
 		public static implicit operator ContextObject(User user) => new ContextObject { u = user };
 		public static implicit operator ContextObject(UserAddress userAddress) => new ContextObject { u = userAddress.User, ua = userAddress };
@@ -260,6 +262,10 @@ namespace TezosNotifyBot
 		AwardAvailable,
 		AwardNotify,
 		AwardAvailableNotifyStatus,
-		Mint
+		Mint,
+		RightsAssigned,
+		RightsAssignedItem,
+		NotifyRightsAssigned,
+		DelegateRightsAssigned
 	}
 }

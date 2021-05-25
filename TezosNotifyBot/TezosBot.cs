@@ -1583,6 +1583,8 @@ namespace TezosNotifyBot
                     SendTextMessageUA(usr.First(), perf);
                 }
 
+                NotifyAssignedRights(tzKtClient, uad, blockMetadata.level.cycle);
+
                 LoadAddressList();
 
                 // Notification of the availability of the award to the delegator
@@ -1712,6 +1714,43 @@ namespace TezosNotifyBot
 
             Logger.LogDebug($"ProcessBlockMetadata {blockMetadata.level.level} completed");
         }
+
+        void NotifyAssignedRights(ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
+		{
+
+            var delegates = userAddresses.Where(ua => ua.NotifyCycleCompletion).Select(ua => ua.Address).Distinct();
+            Dictionary<string, List<Right>> rights = new Dictionary<string, List<Right>>();
+            foreach(var addr in delegates)
+			{
+                var r = tzKtClient.GetRights(addr, cycle);
+                rights.Add(addr, r);
+            }
+
+            foreach(var u in userAddresses.Where(ua => ua.NotifyCycleCompletion).GroupBy(ua => ua.User))
+			{
+                var message = resMgr.Get(Res.RightsAssigned, new ContextObject 
+                {
+                    u = u.Key,
+                    Cycle = cycle
+                }) + "\n\n";
+                string tags = "";
+                foreach (var ua in u)
+                {
+                    var r = rights[ua.Address];
+                    message += resMgr.Get(Res.RightsAssignedItem, new ContextObject
+                    {
+                        ua = ua,
+                        u = u.Key,
+                        Rights = r
+                    }) + "\n\n";
+
+                    tags += ua.HashTag();
+                }
+                if (!u.Key.HideHashTags)
+                    message += "#rights_assigned" + tags;
+                SendTextMessage(u.Key.Id, message, ReplyKeyboards.MainMenu(resMgr, u.Key));
+            }
+		}
 
         private void LoadAddressList()
         {
@@ -2134,6 +2173,34 @@ namespace TezosNotifyBot
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = false;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("rightson"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("rightson ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyRightsAssigned = true;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("rightsoff"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("rightsoff ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyRightsAssigned = false;
                         repo.UpdateUserAddress(ua);
                         ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
@@ -3477,7 +3544,8 @@ namespace TezosNotifyBot
                         if (ua.DelegatorsBalanceThreshold > 0)
                             result += "✂️";
                     }
-
+                    if (ua.NotifyRightsAssigned)
+                        result += "👉";
                 }
                 else
                 {
@@ -3488,6 +3556,7 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
+                    result += resMgr.Get(Res.DelegateRightsAssigned, ua) + "\n";
                     result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count + "\n";
                 }
 
