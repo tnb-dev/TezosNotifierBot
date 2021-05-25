@@ -18,6 +18,6 @@
     "Telegram": {
         "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
     },
-    "TzKtUrl": "https://api.tzkt.io/",
+    "TzKtUrl": "https://api.tzkt.io/", 
     "BetterCallDevUrl": "https://api.better-call.dev/"
 }
