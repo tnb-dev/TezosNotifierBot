@@ -256,14 +256,6 @@ namespace TezosNotifyBot
                         CallbackData = (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
                     }
                 });
-                buttons.Add(new[]
-                {
-                    new InlineKeyboardButton
-                    {
-                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
-                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
-                    }
-                });
                 buttons.Add(new []
                 {
                     new InlineKeyboardButton
@@ -375,6 +367,11 @@ namespace TezosNotifyBot
                 });
                 buttons.Add(new[]
                 {
+                    new InlineKeyboardButton
+                    {
+                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
+                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
+                    },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),
