@@ -136,6 +136,7 @@ namespace TezosNotifyBot.Tezos
     {
         public decimal price_usd { get; set; }
 		public decimal price_btc { get; set; }
+        public decimal price_eur { get; set; }
     }
 
     public class FrozenBalanceByCycle
