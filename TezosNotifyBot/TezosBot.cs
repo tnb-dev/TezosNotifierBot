@@ -1559,11 +1559,11 @@ namespace TezosNotifyBot
                 }
 
                 var cyclePast = tzKtClient.GetCycle(blockMetadata.level.cycle - 1);
-                var cycle = tzKtClient.GetCycle(blockMetadata.level.cycle);
+                var cycleNext = tzKtClient.GetCycle(blockMetadata.level.cycle);
                 foreach (var usr in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => new {o.UserId, o.ChatId}))
                 {
                     string perf = resMgr.Get(Res.CycleCompleted,
-                        new ContextObject {u = usr.First().User, Cycle = blockMetadata.level.cycle - 1, CycleLength = cyclePast.Length, NextEnd = cycle.endTime});
+                        new ContextObject {u = usr.First().User, Cycle = blockMetadata.level.cycle - 1, CycleLength = cyclePast.Length, NextEnd = cycleNext.endTime});
                     foreach (var dr in usr)
                     {
                         var rew = rewardsManager.GetLastActualRewards(dr.Address);
