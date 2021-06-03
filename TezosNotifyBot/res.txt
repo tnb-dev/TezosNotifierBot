@@ -305,7 +305,7 @@ All bakers need to check their software
 #MissedEndorsing;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил заверение блока <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 64 ? " из-за нехватки средств (текущий баланс " + ua.Balance.TezToString() + ")" : "")} и не получает награду {Amount.TezToString()}
 #MissedEndorsing;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed endorsement for block <a href='{t.block(Block)}'>{Block}</a>{(ua.Balance < 512 ? " due to lack of funds (current balance " + ua.Balance.TezToString() + ")" : "")} and does not receive a reward {Amount.TezToString()}
 #CycleCompleted;ru;🏁 Цикл {Cycle} завершен за {CycleLength.Days} дня, {CycleLength.Hours} часов, {CycleLength.Minutes} минут!
-Следующий {(Cycle + 1)} цикл закончится {NextEnd.ToString("d MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru-ru"))} UTC.
+Следующий {(Cycle + 1)} цикл закончится {RusDT(NextEnd)} UTC.
 #CycleCompleted;en;🏁 Cycle {Cycle} is completed in {CycleLength.Days} days, {CycleLength.Hours} hours, {CycleLength.Minutes} minutes!
 Next {(Cycle + 1)} cycle will end on {NextEnd.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.
 #RewardDelivered;ru;💰 Награды за цикл {Cycle} выплачены делегатам!
@@ -415,8 +415,8 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 (Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n - nothing assigned 👃" : "")
 }
 #RightsAssignedItem;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:{
-(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n - на выпечку " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " блок " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp.ToString("d MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) + " UTC" : "")+
-(Rights.Count(o => o.type == "endorsing") > 0 ? "\n - на подтверждение " + Rights.Count(o => o.type == "endorsing").ToString() + " блоков (" + Rights.Where(o => o.type == "endorsing").Sum(o => o.slots).ToString() + " слотов), ближайший " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " блок " + Rights.Where(o => o.type == "endorsing").First().timestamp.ToString("d MMMMM в HH:mm", CultureInfo.GetCultureInfo("ru")) + " UTC" : "")+
+(Rights.Count(o => o.type == "baking" && o.priority == 0) > 0 ? "\n - на выпечку " + Rights.Count(o => o.type == "baking" && o.priority == 0).ToString() + " блоков, ближайший " + Rights.Where(o => o.type == "baking" && o.priority == 0).First().level.ToString() + " блок " + RusDT(Rights.Where(o => o.type == "baking" && o.priority == 0).First().timestamp) + " UTC" : "")+
+(Rights.Count(o => o.type == "endorsing") > 0 ? "\n - на подтверждение " + Rights.Count(o => o.type == "endorsing").ToString() + " блоков (" + Rights.Where(o => o.type == "endorsing").Sum(o => o.slots).ToString() + " слотов), ближайший " + Rights.Where(o => o.type == "endorsing").First().level.ToString() + " блок " + RusDT(Rights.Where(o => o.type == "endorsing").First().timestamp) + " UTC" : "")+
 (Rights.Count(o => (o.priority ?? 0) == 0) == 0 ? "\n - ничего не назначено 👃" : "")
 }
 #NotifyRightsAssigned;ru;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Назначенные права

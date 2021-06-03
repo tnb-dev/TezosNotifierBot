@@ -127,6 +127,23 @@ namespace TezosNotifyBot
 		public static implicit operator ContextObject((UserAddress userAddress, Proposal p) uap) => new ContextObject { u = uap.userAddress.User, ua = uap.userAddress, p = uap.p };
 		public static implicit operator ContextObject((User user, TezosRelease release) data) 
 			=> new ContextObject { u = data.user, r = data.release };
+
+		public string RusDT(DateTime dt) => dt.Day.ToString() + " " + RusMonth(dt.Month) + " " + dt.Year.ToString() + " в " + dt.ToString("HH:mm");
+		string RusMonth(int m)
+		{
+			if (m == 1) return "января";
+			if (m == 2) return "февраля";
+			if (m == 3) return "марта";
+			if (m == 4) return "апреля";
+			if (m == 5) return "мая";
+			if (m == 6) return "июня";
+			if (m == 7) return "июля";
+			if (m == 8) return "августа";
+			if (m == 9) return "сентября";
+			if (m == 10) return "октября";
+			if (m == 11) return "ноября";
+			return "декабря";
+		}
 	}
 
 	public enum Res
