@@ -116,7 +116,8 @@ namespace TezosNotifyBot
 		public UserAddress ua_to { get; set; }
 		public int Minutes { get; set; }
 		public int Cycle { get; set; }
-		
+		public TimeSpan CycleLength { get; set; }
+		public DateTime NextEnd { get; set; }
 		public UserAddress Delegate { get; set; }
 		public List<Tzkt.Right> Rights { get; set; }
 
