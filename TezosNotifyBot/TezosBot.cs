@@ -2609,7 +2609,8 @@ namespace TezosNotifyBot
                         welcomeBack = true;
                         NotifyUserActivity("🤗 User " + UserLink(user) + " is back");
                     }
-
+                    if (message.Text.StartsWith("/now"))
+                        SendTextMessage(user.Id, DateTime.Now.ToString("d MMMMM HH:mm", CultureInfo.GetCultureInfo("ru")));
                     if (message.Text.StartsWith("/start"))
                     {
                         if (newUser || welcomeBack)
