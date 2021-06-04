@@ -935,7 +935,7 @@ namespace TezosNotifyBot
 					{
                         JObject p = item.value as JObject;
                         if (p != null && p["balance"] != null)
-                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value) / new BigInteger(Math.Pow(10, from.Key.token.Decimals)));
+                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, from.Key.token.Decimals)));
                     }
                 }
 
@@ -1059,7 +1059,7 @@ namespace TezosNotifyBot
                     {
                         JObject p = item.value as JObject;
                         if (p != null && p["balance"] != null)
-                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value) / new BigInteger(Math.Pow(10, to.Key.token.Decimals)));
+                            tokenBalance = (decimal)BigInteger.Parse((string)((JValue)p["balance"]).Value) / (decimal)(new BigInteger(Math.Pow(10, to.Key.token.Decimals)));
                     }
                 }
 
@@ -1300,7 +1300,7 @@ namespace TezosNotifyBot
                             continue;
                         from = (string)((JValue)p["from"]).Value;
                         to = (string)((JValue)p["to"]).Value;
-                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value) / new BigInteger(Math.Pow(10, token.Decimals)));
+                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
                     }
                 }
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
@@ -1313,7 +1313,7 @@ namespace TezosNotifyBot
                             continue;
                         from = null;
                         to = (string)((JValue)p["to"]).Value;
-                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value) / new BigInteger(Math.Pow(10, token.Decimals)));
+                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
                     }
                 }
                 if (amount == 0)
