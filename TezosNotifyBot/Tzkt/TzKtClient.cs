@@ -62,10 +62,15 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/rights?cycle={cycle}&baker={baker}&limit=10000&select=type,level,timestamp,priority,slots");
 			return JsonConvert.DeserializeObject<List<Right>>(str);
 		}
-		List<Operation> ITzKtClient.GetEndorsements(int level)
+		List<Endorsement> ITzKtClient.GetEndorsements(int level)
 		{
 			var str = Download($"v1/operations/endorsements?level={level}");
-			return JsonConvert.DeserializeObject<List<Operation>>(str);
+			return JsonConvert.DeserializeObject<List<Endorsement>>(str);
+		}
+		Block ITzKtClient.GetBlock(int level)
+		{
+			var str = Download($"v1/blocks/{level}?operations=true");
+			return JsonConvert.DeserializeObject<Block>(str);
 		}
 		string Download(string addr)
 		{

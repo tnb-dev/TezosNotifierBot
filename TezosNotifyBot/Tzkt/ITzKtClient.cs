@@ -13,6 +13,7 @@ namespace TezosNotifyBot.Tzkt
 		Rewards GetDelegatorRewards(string address, int cycle);
 		List<Right> GetRights(int level);
 		List<Right> GetRights(string baker, int cycle);
-		List<Operation> GetEndorsements(int level);
+		List<Endorsement> GetEndorsements(int level);
+		Block GetBlock(int level);
 	}
 }

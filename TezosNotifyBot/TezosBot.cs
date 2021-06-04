@@ -374,10 +374,13 @@ namespace TezosNotifyBot
 
             lastReceived = DateTime.Now;
             Logger.LogDebug($"Block {header.level} received");
-            var tzKtHead = _serviceProvider.GetService<ITzKtClient>().GetHead();
+            var tzKt = _serviceProvider.GetService<ITzKtClient>();
+            var tzKtHead = tzKt.GetHead();
             Logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
             if (tzKtHead.level < header.level)
                 return false;
+
+            var block = tzKt.GetBlock(header.level);
 
             var prevHeader = lastHeader?.hash == header.predecessor
                 ? lastHeader
@@ -659,7 +662,7 @@ namespace TezosNotifyBot
                             }
                         }
                     }
-
+/*
                     if (content.metadata?.operation_result?.status != "applied")
                         continue;
                     if (content.kind == "transaction")
@@ -907,9 +910,12 @@ namespace TezosNotifyBot
                                 result += "\n\n#delegation " + sourceAddr.HashTag() + ua.HashTag();
                             SendTextMessageUA(ua, result);
                         }
-                    }
+                    }*/
                 }
             }
+            ProcessTransactions(block.Transactions, fromToAmountHash, allUsers);
+            ProcessDelegations(block.Delegations);
+            ProcessOriginations(block.Originations);
 
             var fromGroup = fromToAmountHash.Where(o => o.from != "").GroupBy(o => new {o.from, o.token});
             foreach (var from in fromGroup)
@@ -1258,6 +1264,181 @@ namespace TezosNotifyBot
             return true;
         }
 
+        void ProcessTransactions(List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<User> allUsers)
+        {
+            foreach (var op in ops)
+            {
+                if (op.Status != "applied")
+                    continue;
+
+                var from = op.Sender.address;
+                var to = op.Target.address;
+                var amount = op.Amount / 1000000M;
+
+                Token token = null;
+                if (op.Parameter?.entrypoint == "transfer")
+				{
+                    token = repo.GetToken(to);
+                    from = op.Parameter.value.from;
+                    to = op.Parameter.value.to;
+                    amount = (decimal)(BigInteger.Parse(op.Parameter.value.value) / new BigInteger(Math.Pow(10, token.Decimals)));
+                }
+                if (op.Parameter?.entrypoint == "mint")
+                {
+                    token = repo.GetToken(to);
+                    from = op.Parameter.value.from;
+                    to = op.Parameter.value.to;
+                    amount = (decimal)(BigInteger.Parse(op.Parameter.value.value) / new BigInteger(Math.Pow(10, token.Decimals)));
+                }
+                if (amount == 0)
+                    continue;
+                fromToAmountHash.Add((from, to, amount, op.Hash, token));
+                // Уведомления о китах
+                foreach (var u in allUsers.Where(o =>
+                    !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                {
+                    var ua_from = repo.GetUserTezosAddress(u.Id, from);
+                    var ua_to = repo.GetUserTezosAddress(u.Id, to);
+                    string result = resMgr.Get(Res.WhaleTransaction,
+                        new ContextObject
+                        {
+                            u = u,
+                            OpHash = op.Hash,
+                            Amount = amount,
+                            md = md,
+                            ua_from = ua_from,
+                            ua_to = ua_to
+                        });
+                    if (!u.HideHashTags)
+                    {
+                        result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+                    }
+
+                    SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                }
+
+                // Уведомления о китах для твиттера
+                if (amount >= 500000)
+                {
+                    var ua_from = repo.GetUserTezosAddress(0, from);
+                    var ua_to = repo.GetUserTezosAddress(0, to);
+                    string result = resMgr.Get(Res.TwitterWhaleTransaction,
+                        new ContextObject
+                        { OpHash = op.Hash, Amount = amount, md = md, ua_from = ua_from, ua_to = ua_to });
+                    twitter.TweetAsync(result);
+                }
+            }
+		}
+        void ProcessDelegations(List<Delegation> ops)
+		{
+            foreach(var op in ops)
+            {
+                if (op.Status != "applied")
+                    continue;
+                var from = op.Sender.address;
+                var to = op.NewDelegate?.address;
+                var fromAddresses = repo.GetUserAddresses(from);
+                if (to != null)
+                {
+                    var toAddresses = repo.GetUserAddresses(to);
+                    foreach (var ua in repo.GetUserAddresses(from).Where(o => o.NotifyDelegations))
+                    {
+                        var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
+                        string result = resMgr.Get(Res.NewDelegation,
+                            new ContextObject
+                            {
+                                u = ua.User,
+                                OpHash = op.Hash,
+                                Amount = op.Amount / 1000000M,
+                                ua_from = ua,
+                                ua_to = targetAddr
+                            });
+                        if (!ua.User.HideHashTags)
+                            result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
+                        SendTextMessageUA(ua, result);
+                    }
+
+                    foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
+                    {                        
+                        if (ua.DelegationAmountThreshold > op.Amount / 1000000M)
+                            continue;
+                        var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
+                        string result = resMgr.Get(Res.NewDelegation,
+                            new ContextObject
+                            {
+                                u = ua.User,
+                                OpHash = op.Hash,
+                                Amount = op.Amount / 1000000M,
+                                ua_from = sourceAddr,
+                                ua_to = ua
+                            });
+                        if (!ua.User.HideHashTags)
+                            result += "\n\n#delegation" + sourceAddr.HashTag() + ua.HashTag();
+                        SendTextMessageUA(ua, result);
+                    }
+                }
+
+                var prevdelegate = op.PrevDelegate?.address;
+                if (prevdelegate != null)
+                {
+                    foreach (var ua in repo.GetUserAddresses(prevdelegate).Where(o => o.NotifyDelegations))
+                    {
+                        if (ua.DelegationAmountThreshold > op.Amount / 1000000M)
+                            continue;
+                        var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
+                        string result = resMgr.Get(Res.UnDelegation,
+                            new ContextObject
+                            {
+                                u = ua.User,
+                                OpHash = op.Hash,
+                                Amount = op.Amount / 1000000M,
+                                ua_from = sourceAddr,
+                                ua_to = ua
+                            });
+                        if (!ua.User.HideHashTags)
+                            result += "\n\n#leave_delegate" + sourceAddr.HashTag() + ua.HashTag();
+                        SendTextMessageUA(ua, result);
+                    }
+                }
+            }
+        }
+        void ProcessOriginations(List<Origination> ops)
+		{
+            foreach (var op in ops)
+            {
+                if (op.Status != "applied")
+                    continue;
+                var to = op.ContractDelegate?.address;
+                if (to == null)
+                    continue;
+                var amount = op.ContractBalance / 1000000M;
+                string tezAmount = amount.TezToString();
+                var toAddresses = repo.GetUserAddresses(to);
+                foreach (var ua in repo.GetUserAddresses(op.Sender.address))
+                {
+                    var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
+                    string result = resMgr.Get(Res.NewDelegation,
+                        new ContextObject
+                        { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = ua, ua_to = targetAddr });
+                    if (!ua.User.HideHashTags)
+                        result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
+                    SendTextMessageUA(ua, result);
+                }
+
+                foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
+                {
+                    if (ua.DelegationAmountThreshold > amount)
+                        continue;
+                    var sourceAddr = repo.GetUserTezosAddress(ua.UserId, op.OriginatedContract.address);
+                    string result = resMgr.Get(Res.NewDelegation,
+                        new ContextObject
+                        { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = sourceAddr, ua_to = ua });
+                    if (!ua.User.HideHashTags)
+                        result += "\n\n#delegation " + sourceAddr.HashTag() + ua.HashTag();
+                    SendTextMessageUA(ua, result);
+                }
+            }
+        }
         List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
         {
             List<(string from, string to, decimal amount)>
@@ -1441,7 +1622,7 @@ namespace TezosNotifyBot
                     header.priority == 0 ? RewardsManager.RewardType.Baking : RewardsManager.RewardType.StolenBaking,
                     header.level + 1, bu.change);
             foreach (var op in operations)
-                rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.rewards, op.slots);
+                rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
 
             ProcessBlockMetadata(blockMetadata, header.hash);
             Logger.LogInformation("Block " + (header.level + 1).ToString() + " baking data processed");
