@@ -15,5 +15,6 @@ namespace TezosNotifyBot.Tzkt
 		List<Right> GetRights(string baker, int cycle);
 		List<Endorsement> GetEndorsements(int level);
 		Block GetBlock(int level);
+		BigmapItem GetBigmapItem(string contract, string address);
 	}
 }

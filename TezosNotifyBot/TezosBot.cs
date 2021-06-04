@@ -924,12 +924,19 @@ namespace TezosNotifyBot
                 decimal tokenBalance = 0;
                 if (from.Key.token != null)
                 {
-                    var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
-                    var acc = bcd.GetAccount(from.Key.from);
-                    var token = acc.balances.FirstOrDefault(o =>
-                        o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
-                    if (token != null)
-                        tokenBalance = token.Balance;
+                    //var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
+                    //var acc = bcd.GetAccount(from.Key.from);
+                    //var token = acc.balances.FirstOrDefault(o =>
+                    //    o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
+                    //if (token != null)
+                    //    tokenBalance = token.Balance;
+                    var item = tzKt.GetBigmapItem(from.Key.token.ContractAddress, from.Key.from);
+                    if (item != null)
+					{
+                        JObject p = item.value as JObject;
+                        if (p != null && p["balance"] != null)
+                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value) / new BigInteger(Math.Pow(10, from.Key.token.Decimals)));
+                    }
                 }
 
                 var fromAddresses = repo.GetUserAddresses(from.Key.from).Where(o => o.NotifyTransactions).ToList();
@@ -1041,12 +1048,19 @@ namespace TezosNotifyBot
                 decimal tokenBalance = 0;
                 if (to.Key.token != null)
                 {
-                    var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
-                    var acc = bcd.GetAccount(to.Key.to);
-                    var token = acc.balances.FirstOrDefault(o =>
-                        o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
-                    if (token != null)
-                        tokenBalance = token.Balance;
+                    //var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
+                    //var acc = bcd.GetAccount(to.Key.to);
+                    //var token = acc.balances.FirstOrDefault(o =>
+                    //    o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
+                    //if (token != null)
+                    //    tokenBalance = token.Balance;
+                    var item = tzKt.GetBigmapItem(to.Key.token.ContractAddress, to.Key.to);
+                    if (item != null)
+                    {
+                        JObject p = item.value as JObject;
+                        if (p != null && p["balance"] != null)
+                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value) / new BigInteger(Math.Pow(10, to.Key.token.Decimals)));
+                    }
                 }
 
                 var toAddresses = repo.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
