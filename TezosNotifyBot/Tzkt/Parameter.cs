@@ -7,7 +7,7 @@ namespace TezosNotifyBot.Tzkt
 	public class Parameter
 	{
 		public string entrypoint { get; set; }
-		public Value value { get; set; }
+		//public Value value { get; set; }
 	}
 
 	public class Value

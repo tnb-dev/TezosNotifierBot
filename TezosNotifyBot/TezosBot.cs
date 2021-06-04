@@ -1276,7 +1276,7 @@ namespace TezosNotifyBot
                 var amount = op.Amount / 1000000M;
 
                 Token token = null;
-                if (op.Parameter?.entrypoint == "transfer")
+                /*if (op.Parameter?.entrypoint == "transfer")
 				{
                     token = repo.GetToken(to);
                     from = op.Parameter.value.from;
@@ -1289,7 +1289,7 @@ namespace TezosNotifyBot
                     from = op.Parameter.value.from;
                     to = op.Parameter.value.to;
                     amount = (decimal)(BigInteger.Parse(op.Parameter.value.value) / new BigInteger(Math.Pow(10, token.Decimals)));
-                }
+                }*/
                 if (amount == 0)
                     continue;
                 fromToAmountHash.Add((from, to, amount, op.Hash, token));
