@@ -1302,7 +1302,7 @@ namespace TezosNotifyBot
                         to = (string)((JValue)p["to"]).Value;
                         amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
                     }
-                }
+                }/*
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
                 {
                     token = repo.GetToken(to);
@@ -1315,7 +1315,7 @@ namespace TezosNotifyBot
                         to = (string)((JValue)p["to"]).Value;
                         amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
                     }
-                }
+                }*/
                 if (amount == 0)
                     continue;
                 fromToAmountHash.Add((from, to, amount, op.Hash, token));
