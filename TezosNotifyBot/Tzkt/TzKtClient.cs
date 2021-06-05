@@ -75,7 +75,14 @@ namespace TezosNotifyBot.Tzkt
 		BigmapItem ITzKtClient.GetBigmapItem(string contract, string address)
 		{
 			var str = Download($"v1/contracts/{contract}/bigmaps/ledger/keys/{address}");
-			return JsonConvert.DeserializeObject<BigmapItem>(str);
+			try
+			{
+				return JsonConvert.DeserializeObject<BigmapItem>(str);
+			}
+			catch
+			{
+				return null;
+			}
 		}
 		string Download(string addr)
 		{
