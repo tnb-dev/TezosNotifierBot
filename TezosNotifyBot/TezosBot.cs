@@ -1320,38 +1320,41 @@ namespace TezosNotifyBot
                     continue;
                 fromToAmountHash.Add((from, to, amount, op.Hash, token));
                 // Уведомления о китах
-                foreach (var u in allUsers.Where(o =>
-                    !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                if (token == null)
                 {
-                    var ua_from = repo.GetUserTezosAddress(u.Id, from);
-                    var ua_to = repo.GetUserTezosAddress(u.Id, to);
-                    string result = resMgr.Get(Res.WhaleTransaction,
-                        new ContextObject
-                        {
-                            u = u,
-                            OpHash = op.Hash,
-                            Amount = amount,
-                            md = md,
-                            ua_from = ua_from,
-                            ua_to = ua_to
-                        });
-                    if (!u.HideHashTags)
+                    foreach (var u in allUsers.Where(o =>
+                        !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
                     {
-                        result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+                        var ua_from = repo.GetUserTezosAddress(u.Id, from);
+                        var ua_to = repo.GetUserTezosAddress(u.Id, to);
+                        string result = resMgr.Get(Res.WhaleTransaction,
+                            new ContextObject
+                            {
+                                u = u,
+                                OpHash = op.Hash,
+                                Amount = amount,
+                                md = md,
+                                ua_from = ua_from,
+                                ua_to = ua_to
+                            });
+                        if (!u.HideHashTags)
+                        {
+                            result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+                        }
+
+                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
 
-                    SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                }
-
-                // Уведомления о китах для твиттера
-                if (amount >= 500000)
-                {
-                    var ua_from = repo.GetUserTezosAddress(0, from);
-                    var ua_to = repo.GetUserTezosAddress(0, to);
-                    string result = resMgr.Get(Res.TwitterWhaleTransaction,
-                        new ContextObject
-                        { OpHash = op.Hash, Amount = amount, md = md, ua_from = ua_from, ua_to = ua_to });
-                    twitter.TweetAsync(result);
+                    // Уведомления о китах для твиттера
+                    if (amount >= 500000)
+                    {
+                        var ua_from = repo.GetUserTezosAddress(0, from);
+                        var ua_to = repo.GetUserTezosAddress(0, to);
+                        string result = resMgr.Get(Res.TwitterWhaleTransaction,
+                            new ContextObject
+                            { OpHash = op.Hash, Amount = amount, md = md, ua_from = ua_from, ua_to = ua_to });
+                        twitter.TweetAsync(result);
+                    }
                 }
             }
 		}
