@@ -66,5 +66,12 @@ namespace TezosNotifyBot
         /// <returns></returns>
         public static bool IsAdmin(this User user, TelegramOptions config)
             => config.DevUsers.Contains(user.Username);
+
+        public static decimal TokenAmountToDecimal(string str, int decimals)
+        {
+            string s1 = str.Length > decimals ? str.Substring(0, str.Length - decimals) : "0";
+            string s2 = str.Length > decimals ? str.Substring(str.Length - decimals) : str.PadLeft(decimals, '0');
+            return decimal.Parse(s1 + "." + s2, CultureInfo.InvariantCulture);
+        }
     }
 }

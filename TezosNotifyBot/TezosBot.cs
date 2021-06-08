@@ -236,7 +236,7 @@ namespace TezosNotifyBot
                     catch (Exception ex)
                     {
                         LogError(ex);
-                        NotifyDev("‼️" + ex.Message, 0);
+                        NotifyDev($"‼️{ex.Message}\n🧱{lastHeader?.level + 1}", 0);
                     }
 
                     if (DateTime.Now.Subtract(lastReceived).TotalMinutes > NetworkIssueMinutes)
@@ -935,7 +935,7 @@ namespace TezosNotifyBot
 					{
                         JObject p = item.value as JObject;
                         if (p != null && p["balance"] != null)
-                            tokenBalance = (decimal)(BigInteger.Parse((string)((JValue)p["balance"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, from.Key.token.Decimals)));
+                            tokenBalance = Utils.TokenAmountToDecimal((string)((JValue)p["balance"]).Value, from.Key.token.Decimals);
                     }
                 }
 
@@ -1059,7 +1059,7 @@ namespace TezosNotifyBot
                     {
                         JObject p = item.value as JObject;
                         if (p != null && p["balance"] != null)
-                            tokenBalance = (decimal)BigInteger.Parse((string)((JValue)p["balance"]).Value) / (decimal)(new BigInteger(Math.Pow(10, to.Key.token.Decimals)));
+                            tokenBalance = Utils.TokenAmountToDecimal((string)((JValue)p["balance"]).Value, to.Key.token.Decimals);
                     }
                 }
 
@@ -1300,9 +1300,9 @@ namespace TezosNotifyBot
                             continue;
                         from = (string)((JValue)p["from"]).Value;
                         to = (string)((JValue)p["to"]).Value;
-                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
+                        amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
                     }
-                }/*
+                }
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
                 {
                     token = repo.GetToken(to);
@@ -1311,11 +1311,11 @@ namespace TezosNotifyBot
                         JObject p = op.Parameter.value as JObject;
                         if (p["to"] == null || p["value"] == null)
                             continue;
-                        from = null;
+                        from = "";
                         to = (string)((JValue)p["to"]).Value;
-                        amount = (decimal)(BigInteger.Parse((string)((JValue)p["value"]).Value)) / (decimal)(new BigInteger(Math.Pow(10, token.Decimals)));
+                        amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
                     }
-                }*/
+                }
                 if (amount == 0)
                     continue;
                 fromToAmountHash.Add((from, to, amount, op.Hash, token));
@@ -1483,24 +1483,8 @@ namespace TezosNotifyBot
                     var from = transfer.parameters[0].children[0].value;
                     var to = transfer.parameters[0].children[1].value;
 
-                    if (BigInteger.TryParse(transfer.parameters[0].children[2].value, out var value))
-                    {
-                        try
-                        {
-                            value /= new BigInteger(Math.Pow(10, token.Decimals));
-                            result.Add((from, to, (decimal) value));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogError($"Failed on BigInteger to decimal conversion: {e.Message}");
-                            throw;
-                        }
-                    }
-                    else
-                    {
-                        Logger.LogError(
-                            $"Failed to parse BigInteger transfer with value {transfer.parameters[0].children[2].value}");
-                    }
+                    decimal value = Utils.TokenAmountToDecimal(transfer.parameters[0].children[2].value, token.Decimals);
+                    result.Add((from, to, (decimal) value));                    
                 }
                 if (transfer.parameters?.Count == 1 &&
                     transfer.parameters[0].name == "mint" &&
@@ -1509,29 +1493,12 @@ namespace TezosNotifyBot
                     transfer.parameters[0].children[1].name == "value")
                 {
                     var to = transfer.parameters[0].children[0].value;
-
-                    if (BigInteger.TryParse(transfer.parameters[0].children[1].value, out var value))
-                    {
-                        try
-                        {
-                            value /= new BigInteger(Math.Pow(10, token.Decimals));
-                            result.Add(("", to, (decimal)value));
-                        }
-                        catch (Exception e)
-                        {
-                            Logger.LogError($"Failed on BigInteger to decimal conversion: {e.Message}");
-                            throw;
-                        }
-                    }
-                    else
-                    {
-                        Logger.LogError(
-                            $"Failed to parse BigInteger transfer with value {transfer.parameters[0].children[1].value}");
-                    }
+                    decimal value = Utils.TokenAmountToDecimal(transfer.parameters[0].children[1].value, token.Decimals);
+                    result.Add(("", to, (decimal)value));
                 }
-            }
+			}
 
-            return result;
+			return result;
         }
         
         bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata)
