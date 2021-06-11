@@ -423,3 +423,7 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #NotifyRightsAssigned;en;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Rights assigned
 #DelegateRightsAssigned;ru;👉 Назначенные права: {(ua.NotifyRightsAssigned ? "🔔 вкл" : "🔕 выкл")}
 #DelegateRightsAssigned;en;👉 Rights assigned: {(ua.NotifyRightsAssigned ? "🔔 on" : "🔕 off")}
+#IsAddressOwner;ru;{(ua.IsOwner ? "☑️" : "🔲")} Владелец адреса
+#IsAddressOwner;en;{(ua.IsOwner ? "☑️" : "🔲")} Address owner
+#OwnerLimitReached;en;🧘‍♂️ Sorry, you’ve reached the limit of outgoing messages in this cycle. Please, try in the next cycle.
+#OwnerLimitReached;ru;🧘‍♂️ Извините, вы достигли лимита исходящих сообщений в этом цикле. Пожалуйста, попробуйте в следующем цикле.

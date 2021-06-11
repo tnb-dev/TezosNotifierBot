@@ -378,7 +378,7 @@ namespace TezosNotifyBot
                         CallbackData = "deleteaddress " + id
                     }
                 });
-                if (u.IsAdmin(options))
+                if (u.IsAdmin(options) || ua.IsOwner)
                     buttons.Add(new[]
                     {
                         new InlineKeyboardButton
@@ -388,6 +388,21 @@ namespace TezosNotifyBot
                         }
                     });
             }
+
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+        public static InlineKeyboardMarkup AdminAddressMenu(ResourceManager resMgr, string id, UserAddress ua)
+        {
+            var buttons = new List<InlineKeyboardButton[]>();
+            buttons.Add(new[]
+            {
+                new InlineKeyboardButton
+                {
+                    Text = resMgr.Get(Res.IsAddressOwner, ua),
+                    CallbackData = (ua.IsOwner ? "owneroff" : "owneron") + " " + id
+                }
+            });
 
             return new InlineKeyboardMarkup(buttons);
         }

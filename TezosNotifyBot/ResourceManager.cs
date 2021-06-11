@@ -284,6 +284,8 @@ namespace TezosNotifyBot
 		RightsAssigned,
 		RightsAssignedItem,
 		NotifyRightsAssigned,
-		DelegateRightsAssigned
+		DelegateRightsAssigned,
+		IsAddressOwner,
+		OwnerLimitReached
 	}
 }

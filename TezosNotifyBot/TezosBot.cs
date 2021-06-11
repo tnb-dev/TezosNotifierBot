@@ -2161,6 +2161,12 @@ namespace TezosNotifyBot
                     var userAddress = repo.GetUserAddress(userId, addrId);
                     if (userAddress != null)
                     {
+                        if (userAddress.IsOwner && !user.IsAdmin(Config.Telegram) &&
+                            (new Level(lastHeader.level)).Cycle == (new Level(userAddress.LastMessageLevel)).Cycle)
+						{
+                            SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
+                            return;
+						}
                         // TODO: Maybe reuse user var? 
                         var u = repo.GetUser(userId);
                         u.UserState = UserState.NotifyFollowers;
@@ -2168,9 +2174,11 @@ namespace TezosNotifyBot
                         repo.UpdateUser(u);
 
                         var result = resMgr.Get(Res.EnterMessageForAddressFollowers, userAddress);
-
-                        foreach (var follower in GetFollowers(userAddress.Address))
-                            result += $"\n{follower} [{follower.Id}]";
+                        if (user.IsAdmin(Config.Telegram))
+                        {
+                            foreach (var follower in GetFollowers(userAddress.Address))
+                                result += $"\n{follower} [{follower.Id}]";
+                        }
                         SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
                     }
                     else
@@ -2352,6 +2360,34 @@ namespace TezosNotifyBot
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = false;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("owneron"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("owneron ".Length));
+                    if (ua != null)
+                    {
+                        ua.IsOwner = true;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("owneroff"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("owneroff ".Length));
+                    if (ua != null)
+                    {
+                        ua.IsOwner = false;
                         repo.UpdateUserAddress(ua);
                         ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
@@ -2713,6 +2749,11 @@ namespace TezosNotifyBot
                         {
                             var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             users = GetFollowers(ua.Address);
+                            if (!user.IsAdmin(Config.Telegram))
+							{
+                                ua.LastMessageLevel = lastHeader.level;
+                                repo.UpdateUserAddress(ua);
+							}
                         }
 
                         foreach (var user1 in users)
@@ -3281,6 +3322,11 @@ namespace TezosNotifyBot
                         else if (user.UserState == UserState.NotifyFollowers)
                         {
                             var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            if (!user.IsAdmin(Config.Telegram))
+                            {
+                                ua.LastMessageLevel = lastHeader.level;
+                                repo.UpdateUserAddress(ua);
+                            }
                             string text = ApplyEntities(message.Text, message.Entities);
                             foreach (var u1 in GetFollowers(ua.Address))
                                 SendTextMessage(u1.Id, text, ReplyKeyboards.MainMenu(resMgr, user));
@@ -3746,7 +3792,7 @@ namespace TezosNotifyBot
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
                             Config.Telegram)
-                        : null, msgid);
+                        : ReplyKeyboards.AdminAddressMenu(resMgr, ua.Id.ToString(), ua), msgid);
             }
             else
             {

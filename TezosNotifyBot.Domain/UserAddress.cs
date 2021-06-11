@@ -39,18 +39,8 @@ namespace TezosNotifyBot.Domain
         public long ChatId { get; set; }
         public bool NotifyAwardAvailable { get; set; }
         public bool NotifyRightsAssigned { get; set; }
-        //public string UsdBalance(decimal price_usd)
-        //{
-        //    return (Balance * price_usd).ToString("### ### ### ### ##0.00", CultureInfo.InvariantCulture).Trim();
-        //}
-        //public string BtcBalance(decimal price_btc)
-        //{
-        //    return (Balance * price_btc).ToString("# ### ##0.####", CultureInfo.InvariantCulture).Trim();
-        //}
-        //public string TezBalance()
-        //{
-        //    return Balance.TezToString();
-        //}
+        public bool IsOwner { get; set; }
+        public int LastMessageLevel { get; set; }        
 
         public string HashTag()
         {
