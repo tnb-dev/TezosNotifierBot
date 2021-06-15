@@ -2369,7 +2369,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneron"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = repo.GetUserAddresses().FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("owneron ".Length));
                     if (ua != null)
                     {
@@ -2383,7 +2383,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneroff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = repo.GetUserAddresses().FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("owneroff ".Length));
                     if (ua != null)
                     {
@@ -3792,7 +3792,7 @@ namespace TezosNotifyBot
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
                             Config.Telegram)
-                        : ReplyKeyboards.AdminAddressMenu(resMgr, ua.Id.ToString(), ua), msgid);
+                        : ReplyKeyboards.AdminAddressMenu(resMgr, ua), msgid);
             }
             else
             {

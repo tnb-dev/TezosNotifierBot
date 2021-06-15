@@ -392,7 +392,7 @@ namespace TezosNotifyBot
             return new InlineKeyboardMarkup(buttons);
         }
 
-        public static InlineKeyboardMarkup AdminAddressMenu(ResourceManager resMgr, string id, UserAddress ua)
+        public static InlineKeyboardMarkup AdminAddressMenu(ResourceManager resMgr, UserAddress ua)
         {
             var buttons = new List<InlineKeyboardButton[]>();
             buttons.Add(new[]
@@ -400,7 +400,7 @@ namespace TezosNotifyBot
                 new InlineKeyboardButton
                 {
                     Text = resMgr.Get(Res.IsAddressOwner, ua),
-                    CallbackData = (ua.IsOwner ? "owneroff" : "owneron") + " " + id
+                    CallbackData = (ua.IsOwner ? "owneroff" : "owneron") + " " + ua.Id.ToString()
                 }
             });
 
