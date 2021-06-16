@@ -1583,7 +1583,7 @@ namespace TezosNotifyBot
             var priority = header.priority;
             Logger.LogDebug($"Endorsements processing {header.level + 1}");
 
-            foreach (var d in endorsing_rights.Where(r => r.status == "missed"))
+            foreach (var d in endorsing_rights.Where(r => r.status == "missed" || r.status == "uncovered"))
             {
                 long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
                 if (header.level >= Config.CarthageStart)
