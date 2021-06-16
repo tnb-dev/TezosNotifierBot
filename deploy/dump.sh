@@ -1,4 +1,7 @@
-pg_dump --column-inserts -a \
+pg_dump --column-inserts \
+    --dbname $POSTGRES_DB \
+    --username $POSTGRES_USER \
+    -a \
     -t user \
     -t user_address \
     -t address_config \

@@ -128,3 +128,5 @@ Backup Database:
     - schedules
   tags: 
     - deployer
+  environment:
+    name: release
