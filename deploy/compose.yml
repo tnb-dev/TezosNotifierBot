@@ -5,6 +5,7 @@ services:
     restart: unless-stopped 
     volumes:
       - app-data:/var/lib/postgresql/data
+      - $DB_DUMP_HOME:/var/dump
     networks:
       - default
     environment:
