@@ -1530,7 +1530,7 @@ namespace TezosNotifyBot
                         header.level + 1, rewards);
                 }
 
-                if (baking_right.status == "missed")
+                if (baking_right.status == "missed" || baking_right.status == "uncovered")
                 {
                     var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                     ContractInfo info = null;
@@ -1546,7 +1546,13 @@ namespace TezosNotifyBot
                         ua.Balance = info.balance / 1000000M;
                         var result = resMgr.Get(Res.MissedBaking,
                             new ContextObject
-                                {u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M});
+                                {
+                                u = ua.User,
+                                ua = ua,
+                                Block = header.level,
+                                Amount = rewards / 1000000M,
+                                Rights = new List<Right> { baking_right }
+                            });
 
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_baking" + ua.HashTag();
@@ -1604,7 +1610,13 @@ namespace TezosNotifyBot
                     ua.Balance = info.balance / 1000000M;
                     var result = resMgr.Get(Res.MissedEndorsing,
                         new ContextObject
-                        { u = ua.User, ua = ua, Block = header.level, Amount = rewards / 1000000M });
+                        {
+                            u = ua.User,
+                            ua = ua,
+                            Block = header.level,
+                            Amount = rewards / 1000000M,
+                            Rights = new List<Right> { d }
+                        });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#missed_endorsing" + ua.HashTag();
                     SendTextMessageUA(ua, result);
