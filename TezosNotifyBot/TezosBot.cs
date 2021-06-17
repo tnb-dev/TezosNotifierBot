@@ -2562,6 +2562,14 @@ namespace TezosNotifyBot
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
+                
+                if (callbackData.StartsWith("change_currency"))
+                {
+                    user.Currency = user.Currency == UserCurrency.Usd ? UserCurrency.Eur : UserCurrency.Usd;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                        ev.CallbackQuery.Message.MessageId);
+                }
 
                 if (callbackData.StartsWith("showvotingnotify"))
                 {

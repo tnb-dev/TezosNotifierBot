@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations;
+using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
@@ -16,6 +18,10 @@ namespace TezosNotifyBot.Domain
         public bool HideHashTags { get; set; }
         public int WhaleAlertThreshold { get; set; }
         public bool VotingNotify { get; set; }
+
+        public UserCurrency Currency { get; set; } = UserCurrency.Usd;
+
+        public string CurrencyCode => Currency.GetDisplayName();
         
         /// <summary>
         /// Is user subscribed to notifications about tezos releases
@@ -57,5 +63,13 @@ namespace TezosNotifyBot.Domain
                 VotingNotify = true
             };
         }
+    }
+
+    public enum UserCurrency
+    {
+        [Display(Name = "USD")]
+        Usd = Currency.Usd,
+        [Display(Name = "EUR")]
+        Eur = Currency.Eur
     }
 }
