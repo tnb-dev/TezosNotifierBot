@@ -96,8 +96,8 @@ Full description & manual: http://tzsnt.fr/
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать
 #RenameAddress;en;📝 Rename
-#UserCurrency;ru;{(u.CurrencyCode == "USD" ? "💵" : "💶")} Валюта
-#UserCurrency;en;{(u.CurrencyCode == "USD" ? "💵" : "💶")} Rate
+#UserCurrency;ru;Курс: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
+#UserCurrency;en;Rate: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
 #SetThreshold;ru;✂️ Порог транзакций
 #SetThreshold;en;✂️ Transaction Threshold
 #SetDlgThreshold;ru;✂️ Порог делегирования
