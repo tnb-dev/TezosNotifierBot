@@ -3334,15 +3334,21 @@ namespace TezosNotifyBot
                         else if (user.UserState == UserState.NotifyFollowers)
                         {
                             var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            string text = ApplyEntities(message.Text, message.Entities);
                             if (!user.IsAdmin(Config.Telegram))
                             {
                                 ua.LastMessageLevel = lastHeader.level;
                                 repo.UpdateUserAddress(ua);
+                                text = resMgr.Get(Res.DelegateMessage, ua) + "\n\n" + text;
                             }
-                            string text = ApplyEntities(message.Text, message.Entities);
+                            int count = 0;
                             foreach (var u1 in GetFollowers(ua.Address))
-                                SendTextMessage(u1.Id, text, ReplyKeyboards.MainMenu(resMgr, user));
-                            SendTextMessage(user.Id, resMgr.Get(Res.MessageDeliveredForUsers, user),
+                            {
+                                var tags = !u1.HideHashTags ? "\n\n#delegate_message" + ua.HashTag() : "";
+                                SendTextMessage(u1.Id, text + tags, ReplyKeyboards.MainMenu(resMgr, user));
+                                count++;
+                            }
+                            SendTextMessage(user.Id, resMgr.Get(Res.MessageDeliveredForUsers, new ContextObject { u = user, Amount = count }),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.Broadcast)
