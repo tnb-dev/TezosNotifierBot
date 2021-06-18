@@ -287,6 +287,7 @@ namespace TezosNotifyBot
 		DelegateRightsAssigned,
 		IsAddressOwner,
 		OwnerLimitReached,
+		UserCurrency,
 		DelegateMessage
 	}
 }

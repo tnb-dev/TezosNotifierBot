@@ -7,12 +7,13 @@ using System.IO;
 using System.Text;
 using NornPool.Model;
 using TezosNotifyBot.Domain;
+using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot
 {
     public static class Utils
     {
-		public static string TezToString(this decimal tz)
+        public static string TezToString(this decimal tz)
         {
             if (Math.Abs(tz) > 0.001M)
                 return tz.ToString("###,###,###,###,##0.###", CultureInfo.InvariantCulture).Trim() + " XTZ";
@@ -21,21 +22,31 @@ namespace TezosNotifyBot
         }
 
         public static string AmountToString(this decimal amount, Token token)
-		{
+        {
             if (token == null)
                 return amount.TezToString();
-            return amount.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture).Trim() + " " + token.Symbol;
+            return amount.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture).Trim() + " " +
+                   token.Symbol;
         }
 
         public static string TezToUsd(this decimal tz, Tezos.MarketData md)
-        {
-            return (tz * md.price_usd).ToString("###,###,###,###,##0.00", CultureInfo.InvariantCulture).Trim();
-        }
+            => (tz * md.price_usd).ToString("###,###,###,###,##0.00", CultureInfo.InvariantCulture).Trim();
 
         public static string TezToBtc(this decimal tz, Tezos.MarketData md)
+            => (tz * md.price_btc).ToString("#,###,##0.####", CultureInfo.InvariantCulture).Trim();
+
+        public static string TezToEur(this decimal tz, Tezos.MarketData md)
+            => (tz * md.price_eur).ToString("#,###,##0.####", CultureInfo.InvariantCulture).Trim();
+
+        public static string TezToCurrency(this decimal tz, Tezos.MarketData md, UserCurrency currency)
         {
-            return (tz * md.price_btc).ToString("#,###,##0.####", CultureInfo.InvariantCulture).Trim();
+            var code = currency.GetDisplayName();
+            return (tz * md.CurrencyRate((Currency) currency))
+                .ToString($"#,###,##0.#### {code}", CultureInfo.InvariantCulture).Trim();
         }
+        
+        public static string TezToCurrency(this decimal tz, Tezos.MarketData md, User user) 
+            => tz.TezToCurrency(md, user.Currency);
 
         public static MemoryStream CreateZipToMemoryStream(Stream source, string zipEntryName)
         {
@@ -52,8 +63,8 @@ namespace TezosNotifyBot
             StreamUtils.Copy(source, zipStream, new byte[4096]);
             zipStream.CloseEntry();
 
-            zipStream.IsStreamOwner = false;    // False stops the Close also Closing the underlying stream.
-            zipStream.Close();          // Must finish the ZipOutputStream before using outputMemStream.
+            zipStream.IsStreamOwner = false; // False stops the Close also Closing the underlying stream.
+            zipStream.Close(); // Must finish the ZipOutputStream before using outputMemStream.
 
             outputMemStream.Position = 0;
             return outputMemStream;

@@ -94,6 +94,7 @@ namespace TezosNotifyBot
             });
 
             add2("🇺🇸 English", "set_en", "🇷🇺 Русский", "set_ru");
+            add(resMgr.Get(Res.UserCurrency, user), "change_currency");
             add(resMgr.Get(Res.Explorer, user), "set_explorer");
             if (user.HideHashTags)
                 add(resMgr.Get(Res.HashTags, user), "showhashtags");
@@ -247,7 +248,7 @@ namespace TezosNotifyBot
                 buttons.Add(new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
-                        text: resMgr.Get(Res.PayoutNotifyToggle, ua), 
+                        text: resMgr.Get(Res.PayoutNotifyToggle, ua),
                         callbackData: $"toggle_payout_notify {id}"
                     ),
                     new InlineKeyboardButton
@@ -256,7 +257,7 @@ namespace TezosNotifyBot
                         CallbackData = (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
                     }
                 });
-                buttons.Add(new []
+                buttons.Add(new[]
                 {
                     new InlineKeyboardButton
                     {
@@ -264,7 +265,7 @@ namespace TezosNotifyBot
                         CallbackData = "setname " + id
                     },
                     InlineKeyboardButton.WithCallbackData(
-                        text: resMgr.Get(Res.Delete, u), 
+                        text: resMgr.Get(Res.Delete, u),
                         callbackData: $"deleteaddress {id}"
                     )
                 });

@@ -22,6 +22,7 @@
 %	WhaleAlertThreshold int
 %	VotingNotify bool
 %	NetworkIssueNotify int
+%   CurrencyCode Currency
 % ua UserAddress - адрес пользователя
 %	Address string
 %	CreateDate DateTime
@@ -95,6 +96,8 @@ Full description & manual: http://tzsnt.fr/
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать
 #RenameAddress;en;📝 Rename
+#UserCurrency;ru;Курс: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
+#UserCurrency;en;Rate: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
 #SetThreshold;ru;✂️ Порог транзакций
 #SetThreshold;en;✂️ Transaction Threshold
 #SetDlgThreshold;ru;✂️ Порог делегирования
@@ -206,8 +209,8 @@ Or use the search:
 #AddressAdded;en;✅ Added <a href='{t.account(ua.Address)}'>{ua.Address}</a>{(!String.IsNullOrEmpty(ua.Name) ? " as <b>" + ua.Name + "</b>" : "")}. You will receive notifications on any events.
 #NetworkIssueAlertSet;ru;{(u.NetworkIssueNotify == 0 ? "Уведомления о сбоях сети отключены" : "Установлено время простоя сети до уведомления: " + u.NetworkIssueNotify.ToString() + " минут")}
 #NetworkIssueAlertSet;en;{(u.NetworkIssueNotify == 0 ? "Network failure notifications disabled" : "Network downtime prior to notification: " + u.NetworkIssueNotify.ToString() + " minutes")}
-#CurrentBalance;ru;Доступный баланс: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
-#CurrentBalance;en;Spendable Balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
+#CurrentBalance;ru;Доступный баланс: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToCurrency(md, u)} / {ua.Balance.TezToBtc(md)} BTC)
+#CurrentBalance;en;Spendable Balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToCurrency(md, u)} / {ua.Balance.TezToBtc(md)} BTC)
 #TokenBalance;ru;Баланс: <b>{Amount.AmountToString(Token)}</b>
 #TokenBalance;en;Balance: <b>{Amount.AmountToString(Token)}</b>
 #ActualBalance;ru;Полный баланс: <b>{ua.FullBalance.TezToString()}</b>
@@ -258,10 +261,10 @@ Or use the search:
 #ProposalSelectedMany;en;💡 Proposal period has been completed. Proposals have been submitted:
 #IncomingTransactions;ru;{(Token == null ? "✅" : "🔸")} Входящие <a href='{t.block(Block)}'>транзакции</a> на сумму <b>{Amount.AmountToString(Token)}</b> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
 #IncomingTransactions;en;{(Token == null ? "✅" : "🔸")} Incoming {(Token != null ? "token " : "")}<a href='{t.block(Block)}'>{(Token != null ? "transfers" : "transactions")}</a> of <b>{Amount.AmountToString(Token)}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
-#IncomingTransaction;ru;{(Token == null ? "✅" : "🔸")} Входящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
-#IncomingTransaction;en;{(Token == null ? "✅" : "🔸")} Incoming {(Token != null ? "token " : "")}<a href='{t.op(OpHash)}'>{(Token != null ? "transfer" : "transaction")}</a> of <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
-#Payout;en;🤑 New <a href='{t.op(OpHash)}'>payout</a> of {Amount.AmountToString(Token)} ({Amount.TezToUsd(md)} USD) to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> 
-#Payout;ru;🤑 Новая <a href='{t.op(OpHash)}'>выплата</a> {Amount.AmountToString(Token)} ({Amount.TezToUsd(md)} USD) к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#IncomingTransaction;ru;{(Token == null ? "✅" : "🔸")} Входящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToCurrency(md, u) + ")" : "")}</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#IncomingTransaction;en;{(Token == null ? "✅" : "🔸")} Incoming {(Token != null ? "token " : "")}<a href='{t.op(OpHash)}'>{(Token != null ? "transfer" : "transaction")}</a> of <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToCurrency(md, u) + ")" : "")}</b> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
+#Payout;en;🤑 New <a href='{t.op(OpHash)}'>payout</a> of {Amount.AmountToString(Token)} ({Amount.TezToCurrency(md, u)}) to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> 
+#Payout;ru;🤑 Новая <a href='{t.op(OpHash)}'>выплата</a> {Amount.AmountToString(Token)} ({Amount.TezToCurrency(md, u)}) к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
 #From;ru;▫️<b>{Amount.AmountToString(Token)}</b> от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #From;en;▫️<b>{Amount.AmountToString(Token)}</b> from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #NotAllShown;ru;ℹ️ Не все операции показаны, полный список <a href='{t.block(Block)}'>здесь</a>
@@ -270,18 +273,18 @@ Or use the search:
 #To;en;▫️<b>{Amount.AmountToString(Token)}</b> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #OutgoingTransactions;ru;{(Token == null ? "❎" : "🔹")} Исходящие <a href='{t.block(Block)}'>транзакции</a> на сумму <b>{Amount.AmountToString(Token)}</b> от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
 #OutgoingTransactions;en;{(Token == null ? "❎" : "🔹")} Outgoing {(Token != null ? "token " : "")}<a href='{t.block(Block)}'>{(Token != null ? "transfers" : "transactions")}</a> of <b>{Amount.AmountToString(Token)}</b> from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
-#OutgoingTransaction;ru;{(Token == null ? "❎" : "🔹")} Исходящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
-#OutgoingTransaction;en;{(Token == null ? "❎" : "🔹")} Outgoing {(Token != null ? "token " : "")}<a href='{t.op(OpHash)}'>{(Token != null ? "transfer" : "transaction")}</a> of <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToUsd(md) + " USD)" : "")}</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
-#WhaleTransaction;ru;🐋 Крупная <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
-#WhaleTransaction;en;🐋 Whale <a href='{t.op(OpHash)}'>transaction</a> of <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
-#DoubleBakingOccured;ru;😱 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> осуществил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и потерял <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+#OutgoingTransaction;ru;{(Token == null ? "❎" : "🔹")} Исходящая <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToCurrency(md, u) + ")" : "")}</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#OutgoingTransaction;en;{(Token == null ? "❎" : "🔹")} Outgoing {(Token != null ? "token " : "")}<a href='{t.op(OpHash)}'>{(Token != null ? "transfer" : "transaction")}</a> of <b>{Amount.AmountToString(Token)}{(Token == null ? " (" + Amount.TezToCurrency(md, u) + ")" : "")}</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#WhaleTransaction;ru;🐋 Крупная <a href='{t.op(OpHash)}'>транзакция</a> <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#WhaleTransaction;en;🐋 Whale <a href='{t.op(OpHash)}'>transaction</a> of <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>
+#DoubleBakingOccured;ru;😱 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> осуществил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и потерял <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b>
 
 🛑 Бейкер должен немедленно прекратить выпечку и заверение до конца цикла
-#DoubleBakingOccured;en;😱 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> made <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and lost <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+#DoubleBakingOccured;en;😱 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> made <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and lost <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b>
 
 🛑 Baker should immediately stop both baking and endorsing for the rest of cycle
-#DoubleBakingEvidence;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> обнаружил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и получил награду <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
-#DoubleBakingEvidence;en;👮 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> detected <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and rewarded <b>{Amount.TezToString()} ({Amount.TezToUsd(md)} USD)</b>
+#DoubleBakingEvidence;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> обнаружил <a href='{t.op(OpHash)}'>двойную выпечку/заверение</a> блока <a href='{t.block(Block)}'>{Block}</a> и получил награду <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b>
+#DoubleBakingEvidence;en;👮 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> detected <a href='{t.op(OpHash)}'>double baking/endorsement</a> of block <a href='{t.block(Block)}'>{Block}</a> and rewarded <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b>
 #SkippedEndorsing;ru;😯 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не будет вознагражден за заверение блока <a href='{t.block(Block)}'>{Block}</a> по причине отсутствия заверяющих операций в блоке <a href='{t.block(Block + 1)}'>{Block + 1}</a>
 #SkippedEndorsing;en;😯 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> shall not be rewarded for block <a href='{t.block(Block)}'>{Block}</a> endorsing due to lack of endorsment operations in block <a href='{t.block(Block + 1)}'>{Block + 1}</a>
 #NewDelegation;ru;🤝 Новое <a href='{t.op(OpHash)}'>делегирование</a> <b>{Amount.TezToString()}</b> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a>
@@ -395,10 +398,10 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #LastActive;ru;Последняя активность
 #RevelationPenalty;en;👮 Baker <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> lost {Amount.TezToString()} due to missing seed nonce revelation for block <a href='{t.block(Block)}'>{Block}</a>
 #RevelationPenalty;ru;👮 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> оштрафован на {Amount.TezToString()} за не раскрытие начального одноразового числа для блока <a href='{t.block(Block)}'>{Block}</a>
-#DelegatorsBalance;en;🔺 Delegator <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> related to <a href='{t.account(Delegate.Address)}'>{Delegate.DisplayName()}</a> increased its balance with <a href='{t.op(OpHash)}'>transaction</a> of {Amount} XTZ ({Amount.TezToUsd(md)} USD)
-#DelegatorsBalance;ru;🔺 Делегатор <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> связанный с <a href='{t.account(Delegate.Address)}'>{Delegate.DisplayName()}</a> увеличил свой баланс <a href='{t.op(OpHash)}'>транзакцией</a> на {Amount} XTZ ({Amount.TezToUsd(md)} USD)
-#CurrentDelegatorBalance;ru;Текущий баланс делегатора: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
-#CurrentDelegatorBalance;en;Current delegator balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToUsd(md)} USD / {ua.Balance.TezToBtc(md)} BTC)
+#DelegatorsBalance;en;🔺 Delegator <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> related to <a href='{t.account(Delegate.Address)}'>{Delegate.DisplayName()}</a> increased its balance with <a href='{t.op(OpHash)}'>transaction</a> of {Amount} XTZ ({Amount.TezToCurrency(md, u)})
+#DelegatorsBalance;ru;🔺 Делегатор <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> связанный с <a href='{t.account(Delegate.Address)}'>{Delegate.DisplayName()}</a> увеличил свой баланс <a href='{t.op(OpHash)}'>транзакцией</a> на {Amount} XTZ ({Amount.TezToCurrency(md, u)})
+#CurrentDelegatorBalance;ru;Текущий баланс делегатора: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToCurrency(md, u)} / {ua.Balance.TezToBtc(md)} BTC)
+#CurrentDelegatorBalance;en;Current delegator balance: <b>{ua.Balance.TezToString()}</b> ({ua.Balance.TezToCurrency(md, u)} / {ua.Balance.TezToBtc(md)} BTC)
 #AwardAvailable;en;🧊 Award {Amount.TezToString()} for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> for {Cycle} cycle on the way to the <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. It will be unfrozen and available for payout after 5 cycles
 #AwardAvailable;ru;🧊 Вознаграждение{Amount.TezToString()} для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> за {Cycle} цикл на пути к делегату <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>. Оно будет разморожено и доступно для выплаты через 5 циклов
 #AwardNotify;ru;{(ua.NotifyAwardAvailable ? "☑️" : "🔲")} Вознаграждения

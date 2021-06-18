@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TezosNotifyBot.Storage;
@@ -9,9 +10,10 @@ using TezosNotifyBot.Storage;
 namespace TezosNotifyBot.Storage.Migrations
 {
     [DbContext(typeof(TezosDataContext))]
-    partial class TezosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20210616223332_AddCurrencyToUser")]
+    partial class AddCurrencyToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -432,9 +434,9 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("create_date");
 
-                    b.Property<int>("Currency")
+                    b.Property<int>("CurrencyCode")
                         .HasColumnType("integer")
-                        .HasColumnName("currency");
+                        .HasColumnName("currency_code");
 
                     b.Property<int>("EditUserAddressId")
                         .HasColumnType("integer")
