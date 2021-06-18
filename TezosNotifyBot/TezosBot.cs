@@ -3353,7 +3353,7 @@ namespace TezosNotifyBot
                             foreach (var u1 in GetFollowers(ua.Address))
                             {
                                 var tags = !u1.HideHashTags ? "\n\n#delegate_message" + ua.HashTag() : "";
-                                SendTextMessage(u1.Id, text + tags, ReplyKeyboards.MainMenu(resMgr, user));
+                                SendTextMessage(u1.Id, text + tags, ReplyKeyboards.MainMenu(resMgr, user), disableNotification: true);
                                 count++;
                             }
                             SendTextMessage(user.Id, resMgr.Get(Res.MessageDeliveredForUsers, new ContextObject { u = user, Amount = count }),
