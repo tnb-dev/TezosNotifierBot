@@ -42,7 +42,7 @@ namespace TezosNotifyBot
         {
             var code = currency.GetDisplayName();
             return (tz * md.CurrencyRate((Currency) currency))
-                .ToString($"#,###,##0.#### {code}", CultureInfo.InvariantCulture).Trim();
+                .ToString($"###,###,###,###,##0.00 {code}", CultureInfo.InvariantCulture).Trim();
         }
         
         public static string TezToCurrency(this decimal tz, Tezos.MarketData md, User user) 
