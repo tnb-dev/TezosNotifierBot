@@ -1,10 +1,11 @@
 #nullable enable
 using System;
+using TezosNotifyBot.Shared;
 using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class UserAddress
+    public class UserAddress : IHasHashTag
     {
         public int Id { get; set; }
         public string Address { get; set; }

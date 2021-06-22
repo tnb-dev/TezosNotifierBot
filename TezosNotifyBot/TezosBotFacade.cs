@@ -7,6 +7,7 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Storage;
 
 namespace TezosNotifyBot
@@ -57,6 +58,7 @@ namespace TezosNotifyBot
 
         public async Task NotifyAdmins(string content)
         {
+            // TODO: Replace with telegram admins
             var nicks = options.Value.Telegram.DevUsers;
             var users = await db.Set<User>().AsNoTracking()
                 .Where(x => nicks.Contains(x.Username))

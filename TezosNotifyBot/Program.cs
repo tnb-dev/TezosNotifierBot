@@ -133,6 +133,7 @@ namespace TezosNotifyBot
                     services.Scan(scan => scan
                         .FromCallingAssembly()
                         .AddClasses(classes => classes.AssignableTo<IUpdateHandler>())
+                        .AddClasses(classes => classes.AssignableTo<ICallbackHandler>())
                         .AsSelf()
                         .WithTransientLifetime()
                     );

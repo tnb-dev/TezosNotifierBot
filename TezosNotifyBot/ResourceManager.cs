@@ -238,6 +238,8 @@ namespace TezosNotifyBot
 		DelegatorsBalanceNotifyToggle,
 		DelegatorsBalanceThresholdButton,
 		Off,
+		AddressInfoTitle,
+		AddressInfoButton,
 		Delete,
 		ManageAddress,
 		TransactionNotify,

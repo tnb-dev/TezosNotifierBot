@@ -92,6 +92,10 @@ Full description & manual: http://tzsnt.fr/
 #GoBack;en;⬅️ Go back
 #Delete;ru;🗑 Удалить
 #Delete;en;🗑 Delete
+#AddressInfoTitle;ru;ℹ️ Больше информации о {(isDelegate ? "делегате" : "делегаторе")} {ua.DisplayName()}:
+#AddressInfoTitle;en;ℹ️ More information about {ua.DisplayName()} {(isDelegate ? "delegate" : "delegator")}:
+#AddressInfoButton;ru;ℹ️ Инфо
+#AddressInfoButton;en;ℹ️ Info
 #ManageAddress;ru;🛠 Настроить
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать

@@ -2093,6 +2093,12 @@ namespace TezosNotifyBot
                         ParseMode.Html, replyMarkup: ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
+                if (commandsManager.HasCallbackHandler(ev))
+                {
+                    await commandsManager.ProcessCallbackHandler(sc, ev);
+                    return;
+                }
+
                 if (callbackData.StartsWith("twdelete "))
                 {
                     var twitterMessageId = int.Parse(callbackData.Substring("twdelete ".Length));
