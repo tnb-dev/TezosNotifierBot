@@ -3945,25 +3945,11 @@ namespace TezosNotifyBot
                 Logger.LogInformation("->" + u.ToString() + ": " + text);
                 if (replaceId == 0)
                 {
-                    Message msg = null;
-                    while (text.Length > 4096)
-                    {
-                        int lastIndexOf = text.Substring(0, 4096).LastIndexOf('\n');
-                        msg = Bot
-                            .SendTextMessageAsync(userId, text, parseMode, true, disableNotification, replyMarkup: keyboard)
-                            .ConfigureAwait(true).GetAwaiter().GetResult();
-                        repo.LogOutMessage((int) userId, msg.MessageId, text);
-                        Thread.Sleep(50);
-                        text = text.Substring(lastIndexOf + 1);
-                    };
-                    if (text != "")
-					{
-                        msg = Bot
+                    Message msg = Bot
                             .SendTextMessageAsync(userId, text, parseMode, true, disableNotification, replyMarkup: keyboard)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                         repo.LogOutMessage((int)userId, msg.MessageId, text);
                         Thread.Sleep(50);
-                    }
                     return msg.MessageId;
                 }
                 else
