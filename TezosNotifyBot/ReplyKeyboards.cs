@@ -221,6 +221,11 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
+                        Text = resMgr.Get(Res.AddressInfoButton, u),
+                        CallbackData = "address-links " + id
+                    },
+                    new InlineKeyboardButton
+                    {
                         Text = resMgr.Get(Res.Delete, u),
                         CallbackData = "deleteaddress " + id
                     },
@@ -290,6 +295,11 @@ namespace TezosNotifyBot
             if (ua == null)
                 buttons.Add(new[]
                 {
+                    new InlineKeyboardButton
+                    {
+                        Text = resMgr.Get(Res.AddressInfoButton, u),
+                        CallbackData = "address-links " + id
+                    },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),

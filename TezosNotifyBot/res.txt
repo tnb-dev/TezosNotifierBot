@@ -92,6 +92,16 @@ Full description & manual: http://tzsnt.fr/
 #GoBack;en;⬅️ Go back
 #Delete;ru;🗑 Удалить
 #Delete;en;🗑 Delete
+#AddressInfoTitle;ru;ℹ️ Больше информации о {(isDelegate ? "делегате" : "делегаторе")} {ua.DisplayName()}:
+#AddressInfoTitle;en;ℹ️ More information about {ua.DisplayName()} {(isDelegate ? "delegate" : "delegator")}:
+#AddressInfoButton;ru;ℹ️ Инфо
+#AddressInfoButton;en;ℹ️ Info
+#AddressLinkTzKt;ru;- в эксплорере <a href='https://tzkt.io/{address}/rewards'>TzKt</a>
+#AddressLinkTzKt;en;- in the <a href='https://tzkt.io/{address}/rewards'>TzKt</a> explorer
+#AddressLinkTezosNode;ru;- в рейтинге <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a>
+#AddressLinkTezosNode;en;- in the <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a> rating
+#AddressLinkBackingBad;ru;- у аудитора <a href='https://baking-bad.org/{address}'>Baking Bad</a>
+#AddressLinkBackingBad;en;- from the auditor <a href='https://baking-bad.org/{address}'>Baking Bad</a>
 #ManageAddress;ru;🛠 Настроить
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать
