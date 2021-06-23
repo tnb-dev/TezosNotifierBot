@@ -36,8 +36,8 @@ namespace TezosNotifyBot.Commands.Addresses
             }
 
             var isDelegate = _repo.IsDelegate(address.Address);
-            
-            var title = _lang.Get(Res.AddressInfoTitle, user.Language, new { ua = address, isDelegate });
+
+            var title = _lang.Get(Res.AddressInfoTitle, user.Language, new {ua = address, isDelegate});
 
             var message = new MessageBuilder()
                 .AddLine(title)
@@ -46,8 +46,8 @@ namespace TezosNotifyBot.Commands.Addresses
                 .WithHashTag("rating")
                 .WithHashTag(address);
 
-            var linkData = new { address = address.Address };
-            
+            var linkData = new {address = address.Address};
+
             if (isDelegate)
             {
                 message.AddLine(_lang.Get(Res.AddressLinkTezosNode, user.Language, linkData));
@@ -58,7 +58,8 @@ namespace TezosNotifyBot.Commands.Addresses
                 message.AddLine(_lang.Get(Res.AddressLinkBackingBad, user.Language, linkData));
             }
 
-            await Bot.SendText(query.From.Id, message.Build(!user.HideHashTags), ParseMode.Html);
+            await Bot.SendText(query.From.Id, message.Build(!user.HideHashTags), ParseMode.Html,
+                disableWebPagePreview: true);
         }
     }
 }
