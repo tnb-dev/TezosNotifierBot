@@ -101,7 +101,7 @@ Full description & manual: http://tzsnt.fr/
 #AddressLinkTezosNode;ru;- в рейтинге <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a>
 #AddressLinkTezosNode;en;- in the <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a> rating
 #AddressLinkBackingBad;ru;- у аудитора <a href='https://baking-bad.org/{address}'>Baking Bad</a>
-#AddressLinkBackingBad;en;- from the auditor <a href='https://baking-bad.org/{address}'>Baking Bad</a>
+#AddressLinkBackingBad;en;- in the <a href='https://baking-bad.org/{address}'>Baking Bad</a> auditor
 #ManageAddress;ru;🛠 Настроить
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать
