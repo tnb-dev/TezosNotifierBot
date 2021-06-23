@@ -37,19 +37,26 @@ namespace TezosNotifyBot.Commands.Addresses
 
             var isDelegate = _repo.IsDelegate(address.Address);
             
-            var text = _lang.Get(Res.AddressInfoTitle, user.Language, new
-            {
-                ua = address,
-                isDelegate = isDelegate
-            });
+            var title = _lang.Get(Res.AddressInfoTitle, user.Language, new { ua = address, isDelegate });
 
             var message = new MessageBuilder()
-                .AddLine(text)
+                .AddLine(title)
+                .AddEmptyLine()
                 .WithHashTag("more_info")
                 .WithHashTag("rating")
                 .WithHashTag(address);
+
+            var linkData = new { address = address.Address };
             
-            // TODO: Add new lines based on `isDelegate` variable 
+            if (isDelegate)
+            {
+                message.AddLine(_lang.Get(Res.AddressLinkTezosNode, user.Language, linkData));
+                message.AddLine(_lang.Get(Res.AddressLinkTzKt, user.Language, linkData));
+            }
+            else
+            {
+                message.AddLine(_lang.Get(Res.AddressLinkBackingBad, user.Language, linkData));
+            }
 
             await Bot.SendText(query.From.Id, message.Build(!user.HideHashTags), ParseMode.Html);
         }
