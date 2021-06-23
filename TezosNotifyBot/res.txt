@@ -97,7 +97,7 @@ Full description & manual: http://tzsnt.fr/
 #AddressInfoButton;ru;ℹ️ Инфо
 #AddressInfoButton;en;ℹ️ Info
 #AddressLinkTzKt;ru;- в эксплорере <a href='https://tzkt.io/{address}/rewards'>TzKt</a>
-#AddressLinkTzKt;en;- in the <a href='https://tzkt.io/{address}/rewards'>TzTk</a> explorer
+#AddressLinkTzKt;en;- in the <a href='https://tzkt.io/{address}/rewards'>TzKt</a> explorer
 #AddressLinkTezosNode;ru;- в рейтинге <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a>
 #AddressLinkTezosNode;en;- in the <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a> rating
 #AddressLinkBackingBad;ru;- у аудитора <a href='https://baking-bad.org/{address}'>Baking Bad</a>
