@@ -233,6 +233,8 @@ Or use the search:
 #FreeSpace;en;Free delegation space: <b>{ua.FreeSpace.TezToString()}{(ua.FreeSpace <= 0 ? " (overdelegated❗️)" : "")}</b>
 #Delegate;ru;Делегат
 #Delegate;en;Delegate
+#DelegateStatusToggle;ru;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Уведомления о делегате
+#DelegateStatusToggle;en;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Delegate status
 #AveragePerformance;ru;Ср. эффективность за 10 циклов: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #AveragePerformance;en;Avg. 10-cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами

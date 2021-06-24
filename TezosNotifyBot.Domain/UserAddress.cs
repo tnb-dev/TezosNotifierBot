@@ -5,7 +5,7 @@ using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class UserAddress : IHasHashTag
+    public class UserAddress : IHasId<int>, IHasHashTag
     {
         public int Id { get; set; }
         public string Address { get; set; }
@@ -40,6 +40,7 @@ namespace TezosNotifyBot.Domain
         public long ChatId { get; set; }
         public bool NotifyAwardAvailable { get; set; }
         public bool NotifyRightsAssigned { get; set; }
+        public bool NotifyDelegateStatus { get; set; }
         public bool IsOwner { get; set; }
         public int LastMessageLevel { get; set; }        
 

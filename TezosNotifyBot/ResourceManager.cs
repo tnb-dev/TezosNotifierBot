@@ -211,6 +211,7 @@ namespace TezosNotifyBot
 		AddressAdded,
 		StakingInfo,
 		Delegate,
+		DelegateStatusToggle,
 		IncorrectTezosAddress,
 		FreeSpace,
 		AveragePerformance,
