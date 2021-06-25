@@ -916,7 +916,7 @@ namespace TezosNotifyBot
 
             var fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
             ProcessTransactions(block.Transactions, fromToAmountHash, allUsers);
-            foreach (var t in fromToAmountHash.Where(o => o.amount >= 10000))
+            foreach (var t in fromToAmountHash.Where(o => o.amount >= 10000 && o.token == null))
                 repo.AddWhaleTransaction(t.from, t.to, header.level, header.timestamp, t.amount, t.hash);
 
             ProcessDelegations(block.Delegations);
