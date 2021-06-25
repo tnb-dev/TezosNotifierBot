@@ -362,6 +362,32 @@ namespace TezosNotifyBot.Model
             }
         }
 
+        public void AddWhaleTransaction(string from, string to, int level, DateTime timeStamp, decimal amount, string op)
+		{
+            lock(_dbLock)
+			{
+                _db.Add(new WhaleTransaction
+                {
+                    Amount = amount,
+                    FromAddress = from,
+                    Level = level,
+                    OpHash = op,
+                    Timestamp = timeStamp,
+                    ToAddress = to
+                });
+                _db.SaveChanges();
+			}
+		}
+
+        public void CleanWhaleTransactions(DateTime minDate) 
+        {
+            lock (_dbLock)
+			{
+                _db.RemoveRange(_db.WhaleTransactions.Where(o => o.Timestamp < minDate));
+                _db.SaveChanges();
+			}
+        }
+
         public UserAddress RemoveAddr(int id, string v)
         {
             lock (_dbLock)

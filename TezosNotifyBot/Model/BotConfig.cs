@@ -26,7 +26,9 @@ namespace NornPool.Model
         public string ProxyPassword { get; set; }
 		public string UploadPath { get; set; }
 		public int CarthageStart { get; set; }
-		
+		public int WhaleSeriesLength { get; set; }
+
+
 		public Node[] Nodes { get; set; }
 
 		

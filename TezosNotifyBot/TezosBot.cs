@@ -458,7 +458,6 @@ namespace TezosNotifyBot
                 }
             }
 
-            var fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
             var allUsers = repo.GetUsers();
             foreach (var op in operations)
             {
@@ -910,10 +909,16 @@ namespace TezosNotifyBot
                                 result += "\n\n#delegation " + sourceAddr.HashTag() + ua.HashTag();
                             SendTextMessageUA(ua, result);
                         }
-                    }*/
+                    }
+*/
                 }
             }
+
+            var fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
             ProcessTransactions(block.Transactions, fromToAmountHash, allUsers);
+            foreach (var t in fromToAmountHash.Where(o => o.amount >= 10000))
+                repo.AddWhaleTransaction(t.from, t.to, header.level, header.timestamp, t.amount, t.hash);
+
             ProcessDelegations(block.Delegations);
             ProcessOriginations(block.Originations);
 
@@ -1262,7 +1267,11 @@ namespace TezosNotifyBot
                     repo.UpdateUserAddress(ua);
                 }
             }
+			
+            {
 
+			}
+            repo.CleanWhaleTransactions(header.timestamp.AddDays(-Config.WhaleSeriesLength));
             if (!lastBlockChanged)
                 repo.SetLastBlockLevel(header.level, header.priority, header.hash);
             Logger.LogInformation("Block " + header.level.ToString() + " operations processed");

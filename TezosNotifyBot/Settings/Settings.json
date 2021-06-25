@@ -29,6 +29,7 @@
     "CarthageStart": 38913,
     "TzKtUrl": "https://api.tzkt.io/",
     "BetterCallDevUrl": "https://api.better-call.dev/",
+    "WhaleSeriesLength": 3,
     
     "Nodes": [
         {
