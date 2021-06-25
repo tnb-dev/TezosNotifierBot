@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TezosNotifyBot.Storage;
@@ -9,9 +10,10 @@ using TezosNotifyBot.Storage;
 namespace TezosNotifyBot.Storage.Migrations
 {
     [DbContext(typeof(TezosDataContext))]
-    partial class TezosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20210624190337_AddDelegateStatusToggle")]
+    partial class AddDelegateStatusToggle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -648,44 +650,6 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasDatabaseName("ix_user_address_delegation_user_address_id");
 
                     b.ToTable("user_address_delegation");
-                });
-
-            modelBuilder.Entity("TezosNotifyBot.Domain.WhaleTransaction", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id")
-                        .UseIdentityByDefaultColumn();
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("numeric")
-                        .HasColumnName("amount");
-
-                    b.Property<string>("FromAddress")
-                        .HasColumnType("text")
-                        .HasColumnName("from_address");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<string>("OpHash")
-                        .HasColumnType("text")
-                        .HasColumnName("op_hash");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("timestamp");
-
-                    b.Property<string>("ToAddress")
-                        .HasColumnType("text")
-                        .HasColumnName("to_address");
-
-                    b.HasKey("Id")
-                        .HasName("pk_whale_transaction");
-
-                    b.ToTable("whale_transaction");
                 });
 
             modelBuilder.Entity("TezosNotifyBot.Domain.BalanceUpdate", b =>

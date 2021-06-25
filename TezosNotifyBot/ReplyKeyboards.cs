@@ -270,6 +270,13 @@ namespace TezosNotifyBot
                         CallbackData = "setname " + id
                     },
                     InlineKeyboardButton.WithCallbackData(
+                        text: resMgr.Get(Res.DelegateStatusToggle, ua),
+                        callbackData: $"toggle-delegate-status {id}"
+                    )
+                });
+                buttons.Add(new []
+                {
+                    InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.Delete, u),
                         callbackData: $"deleteaddress {id}"
                     )

@@ -2534,6 +2534,23 @@ namespace TezosNotifyBot
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
+                if (callbackData.StartsWith("toggle-delegate-status"))
+                {
+                    var address = repo.GetUserAddresses(userId)
+                        .FirstOrDefault(x => x.Id == callbackArgs.GetInt(0));
+                    
+                    if (address != null)
+                    {
+                        address.NotifyDelegateStatus = !address.NotifyDelegateStatus;
+                        repo.UpdateUserAddress(address);
+                        ViewAddress(user.Id, address, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                    {
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                    }
+                }
+
                 if (callbackData.StartsWith("misseson"))
                 {
                     var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>

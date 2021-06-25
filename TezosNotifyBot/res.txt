@@ -101,7 +101,7 @@ Full description & manual: http://tzsnt.fr/
 #AddressLinkTezosNode;ru;- в рейтинге <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a>
 #AddressLinkTezosNode;en;- in the <a href='https://www.tezos-nodes.com/baker/{address}'>Tezos Nodes</a> rating
 #AddressLinkBackingBad;ru;- у аудитора <a href='https://baking-bad.org/{address}'>Baking Bad</a>
-#AddressLinkBackingBad;en;- from the auditor <a href='https://baking-bad.org/{address}'>Baking Bad</a>
+#AddressLinkBackingBad;en;- in the <a href='https://baking-bad.org/{address}'>Baking Bad</a> auditor
 #ManageAddress;ru;🛠 Настроить
 #ManageAddress;en;🛠 Tune
 #RenameAddress;ru;📝 Переименовать
@@ -233,6 +233,8 @@ Or use the search:
 #FreeSpace;en;Free delegation space: <b>{ua.FreeSpace.TezToString()}{(ua.FreeSpace <= 0 ? " (overdelegated❗️)" : "")}</b>
 #Delegate;ru;Делегат
 #Delegate;en;Delegate
+#DelegateStatusToggle;ru;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Уведомления о делегате
+#DelegateStatusToggle;en;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Delegate status
 #AveragePerformance;ru;Ср. эффективность за 10 циклов: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #AveragePerformance;en;Avg. 10-cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами

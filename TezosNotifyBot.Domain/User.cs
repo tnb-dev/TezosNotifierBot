@@ -1,10 +1,11 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using TezosNotifyBot.Shared;
 using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class User
+    public class User: IHasId<int>
     {
         public int Id { get; set; }
         public string Firstname { get; set; }
