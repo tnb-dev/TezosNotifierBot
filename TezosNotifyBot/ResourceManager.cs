@@ -294,6 +294,7 @@ namespace TezosNotifyBot
 		IsAddressOwner,
 		OwnerLimitReached,
 		UserCurrency,
-		DelegateMessage
+		DelegateMessage,
+		WhaleTransactions
 	}
 }

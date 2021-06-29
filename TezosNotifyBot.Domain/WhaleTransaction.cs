@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace TezosNotifyBot.Domain
 {
@@ -11,5 +12,6 @@ namespace TezosNotifyBot.Domain
 		public decimal Amount { get; set; }
 		public int Level { get; set; }
 		public DateTime Timestamp { get; set; }
+		public IList<WhaleTransactionNotify> Notifications { get; } = new List<WhaleTransactionNotify>();
 	}
 }

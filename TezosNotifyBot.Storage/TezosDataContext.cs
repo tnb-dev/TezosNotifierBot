@@ -82,6 +82,10 @@ namespace TezosNotifyBot.Storage
             modelBuilder.Entity<ProposalVote>();
             modelBuilder.Entity<Token>();
             modelBuilder.Entity<WhaleTransaction>();
+            modelBuilder.Entity<WhaleTransactionNotify>()
+                .HasOne(e => e.WhaleTransaction)
+                .WithMany(o => o.Notifications)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<AddressConfig>()
                 .HasData(
@@ -93,8 +97,7 @@ namespace TezosNotifyBot.Storage
                 {
                     builder.HasKey(x => x.Tag);
                     builder.Property(x => x.Tag).ValueGeneratedNever();
-                })
-                ;
+                });
             
             // MUST BE BELOW ANY OTHER CONFIGURATIONS
             modelBuilder.ApplyPostgresConventions();

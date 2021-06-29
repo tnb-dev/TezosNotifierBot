@@ -93,6 +93,7 @@ namespace TezosNotifyBot
         private readonly TezosBotFacade botClient;
         string twitterAccountName;
         bool twitterNetworkIssueNotified = false;
+        bool paused = false;
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
             TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient,
@@ -185,6 +186,11 @@ namespace TezosNotifyBot
                 DateTime lastWarn = DateTime.Now;
                 do
                 {
+                    if (paused)
+					{
+                        Thread.Sleep(5000);
+                        continue;
+					}
                     try
                     {
                         if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
@@ -1269,7 +1275,45 @@ namespace TezosNotifyBot
             }
 			
             {
+                var wtlist = repo.GetWhaleTransactions();
 
+                foreach (var address in wtlist.GroupBy(o => new { o.FromAddress, o.ToAddress }))
+                {
+                   var amount = address.Sum(o => o.Amount);
+                   foreach (var u in allUsers.Where(o =>
+                        !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                    {
+                        var ua_from = repo.GetUserTezosAddress(u.Id, address.Key.FromAddress);
+                        var ua_to = repo.GetUserTezosAddress(u.Id, address.Key.ToAddress);
+                        var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id));
+                        var userAmount = listFiltered.Sum(o => o.Amount);
+
+                        if (listFiltered.Any(o => o.Amount > u.WhaleThreshold) || listFiltered.Count() == 1 ||
+                            userAmount < u.WhaleThreshold)
+                            continue;
+
+                        string result = resMgr.Get(Res.WhaleTransactions,
+                            new ContextObject
+                            {
+                                u = u,
+                                Amount = userAmount,
+                                md = md,
+                                ua_from = ua_from,
+                                ua_to = ua_to
+                            });
+                        foreach (var op in listFiltered)
+                        {
+                            result += $"\n▫️<a href='{Explorer.FromId(u.Explorer).op(op.OpHash)}'>{op.Amount.TezToString()}</a>";
+                            repo.AddWhaleTransactionNotify(op.Id, u.Id);
+                        }
+                        if (!u.HideHashTags)
+                        {
+                            result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+                        }
+
+                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                    }
+                }
 			}
             repo.CleanWhaleTransactions(header.timestamp.AddDays(-Config.WhaleSeriesLength));
             if (!lastBlockChanged)
@@ -2936,6 +2980,16 @@ namespace TezosNotifyBot
                         var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
                         NotifyDev(str, user.Id, ParseMode.Default, true);
                     }
+                    else if (message.Text == "/stop")
+                    {
+                        paused = true;
+                        NotifyDev("Blockchain processing paused", user.Id, ParseMode.Default);
+                    }
+                    else if (message.Text == "/resume")
+                    {
+                        paused = false;
+                        NotifyDev("Blockchain processing resumed", user.Id, ParseMode.Default);
+                    }
                     else if (message.Text.StartsWith("/forward") && user.IsAdmin(Config.Telegram))
                     {
                         var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
@@ -2965,7 +3019,8 @@ namespace TezosNotifyBot
 /set_ru - switch tu russian
 /set_en - switch to english
 /forward messageid - forward message to user and caller
-/twclean - clean published twitter messages", ReplyKeyboards.MainMenu(resMgr, user));
+/twclean - clean published twitter messages
+/stop - stop processing blockchain", ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/sql") && Config.DevUserNames.Contains(message.From.Username))
                     {

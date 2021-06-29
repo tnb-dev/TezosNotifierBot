@@ -378,6 +378,18 @@ namespace TezosNotifyBot.Model
                 _db.SaveChanges();
 			}
 		}
+        public void AddWhaleTransactionNotify(int whaleTransactionId, int userId)
+        {
+            lock (_dbLock)
+            {
+                _db.Add(new WhaleTransactionNotify
+                {
+                    WhaleTransactionId = whaleTransactionId,
+                    UserId = userId
+                });
+                _db.SaveChanges();
+            }
+        }
 
         public void CleanWhaleTransactions(DateTime minDate) 
         {
@@ -520,6 +532,14 @@ namespace TezosNotifyBot.Model
         {
             return RunIsolatedDb(db => db.Delegates.OrderBy(o => o.Name).ToList());
         }
+
+        public List<WhaleTransaction> GetWhaleTransactions()
+		{
+            return RunIsolatedDb(db => 
+            {
+                return db.WhaleTransactions.GroupBy(o => new { o.FromAddress, o.ToAddress}).Where(o => o.Sum(t => t.Amount) > 250000).SelectMany(o => o).Include(o => o.Notifications).ToList();
+            });
+		}
 
         public void UpdateDelegateRewards1(string addr, int cycle, long addPlan, long addAcc)
         {

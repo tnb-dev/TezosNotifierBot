@@ -444,3 +444,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #OwnerLimitReached;ru;🧘‍♂️ Извините, вы достигли лимита исходящих сообщений в этом цикле. Пожалуйста, попробуйте в следующем цикле.
 #DelegateMessage;en;💌 Message from your delegator <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
 #DelegateMessage;ru;💌 Сообщение от вашего делегатора <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:
+#WhaleTransactions;ru;🐋 Крупный перевод <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> от <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> к <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> транзакциями:
+#WhaleTransactions;en;🐋 Whale transfer of <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> with transactions:
