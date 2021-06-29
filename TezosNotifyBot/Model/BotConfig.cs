@@ -31,6 +31,8 @@ namespace NornPool.Model
 
 		public Node[] Nodes { get; set; }
 
+		public TimeSpan DelegateInactiveTime { get; set; }
+		
 		
 		// TODO: Refactor access to this properties
 		[Obsolete]

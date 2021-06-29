@@ -29,6 +29,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Domain;
+using TezosNotifyBot.Events;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Shared.Extensions;
@@ -1800,6 +1801,10 @@ namespace TezosNotifyBot
                     }
                 }
 
+                var dispatcher = GetService<IEventDispatcher>();
+
+                dispatcher.Dispatch(new CycleCompletedEvent());
+                
                 var cyclePast = tzKtClient.GetCycle(blockMetadata.level.cycle - 1);
                 var cycleNext = tzKtClient.GetCycle(blockMetadata.level.cycle);
                 foreach (var usr in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => new {o.UserId, o.ChatId}))
@@ -1827,6 +1832,8 @@ namespace TezosNotifyBot
                     SendTextMessageUA(usr.First(), perf);
                 }
 
+                // TODO: TNB-22
+                
                 NotifyAssignedRights(tzKtClient, uad, blockMetadata.level.cycle);
 
                 LoadAddressList();
@@ -3798,15 +3805,13 @@ namespace TezosNotifyBot
             if (msgid != 0)
             {
                 var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
-                var lastSeenOp = tzkt.GetAccountOperations(ua.Address, "limit=1&sort.desc=timestamp").FirstOrDefault();
-                var lastActiveOp = tzkt
-                    .GetAccountOperations(ua.Address, $"limit=1&sort.desc=timestamp&sender.eq={ua.Address}")
-                    .FirstOrDefault();
-                if (lastSeenOp != null)
-                    result += Format(Res.LastSeen, lastSeenOp.Timestamp);
+                var lastSeen = tzkt.GetAccountLastSeen(ua.Address);
+                var lastActive = tzkt.GetAccountLastActive(ua.Address);
+                if (lastSeen != null)
+                    result += Format(Res.LastSeen, (DateTime) lastSeen);
 
-                if (lastActiveOp != null)
-                    result += Format(Res.LastActive, lastActiveOp.Timestamp);
+                if (lastActive != null)
+                    result += Format(Res.LastActive, (DateTime) lastActive);
 
                 string Format(Res key, DateTime timestamp)
                 {
@@ -4185,6 +4190,11 @@ namespace TezosNotifyBot
             {
                 await Bot.SendTextMessageAsync(message.Chat.Id, "Данные не загружены: " + e.Message);
             }
+        }
+
+        private T GetService<T>()
+        {
+            return _serviceProvider.GetRequiredService<T>();
         }
     }
 }

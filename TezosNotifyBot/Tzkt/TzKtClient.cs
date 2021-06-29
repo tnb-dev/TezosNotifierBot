@@ -1,12 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Collections.Generic;
-using System.Linq.Expressions;
+using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -47,6 +45,18 @@ namespace TezosNotifyBot.Tzkt
 			return JsonConvert.DeserializeObject<List<OperationPenalty>>(str);
 		}
 
+		public DateTime? GetAccountLastActive(string address)
+		{
+			var operation = GetAccountOperations(address, $"limit=1&sort.desc=timestamp&sender.eq={address}").FirstOrDefault();
+			return operation?.Timestamp;
+		}
+
+		public DateTime? GetAccountLastSeen(string address)
+		{
+			var operation = GetAccountOperations(address, "limit=1&sort.desc=timestamp").FirstOrDefault();
+			return operation?.Timestamp;
+		}
+		
 		Rewards ITzKtClient.GetDelegatorRewards(string address, int cycle)
 		{
 			var str = Download($"v1/rewards/delegators/{address}?cycle={cycle}");
@@ -99,6 +109,21 @@ namespace TezosNotifyBot.Tzkt
 				throw;
 			}
 		}
+		
+		public T Download<T>(string path)
+		{
+			var result = Download(path);
+			try
+			{
+				return JsonConvert.DeserializeObject<T>(result);
+			}
+			catch (Exception e)
+			{
+				var type = typeof(T);
+				_logger.LogError(e, "Failed to deserialize result of request {Path} to {Type}", path, type);
+				return default;
+			}
+		}
 
 		public IEnumerable<Operation> GetAccountOperations(string address, string filter = "")
 		{
@@ -106,5 +131,6 @@ namespace TezosNotifyBot.Tzkt
 
 			return JsonConvert.DeserializeObject<Operation[]>(response, _jsonSerializerSettings);
 		}
+
 	}
 }
