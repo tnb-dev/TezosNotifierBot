@@ -537,7 +537,7 @@ namespace TezosNotifyBot.Model
 		{
             return RunIsolatedDb(db => 
             {
-                return db.WhaleTransactions.GroupBy(o => new { o.FromAddress, o.ToAddress}).Where(o => o.Sum(t => t.Amount) > 250000).SelectMany(o => o).Include(o => o.Notifications).ToList();
+                return db.WhaleTransactions.Include(o => o.Notifications).ToList();
             });
 		}
 
