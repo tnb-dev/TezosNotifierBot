@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Humanizer;
+using Humanizer.Localisation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NornPool.Model;
@@ -17,27 +18,28 @@ using Delegate = TezosNotifyBot.Domain.Delegate;
 
 namespace TezosNotifyBot.Events.Handlers
 {
-    public class NotifyDelegateInactive: IEventHandler<CycleCompletedEvent>
+    public class NotifyDelegateInactive : IEventHandler<CycleCompletedEvent>
     {
         private readonly TezosDataContext _db;
         private readonly ITzKtClient _tzkt;
         private readonly IOptions<BotConfig> _config;
         private readonly ResourceManager _lang;
 
-        public NotifyDelegateInactive(ITzKtClient tzkt, IOptions<BotConfig> config, TezosDataContext db, ResourceManager lang)
+        public NotifyDelegateInactive(ITzKtClient tzkt, IOptions<BotConfig> config, TezosDataContext db,
+            ResourceManager lang)
         {
             _db = db;
             _tzkt = tzkt;
             _lang = lang;
             _config = config;
         }
-        
+
         public async Task Process(CycleCompletedEvent subject)
         {
             var delegateAddressList = await _db.Set<Delegate>().Select(x => x.Address).ToArrayAsync();
-            
+
             var delegates = new Dictionary<string, DateTime?>();
-            
+
             var delegators = await _db.Set<UserAddress>()
                 .Include(x => x.User)
                 .Where(x => !x.IsDeleted)
@@ -46,7 +48,7 @@ namespace TezosNotifyBot.Events.Handlers
 
 
             var inactiveBound = _config.Value.DelegateInactiveTime;
-            
+
             foreach (var delegator in delegators)
             {
                 var account = _tzkt.GetAccount(delegator.Address);
@@ -63,7 +65,7 @@ namespace TezosNotifyBot.Events.Handlers
                 if (delegateLastActive == null) continue;
 
                 // Skip if last active recently than `inactiveBound` time span
-                if (DateTime.Now.Subtract((DateTime) delegateLastActive) < inactiveBound) 
+                if (DateTime.Now.Subtract((DateTime) delegateLastActive) < inactiveBound)
                     continue;
 
                 // Bad hack
@@ -72,18 +74,19 @@ namespace TezosNotifyBot.Events.Handlers
                     Name = delegateName,
                     Address = delegateAddress
                 };
-                
+
                 var user = delegator.User;
                 var text = _lang.Get(Res.DelegateInactive, user.Language, new
                 {
                     t = Explorer.FromId(user.Explorer), // TODO: Fix it
                     delegateName = @delegate.DisplayName(),
                     delegateAddress,
-                    inactiveTime = inactiveBound.Humanize(culture: new CultureInfo(user.Language), toWords: false),
+                    inactiveTime = inactiveBound.Humanize(culture: new CultureInfo(user.Language), toWords: false,
+                        maxUnit: TimeUnit.Day),
                     delegatorName = delegator.DisplayName(),
                     delegatorAddress = delegator.Address
                 });
-                
+
                 var message = new MessageBuilder()
                     .AddLine(text)
                     .WithHashTag("delegate_inactive")
@@ -93,6 +96,5 @@ namespace TezosNotifyBot.Events.Handlers
                 await _db.SaveChangesAsync();
             }
         }
-
     }
 }
