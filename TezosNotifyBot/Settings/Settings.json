@@ -31,7 +31,7 @@
     "BetterCallDevUrl": "https://api.better-call.dev/",
     "WhaleSeriesLength": 3,
     
-    "DelegateInactiveTime": "0.10:00:00",
+    "DelegateInactiveTime": "30.00:00:00",
     
     "Nodes": [
         {
