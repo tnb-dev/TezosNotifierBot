@@ -296,6 +296,8 @@ namespace TezosNotifyBot
 		UserCurrency,
 		DelegateMessage,
 		WhaleTransactions,
+		DelegateInactive,
+		NotifyDelegateInactive
 		WhaleOutflow,
 		WhaleOutflowItem
 	}

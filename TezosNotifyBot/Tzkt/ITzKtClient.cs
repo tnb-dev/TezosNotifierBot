@@ -10,12 +10,15 @@ namespace TezosNotifyBot.Tzkt
 		Cycle GetCycle(int cycleIndex);
 		List<OperationPenalty> GetRevelationPenalties(int level);
 		IEnumerable<Operation> GetAccountOperations(string address, string filter = "");
+		DateTime? GetAccountLastSeen(string address);
+		DateTime? GetAccountLastActive(string address);
 		Rewards GetDelegatorRewards(string address, int cycle);
 		List<Right> GetRights(int level);
 		List<Right> GetRights(string baker, int cycle);
 		List<Endorsement> GetEndorsements(int level);
 		Block GetBlock(int level);
 		BigmapItem GetBigmapItem(string contract, string address);
+		T Download<T>(string path);
 		decimal GetBalance(string address, int level);
 	}
 }

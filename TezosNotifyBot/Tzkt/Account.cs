@@ -1,4 +1,5 @@
 ﻿using System;
+using Newtonsoft.Json;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -16,6 +17,8 @@ namespace TezosNotifyBot.Tzkt
 		public ulong frozenFees { get; set; }
 		public int counter { get; set; }
 		public int activationLevel { get; set; }
+		[JsonProperty("delegate")]
+		public Delegate Delegate { get; set; }
 		public DateTime activationTime { get; set; }
 		public object stakingBalance { get; set; }
 		public int numContracts { get; set; }
@@ -40,5 +43,15 @@ namespace TezosNotifyBot.Tzkt
 		public DateTime lastActivityTime { get; set; }
 		public int? deactivationLevel { get; set; }
 		public DateTime? deactivationTime { get; set; }
+	}
+
+	public class Delegate
+	{
+		[JsonProperty("alias")]
+		public string Alias { get; set; }
+		[JsonProperty("address")]
+		public string Address { get; set; }
+		[JsonProperty("active")]
+		public bool Active { get; set; }
 	}
 }

@@ -126,9 +126,9 @@ namespace TezosNotifyBot
                     services.AddSingleton<TwitterClient>();
 
                     services.AddHostedService<Service>();
-                    services.AddHostedService<ReleasesWorker>();
+                    // services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
-                    services.AddHostedService<TokensMonitorWorker>();
+                    // services.AddHostedService<TokensMonitorWorker>();
 
                     services.Scan(scan => scan
                         .FromCallingAssembly()
@@ -143,6 +143,18 @@ namespace TezosNotifyBot
                         .As<CommandsProfile>()
                         .WithSingletonLifetime()
                     );
+
+                    services.Scan(scan => scan
+                        .FromCallingAssembly()
+                        .AddClasses(classes => classes
+                            .AssignableToAny(
+                                typeof(IEventHandler<>),
+                                typeof(IEventDispatcher)
+                            )
+                        )
+                        .AsImplementedInterfaces()
+                    );
+
                     services.AddSingleton<CommandsManager>();
                 });
 
