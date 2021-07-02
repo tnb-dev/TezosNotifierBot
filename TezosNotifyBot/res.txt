@@ -448,3 +448,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #WhaleTransactions;en;🐋 Whale transfer of <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a> with transactions:
 #DelegateInactive;ru;🌚 Делегат <a href='{t.account(delegateAddress)}'>{delegateName}</a>, связанный с <a href='{t.account(delegatorAddress)}'>{delegatorName}</a> неактивен уже {inactiveTime}. Может быть тебе пора его проверить?
 #DelegateInactive;en;🌚 Delegate <a href='{t.account(delegateAddress)}'>{delegateName}</a> related to <a href='{t.account(delegatorAddress)}'>{delegatorName}</a> is inactive for {inactiveTime}. Maybe it's time for you to check it out?
+#NotifyDelegateInactive;ru;🌚 Уведомления о делегате: {(ua.NotifyRightsAssigned ? "🔔 вкл" : "🔕 выкл")}
+#NotifyDelegateInactive;en;🌚 Delegate status: {(ua.NotifyRightsAssigned ? "🔔 on" : "🔕 off")}

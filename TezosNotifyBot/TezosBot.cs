@@ -3848,6 +3848,8 @@ namespace TezosNotifyBot
                     result += "🤑";
                 if (ua.NotifyAwardAvailable && !isDelegate)
                     result += "🧊";
+                if (ua.NotifyDelegateStatus && !isDelegate)
+                    result += "🌚";
             }
             else
             {
@@ -3858,6 +3860,8 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.PayoutNotifyStatus, ua) + "\n";
                 if (!isDelegate)
                     result += resMgr.Get(Res.AwardAvailableNotifyStatus, ua) + "\n";
+                if (!isDelegate)
+                    result += resMgr.Get(Res.NotifyDelegateInactive, ua) + "\n";
             }
 
             if (isDelegate)

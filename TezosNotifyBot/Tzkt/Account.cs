@@ -17,7 +17,7 @@ namespace TezosNotifyBot.Tzkt
 		public ulong frozenFees { get; set; }
 		public int counter { get; set; }
 		public int activationLevel { get; set; }
-		[JsonProperty("delegate", Required = Required.AllowNull)]
+		[JsonProperty("delegate")]
 		public Delegate Delegate { get; set; }
 		public DateTime activationTime { get; set; }
 		public object stakingBalance { get; set; }
