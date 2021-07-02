@@ -1278,11 +1278,11 @@ namespace TezosNotifyBot
             {
                 var wtlist = repo.GetWhaleTransactions();
 
-                foreach (var address in wtlist.GroupBy(o => o.FromAddress))
+                foreach (var address in wtlist.GroupBy(o => o.FromAddress).Where(o => o.Sum(o1 => o1.Amount) >= 250000))
                 {
                     var minLevel = address.Min(a => a.Level);
                     var timeStamp = address.Min(a => a.Timestamp);
-                    var from_start = tzKt.GetBalance(address.Key, minLevel);
+                    var from_start = tzKt.GetBalance(address.Key, minLevel - 1);
                     var from_end = tzKt.GetBalance(address.Key, header.level);
                     var amount = (from_start - from_end);
                     foreach (var u in allUsers.Where(o =>
