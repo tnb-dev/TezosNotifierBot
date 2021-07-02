@@ -1280,20 +1280,18 @@ namespace TezosNotifyBot
 
                 foreach (var address in wtlist.GroupBy(o => o.FromAddress))
                 {
-                   var amount = address.Sum(o => o.Amount);
-                   foreach (var u in allUsers.Where(o =>
-                        !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                    var minLevel = address.Min(a => a.Level);
+                    var timeStamp = address.Min(a => a.Timestamp);
+                    var from_start = tzKt.GetBalance(address.Key, minLevel);
+                    var from_end = tzKt.GetBalance(address.Key, header.level);
+                    var amount = (from_start - from_end);
+                    foreach (var u in allUsers.Where(o =>
+                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
                     {
-                        var minLevel = address.Min(a => a.Level);
-                        var timeStamp = address.Min(a => a.Timestamp);
-                        var from_start = tzKt.GetBalance(address.Key, minLevel);
-                        var from_end = tzKt.GetBalance(address.Key, header.level);
-
                         var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
                         var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id));
-                        
-                        if (listFiltered.Count() <= 1 || (from_start - from_end) < u.WhaleThreshold)
-                            continue;
+
+                        if (listFiltered.Count() <= 1) continue;
 
                         string result = resMgr.Get(Res.WhaleOutflow,
                             new ContextObject
