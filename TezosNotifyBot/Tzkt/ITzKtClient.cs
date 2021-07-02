@@ -16,5 +16,6 @@ namespace TezosNotifyBot.Tzkt
 		List<Endorsement> GetEndorsements(int level);
 		Block GetBlock(int level);
 		BigmapItem GetBigmapItem(string contract, string address);
+		decimal GetBalance(string address, int level);
 	}
 }

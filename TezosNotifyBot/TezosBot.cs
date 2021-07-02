@@ -1277,38 +1277,52 @@ namespace TezosNotifyBot
             {
                 var wtlist = repo.GetWhaleTransactions();
 
-                foreach (var address in wtlist.GroupBy(o => new { o.FromAddress, o.ToAddress }))
+                foreach (var address in wtlist.GroupBy(o => o.FromAddress))
                 {
                    var amount = address.Sum(o => o.Amount);
                    foreach (var u in allUsers.Where(o =>
                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
                     {
-                        var ua_from = repo.GetUserTezosAddress(u.Id, address.Key.FromAddress);
-                        var ua_to = repo.GetUserTezosAddress(u.Id, address.Key.ToAddress);
-                        var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id));
-                        var userAmount = listFiltered.Sum(o => o.Amount);
+                        var minLevel = address.Min(a => a.Level);
+                        var timeStamp = address.Min(a => a.Timestamp);
+                        var from_start = tzKt.GetBalance(address.Key, minLevel);
+                        var from_end = tzKt.GetBalance(address.Key, header.level);
 
-                        if (listFiltered.Any(o => o.Amount > u.WhaleThreshold) || listFiltered.Count() == 1 ||
-                            userAmount < u.WhaleThreshold)
+                        var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
+                        var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id));
+                        
+                        if (listFiltered.Count() <= 1 || (from_start - from_end) < u.WhaleThreshold)
                             continue;
 
-                        string result = resMgr.Get(Res.WhaleTransactions,
+                        string result = resMgr.Get(Res.WhaleOutflow,
                             new ContextObject
                             {
                                 u = u,
-                                Amount = userAmount,
+                                Amount = from_start - from_end,
                                 md = md,
-                                ua_from = ua_from,
-                                ua_to = ua_to
+                                ua = ua_from,
+                                Period = (int)Math.Ceiling(DateTime.Now.Subtract(timeStamp).TotalDays)
                             });
-                        foreach (var op in listFiltered)
+                        string tags = "";
+                        foreach (var op in listFiltered.OrderByDescending(o => o.Amount).Take(10).OrderBy(o => o.Level))
                         {
-                            result += $"\n▫️<a href='{Explorer.FromId(u.Explorer).op(op.OpHash)}'>{op.Amount.TezToString()}</a>";
+                            var ua_to = repo.GetUserTezosAddress(u.Id, op.ToAddress);
+                            result += "\n" + resMgr.Get(Res.WhaleOutflow,
+                            new ContextObject
+                            {
+                                u = u,
+                                Amount = op.Amount,
+                                md = md,
+                                ua = ua_to,
+                                Block = op.Level,
+                                OpHash = op.OpHash
+                            });
                             repo.AddWhaleTransactionNotify(op.Id, u.Id);
+                            tags += ua_to.HashTag();
                         }
                         if (!u.HideHashTags)
                         {
-                            result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+                            result += "\n\n#whale" + ua_from.HashTag() + tags;
                         }
 
                         SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -2983,7 +2997,7 @@ namespace TezosNotifyBot
                     else if (message.Text == "/stop")
                     {
                         paused = true;
-                        NotifyDev("Blockchain processing paused", user.Id, ParseMode.Default);
+                        NotifyDev("Blockchain processing paused", 0);
                     }
                     else if (message.Text == "/resume")
                     {

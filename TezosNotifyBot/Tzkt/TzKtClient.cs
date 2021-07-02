@@ -72,6 +72,12 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/blocks/{level}?operations=true");
 			return JsonConvert.DeserializeObject<Block>(str);
 		}
+
+		decimal ITzKtClient.GetBalance(string address, int level)
+		{
+			var str = Download($"v1/accounts/{address}/balance_history/{level}");
+			return ulong.Parse(str) / 1000000M;
+		}
 		BigmapItem ITzKtClient.GetBigmapItem(string contract, string address)
 		{
 			var str = Download($"v1/contracts/{contract}/bigmaps/ledger/keys/{address}");

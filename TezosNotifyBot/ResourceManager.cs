@@ -295,6 +295,8 @@ namespace TezosNotifyBot
 		OwnerLimitReached,
 		UserCurrency,
 		DelegateMessage,
-		WhaleTransactions
+		WhaleTransactions,
+		WhaleOutflow,
+		WhaleOutflowItem
 	}
 }
