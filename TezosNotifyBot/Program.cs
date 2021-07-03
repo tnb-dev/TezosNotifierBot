@@ -67,10 +67,10 @@ namespace TezosNotifyBot
                     {
                         if (context.HostingEnvironment.IsDevelopment())
                             builder.AddConsole();
-                        else
-                            builder.AddGelf(options =>
-                                options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
-                            );
+                        // else
+                        //     builder.AddGelf(options =>
+                        //         options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
+                        //     );
                     });
 
                     services.AddHttpClient<ReleasesClient>();
