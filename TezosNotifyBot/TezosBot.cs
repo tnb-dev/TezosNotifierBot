@@ -1300,13 +1300,13 @@ namespace TezosNotifyBot
                                 Amount = from_start - from_end,
                                 md = md,
                                 ua = ua_from,
-                                Period = (int)Math.Ceiling(DateTime.Now.Subtract(timeStamp).TotalDays)
+                                Period = (int)Math.Ceiling(header.timestamp.Subtract(timeStamp).TotalDays)
                             });
                         string tags = "";
                         foreach (var op in listFiltered.OrderByDescending(o => o.Amount).Take(10).OrderBy(o => o.Level))
                         {
                             var ua_to = repo.GetUserTezosAddress(u.Id, op.ToAddress);
-                            result += "\n" + resMgr.Get(Res.WhaleOutflow,
+                            result += "\n" + resMgr.Get(Res.WhaleOutflowItem,
                             new ContextObject
                             {
                                 u = u,
