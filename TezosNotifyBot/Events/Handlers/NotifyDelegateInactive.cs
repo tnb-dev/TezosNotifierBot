@@ -40,7 +40,7 @@ namespace TezosNotifyBot.Events.Handlers
 
             var delegates = new Dictionary<string, DateTime?>();
 
-            var delegators = await _db.Set<UserAddress>()
+            var delegators = await _db.Set<UserAddress>().AsNoTracking()
                 .Include(x => x.User)
                 .Where(x => !x.IsDeleted)
                 .Where(x => x.NotifyDelegateStatus && !delegateAddressList.Contains(x.Address))
