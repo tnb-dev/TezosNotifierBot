@@ -1289,9 +1289,9 @@ namespace TezosNotifyBot
                          !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
                     {
                         var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
-                        var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id));
+                        var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id) && o.Amount < u.WhaleThreshold);
 
-                        if (listFiltered.Count() <= 1) continue;
+                        if (listFiltered.Count() <= 1 || listFiltered.Sum(o => o.Amount) < u.WhaleThreshold) continue;
 
                         string result = resMgr.Get(Res.WhaleOutflow,
                             new ContextObject
