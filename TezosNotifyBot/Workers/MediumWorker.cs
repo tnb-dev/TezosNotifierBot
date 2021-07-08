@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
@@ -25,9 +26,9 @@ namespace TezosNotifyBot.Workers
         private int lastCycle = 0;
         private int lastLevel = 0;
 
-        public MediumWorker(ITzKtClient tzKtClient, MediumOptions options, ILogger<MediumWorker> logger, IServiceProvider provider)
+        public MediumWorker(ITzKtClient tzKtClient, IOptions<MediumOptions> options, ILogger<MediumWorker> logger, IServiceProvider provider)
         {
-            _options = options;
+            _options = options.Value;
             _tzKtClient = tzKtClient;
             _logger = logger;
             _provider = provider;
@@ -35,8 +36,6 @@ namespace TezosNotifyBot.Workers
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //wait 5 mins
-            await Task.Delay(300000, stoppingToken);
             while (stoppingToken.IsCancellationRequested is false)
             {
                 using var scope = _provider.CreateScope();
