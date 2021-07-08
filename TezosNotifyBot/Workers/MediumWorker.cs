@@ -35,6 +35,8 @@ namespace TezosNotifyBot.Workers
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            //wait 5 mins
+            await Task.Delay(300000, stoppingToken);
             while (stoppingToken.IsCancellationRequested is false)
             {
                 using var scope = _provider.CreateScope();
