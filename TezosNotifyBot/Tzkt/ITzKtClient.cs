@@ -8,8 +8,13 @@ namespace TezosNotifyBot.Tzkt
 	{
 		Head GetHead();
 		Cycle GetCycle(int cycleIndex);
+		List<Cycle> GetCycles();
+		int GetTransactionsCount(int beginLevel, int endLevel);
 		List<OperationPenalty> GetRevelationPenalties(int level);
 		IEnumerable<Operation> GetAccountOperations(string address, string filter = "");
+		List<Transaction> GetTransactions(string filter);
+		List<VotingPeriod> GetVotingPeriods();
+		List<Proposal> GetProposals(int epoch);
 		DateTime? GetAccountLastSeen(string address);
 		DateTime? GetAccountLastActive(string address);
 		Rewards GetDelegatorRewards(string address, int cycle);

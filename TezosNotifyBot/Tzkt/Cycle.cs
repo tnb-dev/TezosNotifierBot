@@ -17,6 +17,8 @@ namespace TezosNotifyBot.Tzkt
         public ulong totalDelegated { get; set; }
         public DateTime startTime { get; set; }
         public DateTime endTime { get; set; }
+        public int firstLevel { get; set; }
+        public int lastLevel { get; set; }
         public TimeSpan Length => endTime.Subtract(startTime);
     }
 }

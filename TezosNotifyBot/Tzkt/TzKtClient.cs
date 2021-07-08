@@ -39,6 +39,18 @@ namespace TezosNotifyBot.Tzkt
 			return cycles[cycleIndex];
 		}
 
+		List<Cycle> ITzKtClient.GetCycles()
+		{
+			var str = Download($"v1/cycles");
+			return JsonConvert.DeserializeObject<List<Cycle>>(str);
+		}
+
+		int ITzKtClient.GetTransactionsCount(int beginLevel, int endLevel)
+		{
+			var str = Download($"v1/operations/transactions/count?level.ge={beginLevel}&level.le={endLevel}");
+			return int.Parse(str);
+		}
+
 		List<OperationPenalty> ITzKtClient.GetRevelationPenalties(int level)
 		{
 			var str = Download($"v1/operations/revelation_penalties?level={level}");
@@ -138,5 +150,21 @@ namespace TezosNotifyBot.Tzkt
 			return JsonConvert.DeserializeObject<Operation[]>(response, _jsonSerializerSettings);
 		}
 
+		List<Transaction> ITzKtClient.GetTransactions(string filter)
+		{
+			var str = Download($"v1/operations/transactions?{filter}");
+			return JsonConvert.DeserializeObject<List<Transaction>>(str);
+		}
+
+		List<VotingPeriod> ITzKtClient.GetVotingPeriods()
+		{
+			var str = Download($"v1/voting/periods?sort.desc=id");
+			return JsonConvert.DeserializeObject<List<VotingPeriod>>(str);
+		}
+		List<Proposal> ITzKtClient.GetProposals(int epoch)
+		{
+			var str = Download($"v1/voting/proposals?epoch={epoch}&sort.desc=rolls");
+			return JsonConvert.DeserializeObject<List<Proposal>>(str);
+		}
 	}
 }

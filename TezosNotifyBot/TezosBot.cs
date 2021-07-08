@@ -60,6 +60,8 @@ namespace TezosNotifyBot
         
         MarketData md = new MarketData();
 
+        public MarketData MarketData => md;
+
         DateTime mdReceived;
 
         //DateTime bakersReceived;
@@ -2994,17 +2996,28 @@ namespace TezosNotifyBot
                     {
                         OnNewAddress(user);
                     }
-                    else if (message.Text.StartsWith("/tzkt "))
+                    else if (message.Text.StartsWith("/tzkt ") && user.IsAdmin(Config.Telegram))
                     {
                         var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
                         NotifyDev(str, user.Id, ParseMode.Default, true);
                     }
-                    else if (message.Text == "/stop")
+                    else if (message.Text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
+                    {
+                        var str = message.Text.Substring("/medium ".Length);
+                        var mw = _serviceProvider.GetService<Workers.MediumWorker>();
+                        var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
+                        var cycles = tzKtClient.GetCycles();
+                        var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
+                        var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
+                        var result = mw.CreatePost(repo, md, prevCycle, currentCycle);
+                        NotifyDev($"New Medium post: <a href='{result.data.url}'>{result.data.title}</a>", 0, ParseMode.Html);
+                    }
+                    else if (message.Text == "/stop" && user.IsAdmin(Config.Telegram))
                     {
                         paused = true;
                         NotifyDev("Blockchain processing paused", 0);
                     }
-                    else if (message.Text == "/resume")
+                    else if (message.Text == "/resume" && user.IsAdmin(Config.Telegram))
                     {
                         paused = false;
                         NotifyDev("Blockchain processing resumed", user.Id, ParseMode.Default);
@@ -3039,7 +3052,9 @@ namespace TezosNotifyBot
 /set_en - switch to english
 /forward messageid - forward message to user and caller
 /twclean - clean published twitter messages
-/stop - stop processing blockchain", ReplyKeyboards.MainMenu(resMgr, user));
+/stop - stop processing blockchain
+/resume - resume processing blockchain
+/medium {cycle} - post medium article about cycle {cycle}", ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/sql") && Config.DevUserNames.Contains(message.From.Username))
                     {
@@ -3998,7 +4013,7 @@ namespace TezosNotifyBot
 
         #endregion
 
-        void NotifyDev(string text, int currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
+        public void NotifyDev(string text, int currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
         {
             foreach (var devUser in Config.DevUserNames)
             {
