@@ -3004,8 +3004,9 @@ namespace TezosNotifyBot
                     else if (message.Text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
                     {
                         var str = message.Text.Substring("/medium ".Length);
-                        var mw = _serviceProvider.GetService<Workers.MediumWorker>();
                         var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
+                        var mw = new Workers.MediumWorker(tzKtClient, _serviceProvider.GetService<IOptions<MediumOptions>>(),
+                            _serviceProvider.GetService<ILogger<Workers.MediumWorker>>(), _serviceProvider);
                         var cycles = tzKtClient.GetCycles();
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
                         var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
