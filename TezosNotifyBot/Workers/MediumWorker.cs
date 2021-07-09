@@ -53,7 +53,7 @@ namespace TezosNotifyBot.Workers
                     {
                         var prevCycle = cycles.Single(c => c.index == currentCycle.index - 1);
                         var result = CreatePost(repo, bot.MarketData, prevCycle, currentCycle);
-                        bot.NotifyDev($"New Medium post: <a href='{result.data.url}'>{result.data.title}</a>", 0, ParseMode.Html);
+                        bot.NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
                         lastCycle = currentCycle.index;
                     }
                     catch (Exception e)

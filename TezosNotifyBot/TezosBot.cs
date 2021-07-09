@@ -3011,7 +3011,7 @@ namespace TezosNotifyBot
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
                         var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
                         var result = mw.CreatePost(repo, md, prevCycle, currentCycle);
-                        NotifyDev($"New Medium post: <a href='{result.data.url}'>{result.data.title}</a>", 0, ParseMode.Html);
+                        NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
                     }
                     else if (message.Text == "/stop" && user.IsAdmin(Config.Telegram))
                     {
@@ -4120,7 +4120,7 @@ namespace TezosNotifyBot
             return 0;
         }
 
-        void NotifyUserActivity(string text)
+        public void NotifyUserActivity(string text)
         {
             foreach (var userId in Config.Telegram.ActivityChat)
             {
