@@ -16,7 +16,7 @@ namespace TezosNotifyBot.Tzkt
         public string status { get; set; }
         public ProposalMetadata metadata { get; set; }
         public int period { get; set; }
-        public string DisplayLink => metadata != null ? $"<a target='_blank' href='{metadata.agora}?utm_source=tezosnotifierbot'>{metadata.alias}</a>" : (hash.Substring(0, 7) + "…" + hash.Substring(hash.Length - 5));
+        public string DisplayLink => $"<a target='_blank' href='https://www.tezosagora.org/proposal/{hash}?utm_source=tezosnotifierbot'>{metadata?.alias ?? (hash.Substring(0, 7) + "…" + hash.Substring(hash.Length - 5))}</a>";
     }
     public class ProposalMetadata
     {
