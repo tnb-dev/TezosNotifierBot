@@ -145,7 +145,7 @@ namespace TezosNotifyBot.Workers
 			{
                 var proposals = _tzKtClient.GetProposals(current.epoch);
                 post.AppendLine($"<p>Now it is exploration period for proposal {proposals[0].DisplayLink}.</p>");
-                post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({((current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers * 100M) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({((current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls * 100M) ?? 0:###.0}%) voted so far:</p>");
+                post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({(100M * (current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({((current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls * 100M) ?? 0:###.0}%) voted so far:</p>");
                 FillBallots(post, current);
                 BallotQuorum(post, current);
                 post.AppendLine($"<p>Exploration period will end on {current.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
@@ -180,7 +180,7 @@ namespace TezosNotifyBot.Workers
             {
                 var proposals = _tzKtClient.GetProposals(current.epoch);
                 post.AppendLine($"<p>Now it is promotion period for proposal {proposals[0].DisplayLink}.</p>");
-                post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({((current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers * 100M) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({((current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls * 100M) ?? 0:###.0}%) voted so far:</p>");
+                post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({(100M * (current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({((current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls * 100M) ?? 0:###.0}%) voted so far:</p>");
                 FillBallots(post, current);
                 BallotQuorum(post, current);
                 post.AppendLine($"<p>Promotion period will end on {current.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
