@@ -2,8 +2,7 @@
     "Logging": {
         "LogLevel": {
             "Default": "Warning",
-            "System": "Warning",
-            "Microsoft": "Warning"
+            "TezosNotifyBot": "Debug"
         }
     },
     "ConnectionStrings": {
