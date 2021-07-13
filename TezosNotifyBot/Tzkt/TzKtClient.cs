@@ -38,6 +38,11 @@ namespace TezosNotifyBot.Tzkt
 				cycles[cycleIndex] = JsonConvert.DeserializeObject<Cycle>(Download($"v1/cycles/{cycleIndex}"));
 			return cycles[cycleIndex];
 		}
+		CycleStats ITzKtClient.GetCycleStats(int cycleIndex)
+		{
+			var str = Download($"v1/statistics/cyclic?cycle={cycleIndex}");
+			return JsonConvert.DeserializeObject<CycleStats>(str);
+		}
 
 		List<Cycle> ITzKtClient.GetCycles()
 		{

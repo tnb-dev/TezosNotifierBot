@@ -207,6 +207,7 @@ namespace TezosNotifyBot.Tezos
 	public class CryptoComparePrice
     {
         public decimal BTC { get; set; }
+        public decimal ETH { get; set; }
         public decimal USD { get; set; }
         public decimal EUR { get; set; }
     }

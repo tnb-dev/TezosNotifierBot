@@ -8,6 +8,7 @@ namespace TezosNotifyBot.Tzkt
 	{
 		Head GetHead();
 		Cycle GetCycle(int cycleIndex);
+		CycleStats GetCycleStats(int cycleIndex);
 		List<Cycle> GetCycles();
 		int GetTransactionsCount(int beginLevel, int endLevel);
 		List<OperationPenalty> GetRevelationPenalties(int level);

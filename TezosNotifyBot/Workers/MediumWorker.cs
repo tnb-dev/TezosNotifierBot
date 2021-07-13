@@ -96,7 +96,7 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("</ul>");
             post.AppendLine($"<p>So more then {whaleTransactions.Sum(o => o.Amount / 1000000M).TezToString()} was transferred by whales!</p>");
             FillGovernance(post, prevCycle, currentCycle);
-
+            FillRates(post, prevCycle, currentCycle);
             post.AppendLine("<p>&nbsp;</p>");
             FillLinks(post);
 
@@ -223,6 +223,35 @@ namespace TezosNotifyBot.Workers
             post.AppendLine($"<li>Nay - {vp.nayRolls} rolls ({(100D * vp.nayRolls / (vp.yayRolls + vp.nayRolls + vp.passRolls)) ?? 0:##0.0}%)</li>");
             post.AppendLine($"<li>Pass - {vp.passRolls} rolls ({(100D * vp.passRolls / (vp.yayRolls + vp.nayRolls + vp.passRolls)) ?? 0:##0.0}%)</li>");
             post.AppendLine("</ul>");
+        }
+
+        void FillRates(StringBuilder post, Cycle prevCycle, Cycle cycle)
+		{
+            var histUrl = $"https://min-api.cryptocompare.com/data/v2/histohour?fsym=XTZ&tsym=USD&limit=72&toTs={new DateTimeOffset(cycle.startTime).ToUnixTimeSeconds()}&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f";
+            WebClient wc = new WebClient();
+            var histDataStr = wc.DownloadString(histUrl);
+            var histData = JsonSerializer.Deserialize<CryptoCompare.HistohourResult>(histDataStr);
+            
+            string strPrices = wc.DownloadString("https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f");
+            var dtoPrice = JsonSerializer.Deserialize<Tezos.CryptoComparePrice>(strPrices);
+
+            post.AppendLine("<h1>Market data</h1>");
+            post.AppendLine("<p>Current XTZ price:</p>");
+            post.AppendLine("<ul>");
+            post.AppendLine($"<li>{dtoPrice.USD} USD</li>");
+            post.AppendLine($"<li>{dtoPrice.EUR} EUR</li>");
+            post.AppendLine($"<li>{dtoPrice.BTC} BTC</li>");
+            post.AppendLine($"<li>{dtoPrice.ETH} ETH</li>");
+            post.AppendLine("</ul>");
+            post.AppendLine($"<p>Price change in the {prevCycle.index} cycle:</p>");
+            post.AppendLine("<ul>");
+            post.AppendLine($"<li>low {histData.Data.Data.Where(d => d.Timestamp >= prevCycle.startTime).Min(d => d.low)} USD</li>");
+            post.AppendLine($"<li>high {histData.Data.Data.Where(d => d.Timestamp >= prevCycle.startTime).Max(d => d.high)} USD</li>");
+            post.AppendLine("</ul>");
+
+            var stat = _tzKtClient.GetCycleStats(prevCycle.index);
+            post.AppendLine($"<p>Current Market Cap is {dtoPrice.USD*(stat.totalSupply/1000000)} USD</p>");
+            post.AppendLine($"<p>Current Supply is {stat.totalSupply/1000000} XTZ</p>");
         }
 
         void FillLinks(StringBuilder post)

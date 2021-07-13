@@ -220,7 +220,7 @@ namespace TezosNotifyBot.Tezos
         {
             string str =
                 Download(
-                    "https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f");
+                    "https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f");
             var dto = JsonConvert.DeserializeObject<CryptoComparePrice>(str);
             return new MarketData
             {
