@@ -250,8 +250,8 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("</ul>");
 
             var stat = _tzKtClient.GetCycleStats(prevCycle.index);
-            post.AppendLine($"<p>Current Market Cap is {dtoPrice.USD*(stat.totalSupply/1000000)} USD</p>");
-            post.AppendLine($"<p>Current Supply is {stat.totalSupply/1000000} XTZ</p>");
+            post.AppendLine($"<p>Current Market Cap is {(dtoPrice.USD * (stat.totalSupply / 1000000)).ToString("###,###,###,###,###,###")} USD</p>");
+            post.AppendLine($"<p>Current Supply is {(stat.totalSupply / 1000000).ToString("###,###,###,###,###,###")} XTZ</p>");
         }
 
         void FillLinks(StringBuilder post)
