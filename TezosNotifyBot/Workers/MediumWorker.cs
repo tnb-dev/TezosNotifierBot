@@ -50,7 +50,7 @@ namespace TezosNotifyBot.Workers
                     lastCycle = currentCycle.index;
                     bot.NotifyDev($"MediumWorker started on cycle {lastCycle}", 0);
                 }
-                if (lastCycle < currentCycle.index)
+                if (lastCycle != currentCycle.index)
                 {
                     try
                     {
