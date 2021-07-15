@@ -38,7 +38,7 @@ namespace TezosNotifyBot.Commands.Addresses
             var isDelegate = _repo.IsDelegate(address.Address);
 
             var lang = user.Language;
-            var title = _lang.Get(Res.AddressInfoTitle, lang, new {ua = address, isDelegate});
+            var title = _lang.Get(Res.AddressInfoTitle, lang, new {ua = address});
 
             var message = new MessageBuilder()
                 .AddLine(title)
