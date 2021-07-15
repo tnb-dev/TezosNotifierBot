@@ -46,7 +46,10 @@ namespace TezosNotifyBot.Workers
                 var cycles = _tzKtClient.GetCycles();
                 var currentCycle = cycles.FirstOrDefault(c => c.firstLevel <= lastLevel && lastLevel <= c.lastLevel);
                 if (lastCycle == 0 && currentCycle != null)
+                {
                     lastCycle = currentCycle.index;
+                    bot.NotifyDev($"MediumWorker started on cycle {lastCycle}", 0);
+                }
                 if (lastCycle < currentCycle.index)
                 {
                     try
