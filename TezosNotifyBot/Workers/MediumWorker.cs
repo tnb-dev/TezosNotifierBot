@@ -74,12 +74,16 @@ namespace TezosNotifyBot.Workers
 		{
             StringBuilder post = new StringBuilder();
 
-            post.AppendLine("<p>This post was generated fully automatically by the <a href='https://tzsnt.fr/'>TezosNotifierBot</a>.</p>");
+            post.AppendLine("<p><i>This post was generated fully automatically by the <a href='https://tzsnt.fr/'>TezosNotifierBot</a>.</i></p>");
+            post.AppendLine("<p><img src='https://tzsnt.fr/img/tezos-notifier-horizontal.png' /></p>");
             post.AppendLine("<h1>General cycle stats</h1>");
             post.AppendLine($"<p>Cycle {prevCycle.index} is completed in {prevCycle.Length.Days} days, {prevCycle.Length.Hours} hours, {prevCycle.Length.Minutes} minutes!</p>");
             post.AppendLine($"<p>Next {currentCycle.index} cycle will end on {currentCycle.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
             post.AppendLine("<h1>Transaction stats</h1>");
             post.AppendLine($"<p>In the {prevCycle.index} cycle was made {_tzKtClient.GetTransactionsCount(prevCycle.firstLevel, prevCycle.lastLevel).ToString("###,###,###,###")} transactions.</p>");
+
+            FillRates(post, prevCycle, currentCycle);
+
             post.AppendLine("<h1>Whale transactions</h1>");
 
             var whaleTransactions = _tzKtClient.GetTransactions($"level.ge={prevCycle.firstLevel}&level.le={prevCycle.lastLevel}&status=applied&amount.ge=500000000000");
@@ -99,8 +103,7 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("</ul>");
             post.AppendLine($"<p>So more then {whaleTransactions.Sum(o => o.Amount / 1000000M).TezToString()} was transferred by whales!</p>");
             FillGovernance(post, prevCycle, currentCycle);
-            FillRates(post, prevCycle, currentCycle);
-            post.AppendLine("<p>&nbsp;</p>");
+            post.AppendLine("<p><hr /></p>");
             FillLinks(post);
 
             var result = Publish($"Tezos Blockchain cycle {prevCycle.index} stats", post.ToString());
