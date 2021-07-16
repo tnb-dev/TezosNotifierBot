@@ -26,9 +26,8 @@ namespace TezosNotifyBot.Storage
         public DbSet<BalanceUpdate> BalanceUpdates { get; set; }
         public DbSet<TwitterMessage> TwitterMessages { get; set; }
         public DbSet<Token> Tokens { get; set; }
-
+        public DbSet<WhaleTransaction> WhaleTransactions { get; set; }
         #endregion
-
         public TezosDataContext(DbContextOptions options) : base(options)
         {
         }
@@ -61,6 +60,8 @@ namespace TezosNotifyBot.Storage
                 builder.Property(x => x.NotifyPayout).HasDefaultValue(true);
                 builder.Property(x => x.NotifyDelegatorsBalance).HasDefaultValue(true);
                 builder.Property(x => x.NotifyAwardAvailable).HasDefaultValue(true);
+                builder.Property(x => x.NotifyRightsAssigned).HasDefaultValue(true);
+                builder.Property(x => x.NotifyDelegateStatus).HasDefaultValue(true);
             });
             modelBuilder.Entity<UserAddressDelegation>();
             modelBuilder.Entity<Message>(builder =>
@@ -80,6 +81,11 @@ namespace TezosNotifyBot.Storage
             modelBuilder.Entity<Proposal>();
             modelBuilder.Entity<ProposalVote>();
             modelBuilder.Entity<Token>();
+            modelBuilder.Entity<WhaleTransaction>();
+            modelBuilder.Entity<WhaleTransactionNotify>()
+                .HasOne(e => e.WhaleTransaction)
+                .WithMany(o => o.Notifications)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<AddressConfig>()
                 .HasData(
@@ -91,8 +97,7 @@ namespace TezosNotifyBot.Storage
                 {
                     builder.HasKey(x => x.Tag);
                     builder.Property(x => x.Tag).ValueGeneratedNever();
-                })
-                ;
+                });
             
             // MUST BE BELOW ANY OTHER CONFIGURATIONS
             modelBuilder.ApplyPostgresConventions();

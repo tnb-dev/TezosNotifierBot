@@ -1,10 +1,11 @@
 #nullable enable
 using System;
+using TezosNotifyBot.Shared;
 using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class UserAddress
+    public class UserAddress : IHasId<int>, IHasHashTag
     {
         public int Id { get; set; }
         public string Address { get; set; }
@@ -38,18 +39,10 @@ namespace TezosNotifyBot.Domain
         public bool NotifyMisses { get; set; }
         public long ChatId { get; set; }
         public bool NotifyAwardAvailable { get; set; }
-        //public string UsdBalance(decimal price_usd)
-        //{
-        //    return (Balance * price_usd).ToString("### ### ### ### ##0.00", CultureInfo.InvariantCulture).Trim();
-        //}
-        //public string BtcBalance(decimal price_btc)
-        //{
-        //    return (Balance * price_btc).ToString("# ### ##0.####", CultureInfo.InvariantCulture).Trim();
-        //}
-        //public string TezBalance()
-        //{
-        //    return Balance.TezToString();
-        //}
+        public bool NotifyRightsAssigned { get; set; }
+        public bool NotifyDelegateStatus { get; set; }
+        public bool IsOwner { get; set; }
+        public int LastMessageLevel { get; set; }        
 
         public string HashTag()
         {

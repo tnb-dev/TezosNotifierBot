@@ -15,5 +15,10 @@ namespace TezosNotifyBot.Tzkt
         public ulong totalStaking { get; set; }
         public int totalDelegators { get; set; }
         public ulong totalDelegated { get; set; }
+        public DateTime startTime { get; set; }
+        public DateTime endTime { get; set; }
+        public int firstLevel { get; set; }
+        public int lastLevel { get; set; }
+        public TimeSpan Length => endTime.Subtract(startTime);
     }
 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using System.Globalization;
 
 namespace TezosNotifyBot
 {
@@ -115,8 +116,10 @@ namespace TezosNotifyBot
 		public UserAddress ua_to { get; set; }
 		public int Minutes { get; set; }
 		public int Cycle { get; set; }
-		
+		public TimeSpan CycleLength { get; set; }
+		public DateTime NextEnd { get; set; }
 		public UserAddress Delegate { get; set; }
+		public List<Tzkt.Right> Rights { get; set; }
 
 		public static implicit operator ContextObject(User user) => new ContextObject { u = user };
 		public static implicit operator ContextObject(UserAddress userAddress) => new ContextObject { u = userAddress.User, ua = userAddress };
@@ -124,6 +127,23 @@ namespace TezosNotifyBot
 		public static implicit operator ContextObject((UserAddress userAddress, Proposal p) uap) => new ContextObject { u = uap.userAddress.User, ua = uap.userAddress, p = uap.p };
 		public static implicit operator ContextObject((User user, TezosRelease release) data) 
 			=> new ContextObject { u = data.user, r = data.release };
+
+		public string RusDT(DateTime dt) => dt.Day.ToString() + " " + RusMonth(dt.Month) + " " + dt.Year.ToString() + " в " + dt.ToString("HH:mm");
+		string RusMonth(int m)
+		{
+			if (m == 1) return "января";
+			if (m == 2) return "февраля";
+			if (m == 3) return "марта";
+			if (m == 4) return "апреля";
+			if (m == 5) return "мая";
+			if (m == 6) return "июня";
+			if (m == 7) return "июля";
+			if (m == 8) return "августа";
+			if (m == 9) return "сентября";
+			if (m == 10) return "октября";
+			if (m == 11) return "ноября";
+			return "декабря";
+		}
 	}
 
 	public enum Res
@@ -191,6 +211,7 @@ namespace TezosNotifyBot
 		AddressAdded,
 		StakingInfo,
 		Delegate,
+		DelegateStatusToggle,
 		IncorrectTezosAddress,
 		FreeSpace,
 		AveragePerformance,
@@ -218,6 +239,11 @@ namespace TezosNotifyBot
 		DelegatorsBalanceNotifyToggle,
 		DelegatorsBalanceThresholdButton,
 		Off,
+		AddressInfoTitle,
+		AddressInfoButton,
+		AddressLinkTzKt,
+		AddressLinkTezosNode,
+		AddressLinkBackingBad,
 		Delete,
 		ManageAddress,
 		TransactionNotify,
@@ -260,6 +286,19 @@ namespace TezosNotifyBot
 		AwardAvailable,
 		AwardNotify,
 		AwardAvailableNotifyStatus,
-		Mint
+		Mint,
+		RightsAssigned,
+		RightsAssignedItem,
+		NotifyRightsAssigned,
+		DelegateRightsAssigned,
+		IsAddressOwner,
+		OwnerLimitReached,
+		UserCurrency,
+		DelegateMessage,
+		WhaleTransactions,
+		DelegateInactive,
+		NotifyDelegateInactive,
+		WhaleOutflow,
+		WhaleOutflowItem
 	}
 }

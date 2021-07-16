@@ -28,6 +28,9 @@
     "CarthageStart": 38913,
     "TzKtUrl": "https://api.tzkt.io/",
     "BetterCallDevUrl": "https://api.better-call.dev/",
+    "WhaleSeriesLength": 3,
+    
+    "DelegateInactiveTime": "30.00:00:00",
     
     "Nodes": [
         {
@@ -58,5 +61,12 @@
             "Name": "ECAD Labs",
             "Url": "https://api.tez.ie/rpc/mainnet"
         }
-    ]
+    ],
+    "Medium": 
+    {
+      "ApiUrl": "https://api.medium.com/",
+      "AuthToken": "264d36291c5a6d32ff37237dc225ef9ec5ae764c6c449012e356387582157ac07",
+      "UserId": "131d50958931213e7b8185e58dc37e056797493193850f71a9c38c0cd7bd5472e",
+      "PublishStatus": "public"
+    }
 }

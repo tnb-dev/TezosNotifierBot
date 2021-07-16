@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using TezosNotifyBot.Domain;
 
 namespace TezosNotifyBot.Tezos
 {
@@ -136,6 +137,19 @@ namespace TezosNotifyBot.Tezos
     {
         public decimal price_usd { get; set; }
 		public decimal price_btc { get; set; }
+        public decimal price_eur { get; set; }
+        
+        public decimal CurrencyRate(Currency code) => code switch
+        {
+	        Currency.Eur => price_eur,
+	        _ => price_usd,
+        };
+		
+        public string CurrencyCode(string code) => code switch
+        {
+	        "eur" => "eur",
+	        _ => "usd",
+        };
     }
 
     public class FrozenBalanceByCycle
@@ -193,6 +207,7 @@ namespace TezosNotifyBot.Tezos
 	public class CryptoComparePrice
     {
         public decimal BTC { get; set; }
+        public decimal ETH { get; set; }
         public decimal USD { get; set; }
         public decimal EUR { get; set; }
     }
