@@ -98,7 +98,7 @@ namespace TezosNotifyBot.Workers
             {
                 var sender = repo.GetUserTezosAddress(0, wt.Sender.address);
                 var target = repo.GetUserTezosAddress(0, wt.Target.address);
-                post.AppendLine($"<li><a target='_blank' href='https://tzkt.io/{wt.Hash}?utm_source=tezosnotifierbot'>transaction</a> of {(wt.Amount / 1000000M).TezToString()} ({(wt.Amount / 1000000M).TezToUsd(md)} USD) from <a href='https://tzkt.io/{wt.Sender}?utm_source=tezosnotifierbot'>{sender.DisplayName()}</a> to <a href='https://tzkt.io/{wt.Target}?utm_source=tezosnotifierbot'>{target.DisplayName()}</a></li>");
+                post.AppendLine($"<li><a target='_blank' href='https://tzkt.io/{wt.Hash}?utm_source=tezosnotifierbot'>transaction</a> of {(wt.Amount / 1000000M).TezToString()} ({(wt.Amount / 1000000M).TezToUsd(md)} USD) from <a href='https://tzkt.io/{wt.Sender.address}?utm_source=tezosnotifierbot'>{sender.DisplayName()}</a> to <a href='https://tzkt.io/{wt.Target.address}?utm_source=tezosnotifierbot'>{target.DisplayName()}</a></li>");
             }
             post.AppendLine("</ul>");
             post.AppendLine($"<p>So more then {whaleTransactions.Sum(o => o.Amount / 1000000M).TezToString()} was transferred by whales!</p>");
