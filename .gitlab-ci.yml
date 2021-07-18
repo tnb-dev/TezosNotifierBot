@@ -119,3 +119,14 @@ Shutdown Release:
   when: manual
   environment:
     name: release
+    
+Backup Database:
+  stage: service
+  script: 
+    - cat deploy/dump.sh | docker-compose -f deploy/compose.yml -p tezos-bot-release exec -T db bash
+  only:
+    - schedules
+  tags: 
+    - deployer
+  environment:
+    name: release

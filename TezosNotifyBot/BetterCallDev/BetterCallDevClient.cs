@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -84,6 +84,7 @@ namespace TezosNotifyBot.BetterCallDev
 
 		List<Operation> IBetterCallDevClient.GetOperations(string ophash)
 		{
+			return new List<Operation>();
 			var opsStr = Download($"v1/opg/{ophash}");
 			return JsonConvert.DeserializeObject<List<Operation>>(opsStr) ?? new List<Operation>();
 		}
