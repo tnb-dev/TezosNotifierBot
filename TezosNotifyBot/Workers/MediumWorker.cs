@@ -73,7 +73,7 @@ namespace TezosNotifyBot.Workers
         public Medium.Response CreatePost(Repository repo, Tezos.MarketData md, Cycle prevCycle, Cycle currentCycle)
 		{
             StringBuilder post = new StringBuilder();
-            post.AppendLine($"<h1>Tezos Blockchain cycle {prevCycle.index} stats></h1>");
+            post.AppendLine($"<h1>Tezos Blockchain cycle {prevCycle.index} stats</h1>");
 
             post.AppendLine("<p><i>This post was generated fully automatically by the <a href='https://tzsnt.fr/'>TezosNotifierBot</a>.</i></p>");
             post.AppendLine("<p><img src='https://tzsnt.fr/img/tezos-notifier-horizontal.png' /></p>");
