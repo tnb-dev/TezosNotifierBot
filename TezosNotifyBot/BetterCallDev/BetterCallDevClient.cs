@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Linq;
@@ -20,9 +20,15 @@ namespace TezosNotifyBot.BetterCallDev
 
 		Account IBetterCallDevClient.GetAccount(string address)
 		{
-			return new Account();
-			//string account = Download($"v1/account/mainnet/{address}/token_balances");
-			//return JsonConvert.DeserializeObject<Account>(account);
+			try
+			{
+				string account = Download($"v1/account/mainnet/{address}/token_balances");
+				return JsonConvert.DeserializeObject<Account>(account);
+			}
+			catch
+			{
+				return new Account();
+			}
 		}
 
 		string Download(string addr)

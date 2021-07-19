@@ -94,6 +94,7 @@ namespace TezosNotifyBot
             });
 
             add2("🇺🇸 English", "set_en", "🇷🇺 Русский", "set_ru");
+            add(resMgr.Get(Res.UserCurrency, user), "change_currency");
             add(resMgr.Get(Res.Explorer, user), "set_explorer");
             if (user.HideHashTags)
                 add(resMgr.Get(Res.HashTags, user), "showhashtags");
@@ -220,6 +221,11 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
+                        Text = resMgr.Get(Res.AddressInfoButton, u),
+                        CallbackData = "address-links " + id
+                    },
+                    new InlineKeyboardButton
+                    {
                         Text = resMgr.Get(Res.Delete, u),
                         CallbackData = "deleteaddress " + id
                     },
@@ -247,7 +253,7 @@ namespace TezosNotifyBot
                 buttons.Add(new[]
                 {
                     InlineKeyboardButton.WithCallbackData(
-                        text: resMgr.Get(Res.PayoutNotifyToggle, ua), 
+                        text: resMgr.Get(Res.PayoutNotifyToggle, ua),
                         callbackData: $"toggle_payout_notify {id}"
                     ),
                     new InlineKeyboardButton
@@ -256,7 +262,7 @@ namespace TezosNotifyBot
                         CallbackData = (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
                     }
                 });
-                buttons.Add(new []
+                buttons.Add(new[]
                 {
                     new InlineKeyboardButton
                     {
@@ -264,7 +270,14 @@ namespace TezosNotifyBot
                         CallbackData = "setname " + id
                     },
                     InlineKeyboardButton.WithCallbackData(
-                        text: resMgr.Get(Res.Delete, u), 
+                        text: resMgr.Get(Res.DelegateStatusToggle, ua),
+                        callbackData: $"toggle-delegate-status {id}"
+                    )
+                });
+                buttons.Add(new []
+                {
+                    InlineKeyboardButton.WithCallbackData(
+                        text: resMgr.Get(Res.Delete, u),
                         callbackData: $"deleteaddress {id}"
                     )
                 });
@@ -289,6 +302,11 @@ namespace TezosNotifyBot
             if (ua == null)
                 buttons.Add(new[]
                 {
+                    new InlineKeyboardButton
+                    {
+                        Text = resMgr.Get(Res.AddressInfoButton, u),
+                        CallbackData = "address-links " + id
+                    },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),
@@ -369,11 +387,16 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
+                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
+                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
+                    },
+                    new InlineKeyboardButton
+                    {
                         Text = resMgr.Get(Res.Delete, u),
                         CallbackData = "deleteaddress " + id
                     }
                 });
-                if (u.IsAdmin(options))
+                if (u.IsAdmin(options) || ua.IsOwner)
                     buttons.Add(new[]
                     {
                         new InlineKeyboardButton
@@ -383,6 +406,21 @@ namespace TezosNotifyBot
                         }
                     });
             }
+
+            return new InlineKeyboardMarkup(buttons);
+        }
+
+        public static InlineKeyboardMarkup AdminAddressMenu(ResourceManager resMgr, UserAddress ua)
+        {
+            var buttons = new List<InlineKeyboardButton[]>();
+            buttons.Add(new[]
+            {
+                new InlineKeyboardButton
+                {
+                    Text = resMgr.Get(Res.IsAddressOwner, ua),
+                    CallbackData = (ua.IsOwner ? "owneroff" : "owneron") + " " + ua.Id.ToString()
+                }
+            });
 
             return new InlineKeyboardMarkup(buttons);
         }

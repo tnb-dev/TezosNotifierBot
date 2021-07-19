@@ -47,31 +47,6 @@ namespace TezosNotifyBot.Storage.Migrations
                         });
                 });
 
-            modelBuilder.Entity("TezosNotifyBot.Domain.BakingRights", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id")
-                        .UseIdentityByDefaultColumn();
-
-                    b.Property<int>("DelegateId")
-                        .HasColumnType("integer")
-                        .HasColumnName("delegate_id");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.HasKey("Id")
-                        .HasName("pk_baking_rights");
-
-                    b.HasIndex("DelegateId")
-                        .HasDatabaseName("ix_baking_rights_delegate_id");
-
-                    b.ToTable("baking_rights");
-                });
-
             modelBuilder.Entity("TezosNotifyBot.Domain.BalanceUpdate", b =>
                 {
                     b.Property<int>("Id")
@@ -166,35 +141,6 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasDatabaseName("ix_delegate_rewards_delegate_id");
 
                     b.ToTable("delegate_rewards");
-                });
-
-            modelBuilder.Entity("TezosNotifyBot.Domain.EndorsingRights", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id")
-                        .UseIdentityByDefaultColumn();
-
-                    b.Property<int>("DelegateId")
-                        .HasColumnType("integer")
-                        .HasColumnName("delegate_id");
-
-                    b.Property<int>("Level")
-                        .HasColumnType("integer")
-                        .HasColumnName("level");
-
-                    b.Property<int>("SlotCount")
-                        .HasColumnType("integer")
-                        .HasColumnName("slot_count");
-
-                    b.HasKey("Id")
-                        .HasName("pk_endorsing_rights");
-
-                    b.HasIndex("DelegateId")
-                        .HasDatabaseName("ix_endorsing_rights_delegate_id");
-
-                    b.ToTable("endorsing_rights");
                 });
 
             modelBuilder.Entity("TezosNotifyBot.Domain.KnownAddress", b =>
@@ -486,6 +432,10 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("create_date");
 
+                    b.Property<int>("Currency")
+                        .HasColumnType("integer")
+                        .HasColumnName("currency");
+
                     b.Property<int>("EditUserAddressId")
                         .HasColumnType("integer")
                         .HasColumnName("edit_user_address_id");
@@ -585,6 +535,14 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
+                    b.Property<bool>("IsOwner")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_owner");
+
+                    b.Property<int>("LastMessageLevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_message_level");
+
                     b.Property<DateTime>("LastUpdate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("last_update");
@@ -609,6 +567,12 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasDefaultValue(true)
                         .HasColumnName("notify_cycle_completion");
 
+                    b.Property<bool>("NotifyDelegateStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("notify_delegate_status");
+
                     b.Property<bool>("NotifyDelegations")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -632,6 +596,12 @@ namespace TezosNotifyBot.Storage.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("notify_payout");
+
+                    b.Property<bool>("NotifyRightsAssigned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("notify_rights_assigned");
 
                     b.Property<bool>("NotifyTransactions")
                         .ValueGeneratedOnAdd()
@@ -680,16 +650,70 @@ namespace TezosNotifyBot.Storage.Migrations
                     b.ToTable("user_address_delegation");
                 });
 
-            modelBuilder.Entity("TezosNotifyBot.Domain.BakingRights", b =>
+            modelBuilder.Entity("TezosNotifyBot.Domain.WhaleTransaction", b =>
                 {
-                    b.HasOne("TezosNotifyBot.Domain.Delegate", "Delegate")
-                        .WithMany()
-                        .HasForeignKey("DelegateId")
-                        .HasConstraintName("fk_baking_rights_delegates_delegate_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id")
+                        .UseIdentityByDefaultColumn();
 
-                    b.Navigation("Delegate");
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric")
+                        .HasColumnName("amount");
+
+                    b.Property<string>("FromAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("from_address");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("integer")
+                        .HasColumnName("level");
+
+                    b.Property<string>("OpHash")
+                        .HasColumnType("text")
+                        .HasColumnName("op_hash");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("timestamp");
+
+                    b.Property<string>("ToAddress")
+                        .HasColumnType("text")
+                        .HasColumnName("to_address");
+
+                    b.HasKey("Id")
+                        .HasName("pk_whale_transaction");
+
+                    b.ToTable("whale_transaction");
+                });
+
+            modelBuilder.Entity("TezosNotifyBot.Domain.WhaleTransactionNotify", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id")
+                        .UseIdentityByDefaultColumn();
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("WhaleTransactionId")
+                        .HasColumnType("integer")
+                        .HasColumnName("whale_transaction_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_whale_transaction_notify");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_whale_transaction_notify_user_id");
+
+                    b.HasIndex("WhaleTransactionId")
+                        .HasDatabaseName("ix_whale_transaction_notify_whale_transaction_id");
+
+                    b.ToTable("whale_transaction_notify");
                 });
 
             modelBuilder.Entity("TezosNotifyBot.Domain.BalanceUpdate", b =>
@@ -710,18 +734,6 @@ namespace TezosNotifyBot.Storage.Migrations
                         .WithMany()
                         .HasForeignKey("DelegateId")
                         .HasConstraintName("fk_delegate_rewards_delegate_delegate_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Delegate");
-                });
-
-            modelBuilder.Entity("TezosNotifyBot.Domain.EndorsingRights", b =>
-                {
-                    b.HasOne("TezosNotifyBot.Domain.Delegate", "Delegate")
-                        .WithMany()
-                        .HasForeignKey("DelegateId")
-                        .HasConstraintName("fk_endorsing_rights_delegate_delegate_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -804,6 +816,32 @@ namespace TezosNotifyBot.Storage.Migrations
                     b.Navigation("Delegate");
 
                     b.Navigation("UserAddress");
+                });
+
+            modelBuilder.Entity("TezosNotifyBot.Domain.WhaleTransactionNotify", b =>
+                {
+                    b.HasOne("TezosNotifyBot.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .HasConstraintName("fk_whale_transaction_notify_user_user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TezosNotifyBot.Domain.WhaleTransaction", "WhaleTransaction")
+                        .WithMany("Notifications")
+                        .HasForeignKey("WhaleTransactionId")
+                        .HasConstraintName("fk_whale_transaction_notify_whale_transaction_whale_transactio~")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("WhaleTransaction");
+                });
+
+            modelBuilder.Entity("TezosNotifyBot.Domain.WhaleTransaction", b =>
+                {
+                    b.Navigation("Notifications");
                 });
 #pragma warning restore 612, 618
         }
