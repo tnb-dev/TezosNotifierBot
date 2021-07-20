@@ -116,8 +116,8 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("<h1>Governance</h1>");
 
             var periods = _tzKtClient.GetVotingPeriods();
-            var current = periods.FirstOrDefault(c => c.firstLevel <= cycle_cur.lastLevel && cycle_cur.lastLevel <= c.lastLevel);
-            var prev = periods.FirstOrDefault(c => c.firstLevel <= cycle_prev.lastLevel && cycle_prev.lastLevel <= c.lastLevel);
+            var current = periods.FirstOrDefault(c => c.firstLevel <= cycle_cur.lastLevel && cycle_cur.lastLevel - 1 <= c.lastLevel);
+            var prev = periods.FirstOrDefault(c => c.firstLevel <= cycle_prev.lastLevel && cycle_prev.lastLevel - 1<= c.lastLevel);
 
             if (prev.kind == "adoption" && current.kind == "proposal")
 			{
