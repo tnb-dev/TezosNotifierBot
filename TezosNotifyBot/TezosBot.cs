@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -1277,7 +1277,7 @@ namespace TezosNotifyBot
                 }
             }
 			
-            {
+            /*{
                 var wtlist = repo.GetWhaleTransactions();
 
                 foreach (var address in wtlist.GroupBy(o => o.FromAddress).Where(o => o.Sum(o1 => o1.Amount) >= 250000))
@@ -1330,7 +1330,7 @@ namespace TezosNotifyBot
                     }
                 }
 			}
-            repo.CleanWhaleTransactions(header.timestamp.AddDays(-Config.WhaleSeriesLength));
+            repo.CleanWhaleTransactions(header.timestamp.AddDays(-Config.WhaleSeriesLength));*/
             if (!lastBlockChanged)
                 repo.SetLastBlockLevel(header.level, header.priority, header.hash);
             Logger.LogInformation("Block " + header.level.ToString() + " operations processed");
