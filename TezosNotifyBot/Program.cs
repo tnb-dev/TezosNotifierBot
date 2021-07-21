@@ -61,7 +61,6 @@ namespace TezosNotifyBot
 
                     services.Configure<BotConfig>(context.Configuration);
                     services.Configure<TwitterOptions>(context.Configuration.GetSection("Twitter"));
-                    services.Configure<MediumOptions>(context.Configuration.GetSection("Medium"));
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
 
                     services.AddLogging(builder =>
@@ -127,15 +126,14 @@ namespace TezosNotifyBot
                     services.AddSingleton<TwitterClient>();
 
                     services.AddHostedService<Service>();
-                    // services.AddHostedService<ReleasesWorker>();
+                    services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
-                    services.AddHostedService<MediumWorker>();
-                    // services.AddHostedService<TokensMonitorWorker>();
+                    services.AddHostedService<TokensMonitorWorker>();
+                    services.AddHostedService<WhaleMonitorWorker>();
 
                     services.Scan(scan => scan
                         .FromCallingAssembly()
                         .AddClasses(classes => classes.AssignableTo<IUpdateHandler>())
-                        .AddClasses(classes => classes.AssignableTo<ICallbackHandler>())
                         .AsSelf()
                         .WithTransientLifetime()
                     );
@@ -145,18 +143,6 @@ namespace TezosNotifyBot
                         .As<CommandsProfile>()
                         .WithSingletonLifetime()
                     );
-
-                    services.Scan(scan => scan
-                        .FromCallingAssembly()
-                        .AddClasses(classes => classes
-                            .AssignableToAny(
-                                typeof(IEventHandler<>),
-                                typeof(IEventDispatcher)
-                            )
-                        )
-                        .AsImplementedInterfaces()
-                    );
-
                     services.AddSingleton<CommandsManager>();
                 });
 
