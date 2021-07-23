@@ -3313,6 +3313,11 @@ namespace TezosNotifyBot
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
+                    else if (commandsManager.HasUpdateHandler(evu))
+                    {
+                        commandsManager.ProcessUpdateHandler(su, evu)
+                            .ConfigureAwait(true).GetAwaiter().GetResult();
+                    }
                     else if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}") &&
                              user.UserState != UserState.Broadcast && user.UserState != UserState.Support &&
                              user.UserState != UserState.NotifyFollowers)
@@ -3333,11 +3338,6 @@ namespace TezosNotifyBot
                     else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, user))
                     {
                         SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
-                    }
-                    else if (commandsManager.HasUpdateHandler(evu))
-                    {
-                        commandsManager.ProcessUpdateHandler(su, evu)
-                            .ConfigureAwait(true).GetAwaiter().GetResult();
                     }
                     else
                     {
