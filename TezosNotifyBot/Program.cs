@@ -143,6 +143,18 @@ namespace TezosNotifyBot
                         .As<CommandsProfile>()
                         .WithSingletonLifetime()
                     );
+                    
+                    services.Scan(scan => scan
+                        .FromCallingAssembly()
+                        .AddClasses(classes => classes
+                            .AssignableToAny(
+                                typeof(IEventHandler<>),
+                                typeof(IEventDispatcher)
+                            )
+                        )
+                        .AsImplementedInterfaces()
+                    );
+
                     services.AddSingleton<CommandsManager>();
                 });
 
