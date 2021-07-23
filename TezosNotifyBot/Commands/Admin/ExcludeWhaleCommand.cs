@@ -11,16 +11,17 @@ using TezosNotifyBot.Storage;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Model;
 using NornPool.Model;
+using Microsoft.Extensions.Options;
 
 namespace TezosNotifyBot.Commands.Admin
 {
 	public class ExcludeWhaleCommand : BaseHandler, IUpdateHandler
 	{
         BotConfig Config;
-        public ExcludeWhaleCommand(BotConfig config, TezosDataContext db, TezosBotFacade botClient)
+        public ExcludeWhaleCommand(IOptions<BotConfig> config, TezosDataContext db, TezosBotFacade botClient)
           : base(db, botClient)
         {
-            Config = config;
+            Config = config.Value;
         }
 
         public async Task HandleUpdate(object sender, UpdateEventArgs eventArgs)
