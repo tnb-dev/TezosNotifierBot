@@ -1336,8 +1336,8 @@ namespace TezosNotifyBot
                 // Уведомления о китах
                 if (token == null)
                 {
-                    var ka_from = repo.GetKnownAddress(from);
-                    var ka_to = repo.GetKnownAddress(to);
+                    var ka_from = repo.GetKnownAddress(from) ?? new KnownAddress(from, null);
+                    var ka_to = repo.GetKnownAddress(to) ?? new KnownAddress(to, null);
                     if (!ka_from.ExcludeWhaleAlert && !ka_to.ExcludeWhaleAlert)
                     {
                         foreach (var u in allUsers.Where(o =>
