@@ -62,6 +62,7 @@ namespace TezosNotifyBot
                     services.Configure<BotConfig>(context.Configuration);
                     services.Configure<TwitterOptions>(context.Configuration.GetSection("Twitter"));
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
+                    services.Configure<MediumOptions>(context.Configuration.GetSection("Medium"));
 
                     services.AddLogging(builder =>
                     {
