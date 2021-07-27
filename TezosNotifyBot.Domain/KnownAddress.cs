@@ -13,5 +13,6 @@ namespace TezosNotifyBot.Domain
         public string Address { get; set; }
 
         public string? PayoutFor { get; set; }
+        public bool ExcludeWhaleAlert { get; set; }
     }
 }

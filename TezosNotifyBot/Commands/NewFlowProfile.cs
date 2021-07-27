@@ -10,6 +10,7 @@ namespace TezosNotifyBot.Commands
         {
             // Commands
             AddCommand<SyncPayoutAddressCommand>("/sync-payout");
+            AddCommand<ExcludeWhaleCommand>("/exclude-whale");
             
             // Callbacks
             AddCallback<AddressLinksCallbackHandler>("address-links");

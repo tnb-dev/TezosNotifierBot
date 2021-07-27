@@ -366,6 +366,8 @@ namespace TezosNotifyBot.Model
 		{
             lock(_dbLock)
 			{
+                if (_db.KnownAddresses.Any(o => (o.Address == from || o.Address == to) && o.ExcludeWhaleAlert))
+                    return;
                 _db.Add(new WhaleTransaction
                 {
                     Amount = amount,
