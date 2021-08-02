@@ -2961,7 +2961,7 @@ namespace TezosNotifyBot
                         var cycles = tzKtClient.GetCycles();
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
                         var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
-                        var result = mw.CreatePost(repo, md, prevCycle, currentCycle);
+                        var result = mw.CreatePost(repo, prevCycle, currentCycle);
                         NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
                     }
                     else if (message.Text == "/stop" && user.IsAdmin(Config.Telegram))
