@@ -371,9 +371,9 @@ namespace TezosNotifyBot
         }
 
         BlockHeader lastHeader;
-        BlockMetadata lastMetadata;
+        //BlockMetadata lastMetadata;
 
-        private bool Client_BlockReceived(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations)
+        private bool Client_BlockReceived(BlockHeader header, BlockMetadata blockMetadata_, Operation[] operations)
         {
             if (lastWebExceptionNotify != DateTime.MinValue)
             {
@@ -394,20 +394,25 @@ namespace TezosNotifyBot
             var prevHeader = lastHeader?.hash == header.predecessor
                 ? lastHeader
                 : _nodeManager.Client.GetBlockHeader((header.level - 1).ToString());
-            var prevMD = lastMetadata?.level?.level == header.level - 1
+            /*var prevMD = lastMetadata?.level?.level == header.level - 1
                 ? lastMetadata
-                : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());
-            if (!ProcessBlockBakingData(prevHeader, prevMD))
+                : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());*/
+            if (!ProcessBlockBakingData(block))//  prevHeader/*, prevMD*/))
                 return false;
 
-            if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "testing")
+            var periods = tzKt.GetVotingPeriods();
+            var cycles = tzKt.GetCycles();
+            var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+            var prevPeriod = periods.Single(p => p.index == currentPeriod.index - 1);
+            
+            if (currentPeriod.lastLevel == block.Level && currentPeriod.kind == "exploration")
             {
                 var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
                 var p = repo.GetProposal(hash);
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
                     var result = resMgr.Get(Res.TestingVoteSuccess,
-                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period});
+                        new ContextObject {p = p, u = u, Block = block.Level, Period = currentPeriod.index});
                     if (!u.HideHashTags)
                         result += "\n\n#proposal" + p.HashTag();
                     SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -434,39 +439,38 @@ namespace TezosNotifyBot
                 }
             }
 
-            if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "proposal" &&
-                prevMD.voting_period_kind == "testing_vote")
+            if (currentPeriod.firstLevel == block.Level && currentPeriod.kind == "proposal" && prevPeriod.kind == "exploration")
             {
                 var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
                 var p = repo.GetProposal(hash);
                 foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                 {
                     var result = resMgr.Get(Res.TestingVoteFailed,
-                        new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
+                        new ContextObject {p = p, u = u, Block = block.Level, Period = prevPeriod.index });
                     if (!u.HideHashTags)
                         result += "\n\n#proposal" + p.HashTag();
                     SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                 }
             }
-    
-            if (blockMetadata.level.voting_period_position == 32767 && blockMetadata.voting_period_kind == "proposal" &&
-                prevMD.voting_period_kind == "promotion_vote")
-            {
-                var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
-                var p = repo.GetProposal(hash);
-                foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
-                {
-                    var result = blockMetadata.next_protocol == hash
-                        ? resMgr.Get(Res.PromotionVoteSuccess,
-                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period })
-                        : resMgr.Get(Res.PromotionVoteFailed,
-                            new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
-                    if (!u.HideHashTags)
-                        result += "\n\n#proposal" + p.HashTag();
-                    SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                }
-            }
-
+ 
+            //if (currentPeriod.lastLevel == block.Level && currentPeriod.kind == "proposal" &&
+            //    prevMD.voting_period_kind == "promotion_vote")
+            //{
+            //    var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
+            //    var p = repo.GetProposal(hash);
+            //    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+            //    {
+            //        var result = blockMetadata.next_protocol == hash
+            //            ? resMgr.Get(Res.PromotionVoteSuccess,
+            //                new ContextObject {p = p, u = u, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period })
+            //            : resMgr.Get(Res.PromotionVoteFailed,
+            //                new ContextObject {p = p, u = u, Block = blockMetadata.level.level});
+            //        if (!u.HideHashTags)
+            //            result += "\n\n#proposal" + p.HashTag();
+            //        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+            //    }
+            //}
+ 
             var allUsers = repo.GetUsers();
             foreach (var op in operations)
             {
@@ -498,7 +502,7 @@ namespace TezosNotifyBot
                                 SendTextMessageUA(ua, result);
                             }
 
-                            var bakerAddresses = repo.GetUserAddresses(blockMetadata.baker);
+                            var bakerAddresses = repo.GetUserAddresses(block.Baker.address);
                             foreach (var ua in bakerAddresses)
                             {
                                 string result = resMgr.Get(Res.DoubleBakingEvidence,
@@ -540,8 +544,8 @@ namespace TezosNotifyBot
                                         new ContextObject
                                         {
                                             ua = ua, p = p, u = u, OpHash = op.hash,
-                                            Block = blockMetadata.level.level,
-                                            Period = blockMetadata.level.voting_period
+                                            Block = block.Level,
+                                            Period = currentPeriod.index
                                         });
                                     if (!u.HideHashTags)
                                         result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -559,7 +563,7 @@ namespace TezosNotifyBot
                                                 StakingBalance = rolls * 8000
                                             },
                                             p = p, OpHash = op.hash,
-                                            Period = blockMetadata.level.voting_period
+                                            Period = currentPeriod.index
                                         });
                                     twitter.TweetAsync(twText);
                                 }
@@ -576,8 +580,8 @@ namespace TezosNotifyBot
                                             new ContextObject
                                             {
                                                 ua = ua, p = p, u = ua.User, OpHash = op.hash, TotalRolls = allrolls,
-                                                Block = blockMetadata.level.level,
-                                                Period = blockMetadata.level.voting_period
+                                                Block = block.Level,
+                                                Period = currentPeriod.index
                                             });
                                         if (!ua.User.HideHashTags)
                                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -586,7 +590,7 @@ namespace TezosNotifyBot
                                 }
                             }
 
-                            repo.AddProposalVote(p, from, blockMetadata.level.voting_period, header.level, 0);
+                            repo.AddProposalVote(p, from, currentPeriod.index, header.level, 0);
                         }
                     }
 
@@ -607,7 +611,7 @@ namespace TezosNotifyBot
                         }
 
                         // Записать Vote в базу данных
-                        repo.AddProposalVote(p, from, blockMetadata.level.voting_period, header.level,
+                        repo.AddProposalVote(p, from, currentPeriod.index, block.Level,
                             content.ballot == "yay" ? 1 : (content.ballot == "nay" ? 2 : 3));
 
                         foreach (var ua in repo.GetUserAddresses(from))
@@ -624,8 +628,8 @@ namespace TezosNotifyBot
                                     new ContextObject
                                     {
                                         ua = ua, p = p, u = ua.User, OpHash = op.hash, TotalRolls = allrolls,
-                                        Block = blockMetadata.level.level,
-                                        Period = blockMetadata.level.voting_period
+                                        Block = block.Level,
+                                        Period = currentPeriod.index
                                     });
                                 if (!ua.User.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
@@ -657,7 +661,7 @@ namespace TezosNotifyBot
                             foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
                             {
                                 var result = resMgr.Get(Res.QuorumReached,
-                                    new ContextObject {u = u, p = p, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
+                                    new ContextObject {u = u, p = p, Block = block.Level, Period = currentPeriod.index });
                                 if (!u.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag();
                                 SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
@@ -665,7 +669,7 @@ namespace TezosNotifyBot
 
                             {
                                 var twText = resMgr.Get(Res.TwitterQuorumReached,
-                                    new ContextObject {p = p, Block = blockMetadata.level.level, Period = blockMetadata.level.voting_period });
+                                    new ContextObject {p = p, Block = block.Level, Period = currentPeriod.index });
                                 twitter.TweetAsync(twText);
                             }
                         }
@@ -1281,7 +1285,6 @@ namespace TezosNotifyBot
                 repo.SetLastBlockLevel(header.level, header.priority, header.hash);
             Logger.LogInformation("Block " + header.level.ToString() + " operations processed");
             lastHeader = header;
-            lastMetadata = blockMetadata;
             lastHash = header.hash;
             if (lastBlockChanged)
             {
@@ -1523,42 +1526,42 @@ namespace TezosNotifyBot
 			return result;
         }
         
-        bool ProcessBlockBakingData(BlockHeader header, BlockMetadata blockMetadata)
+        bool ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
         {
-            Logger.LogDebug($"ProcessBlockBakingData {header.level}");
+            Logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
             var tzktClient = _serviceProvider.GetService<ITzKtClient>();
-            var operations = tzktClient.GetEndorsements(header.level);
-            var rights = tzktClient.GetRights(header.level);
+            var operations = block.Endorsements;// tzktClient.GetEndorsements(header.level);
+            var rights = tzktClient.GetRights(block.Level);
             var baking_rights = rights.Where(r => r.type == "baking");
             var endorsing_rights = rights.Where(r => r.type == "endorsing");
 
             // Проверка baking rights
-            Logger.LogDebug($"Baking rights processing {header.level + 1}");
-            int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots.Value);
-            if (header.level <= 655360)
-                slots = 32;
+            Logger.LogDebug($"Baking rights processing {block.Level}");
+            //int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots.Value);
+            //if (header.level <= 655360)
+            //    slots = 32;
             foreach (var baking_right in baking_rights)
             {
-                if (baking_right.priority == 0 && baking_right.status == "missed")
-                {
-                    long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
-                    if (baking_right.level >= Config.CarthageStart)
-                        rewards = 80000000L * slots / 32 / 2;
-                    rewardsManager.BalanceUpdate(baking_right.baker.address, RewardsManager.RewardType.MissedBaking,
-                        header.level + 1, rewards);
-                }
+                //if (baking_right.priority == 0 && baking_right.status == "missed")
+                //{
+                //    long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
+                //    if (baking_right.level >= Config.CarthageStart)
+                //        rewards = 80000000L * slots / 32 / 2;
+                //    rewardsManager.BalanceUpdate(baking_right.baker.address, RewardsManager.RewardType.MissedBaking,
+                //        header.level + 1, rewards);
+                //}
 
                 if (baking_right.status == "missed" || baking_right.status == "uncovered")
                 {
                     var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                     ContractInfo info = null;
                     if (uaddrs.Count > 0)
-                        info = addrMgr.GetContract(_nodeManager.Client, header.hash, baking_right.baker.address);
+                        info = addrMgr.GetContract(_nodeManager.Client, block.Hash, baking_right.baker.address);
 
-                    long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
-                    if (baking_right.level >= Config.CarthageStart)
-                        rewards = 80000000L * slots / 32 / 2;
+                    //long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
+                    //if (baking_right.level >= Config.CarthageStart)
+                    //    rewards = 80000000L * slots / 32 / 2;
 
                     foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                     {
@@ -1568,8 +1571,8 @@ namespace TezosNotifyBot
                                 {
                                 u = ua.User,
                                 ua = ua,
-                                Block = header.level,
-                                Amount = rewards / 1000000M,
+                                Block = block.Level,
+                                Amount = block.Reward / 1000000M,
                                 Rights = new List<Right> { baking_right }
                             });
 
@@ -1588,12 +1591,8 @@ namespace TezosNotifyBot
                             var result = resMgr.Get(Res.StoleBaking,
                                 new ContextObject
                                 {
-                                    u = ua.User, ua = ua, Block = header.level, Priority = baking_right.priority.Value,
-                                    Amount = (blockMetadata.balance_updates.Where(o =>
-                                                      o.kind == "freezer" && o.category == "rewards" &&
-                                                      (o.level ?? o.cycle) == blockMetadata.level.cycle)
-                                                  .Sum(o => o.change) /
-                                              1000000M)
+                                    u = ua.User, ua = ua, Block = block.Level, Priority = baking_right.priority.Value,
+                                    Amount = block.Reward / 1000000M
                                 });
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#stole_baking" + ua.HashTag();
@@ -1605,34 +1604,36 @@ namespace TezosNotifyBot
                 }
             }
 
-            var priority = header.priority;
-            Logger.LogDebug($"Endorsements processing {header.level + 1}");
+            //var priority = header.priority;
+            Logger.LogDebug($"Endorsements processing {block.Level}");
 
             foreach (var d in endorsing_rights.Where(r => r.status == "missed" || r.status == "uncovered"))
             {
-                long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
-                if (header.level >= Config.CarthageStart)
-                {
-                    rewards = 80000000 * d.slots.Value / 32 / 2;
-                    if (priority > 0)
-                        rewards = rewards * 2 / 3;
-                }
+                //long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
+                //if (header.level >= Config.CarthageStart)
+                //{
+                //    rewards = 80000000 * d.slots.Value / 32 / 2;
+                //    if (priority > 0)
+                //        rewards = rewards * 2 / 3;
+                //}
 
-                rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
-                    header.level + 1, rewards, d.slots.Value);
+                //rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
+                //    header.level + 1, rewards, d.slots.Value);
                 var uaddrs = repo.GetUserAddresses(d.baker.address);
                 ContractInfo info = null;
                 if (uaddrs.Count > 0)
-                    info = addrMgr.GetContract(_nodeManager.Client, header.hash, d.baker.address);
+                    info = addrMgr.GetContract(_nodeManager.Client, block.Hash, d.baker.address);
                 foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                 {
                     ua.Balance = info.balance / 1000000M;
+                    var someEndorsement = block.Endorsements.FirstOrDefault() ?? new Endorsement { Slots = 1 };
+                    var rewards = someEndorsement.Rewards / (ulong)someEndorsement.Slots * (ulong)d.slots.Value;
                     var result = resMgr.Get(Res.MissedEndorsing,
                         new ContextObject
                         {
                             u = ua.User,
                             ua = ua,
-                            Block = header.level,
+                            Block = block.Level,
                             Amount = rewards / 1000000M,
                             Rights = new List<Right> { d }
                         });
@@ -1642,7 +1643,7 @@ namespace TezosNotifyBot
                 }
             }
 
-            Logger.LogDebug($"Updating rewards {header.level}");
+            /*Logger.LogDebug($"Updating rewards {header.level}");
             foreach (var bu in blockMetadata.balance_updates.Where(o =>
                 o.kind == "freezer" && o.category == "rewards" && (o.level ?? o.cycle) == blockMetadata.level.cycle))
                 rewardsManager.BalanceUpdate(bu.@delegate,
@@ -1650,9 +1651,9 @@ namespace TezosNotifyBot
                     header.level + 1, bu.change);
             foreach (var op in operations)
                 rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
-
-            ProcessBlockMetadata(blockMetadata, header.hash);
-            Logger.LogInformation("Block " + (header.level + 1).ToString() + " baking data processed");
+            */
+            //ProcessBlockMetadata(blockMetadata, header.hash);
+            Logger.LogInformation($"Block {block.Level} baking data processed");
             return true;
         }
 
@@ -3260,12 +3261,12 @@ namespace TezosNotifyBot
                         if (result != "")
                             NotifyDev("Установлены названия:\n\n" + result, 0, ParseMode.Html);
                     }
-                    else if (Config.DevUserNames.Contains(message.From.Username) &&
-                             message.Text.StartsWith("/processmd"))
-                    {
-                        var md = _nodeManager.Client.GetBlockMetadata(message.Text.Substring("/processmd ".Length));
-                        ProcessBlockMetadata(md, message.Text.Substring("/processmd ".Length));
-                    }
+                    //else if (Config.DevUserNames.Contains(message.From.Username) &&
+                    //         message.Text.StartsWith("/processmd"))
+                    //{
+                    //    var md = _nodeManager.Client.GetBlockMetadata(message.Text.Substring("/processmd ".Length));
+                    //    ProcessBlockMetadata(md, message.Text.Substring("/processmd ".Length));
+                    //}
                     else if (Config.DevUserNames.Contains(message.From.Username) && message.Text == "/defaultnode")
                     {
                         _nodeManager.SwitchTo(0);

@@ -30,8 +30,8 @@ namespace TezosNotifyBot.Tzkt
     {
         public Baker @delegate { get; set; }
         public int Slots { get; set; }
-        public long Deposit { get; set; }
-        public long Rewards { get; set; }
+        public ulong Deposit { get; set; }
+        public ulong Rewards { get; set; }
     }
 
     public class Transaction : Operation
