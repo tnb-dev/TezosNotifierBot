@@ -373,7 +373,7 @@ namespace TezosNotifyBot
         BlockHeader lastHeader;
         //BlockMetadata lastMetadata;
 
-        private bool Client_BlockReceived(BlockHeader header, BlockMetadata blockMetadata_, Operation[] operations)
+        private bool Client_BlockReceived(BlockHeader header, BlockMetadata blockMetadata_, Operation[] operations_)
         {
             if (lastWebExceptionNotify != DateTime.MinValue)
             {
@@ -471,7 +471,7 @@ namespace TezosNotifyBot
             //    }
             //}
  
-            var allUsers = repo.GetUsers();
+            var allUsers = repo.GetUsers();/*
             foreach (var op in operations)
             {
                 foreach (var content in op.contents)
@@ -674,6 +674,7 @@ namespace TezosNotifyBot
                             }
                         }
                     }
+*/
 /*
                     if (content.metadata?.operation_result?.status != "applied")
                         continue;
@@ -923,9 +924,9 @@ namespace TezosNotifyBot
                             SendTextMessageUA(ua, result);
                         }
                     }
-*/
+
                 }
-            }
+            }*/
 
             var fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
             ProcessTransactions(block.Transactions, fromToAmountHash, allUsers);

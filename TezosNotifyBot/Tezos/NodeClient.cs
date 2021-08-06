@@ -71,10 +71,10 @@ namespace TezosNotifyBot.Tezos
                 }
 
                 // Скачать операции
-                var ops = GetBlockOperations(bh.hash);
-                if (ops == null)
-                    return DateTime.Now;
-                var ok = BlockReceived(bh, null/*GetBlockMetadata(bh.hash)*/, ops);
+                //var ops = GetBlockOperations(bh.hash);
+                //if (ops == null)
+                //    return DateTime.Now;
+                var ok = BlockReceived(bh, null,null/*GetBlockMetadata(bh.hash), ops*/);
                 if (!ok)
                     return DateTime.Now;
 
@@ -147,14 +147,14 @@ namespace TezosNotifyBot.Tezos
                 .ToDictionary(o => o.Item1, o => o.Item2);
         }
 
-        public Operation[] GetBlockOperations(string hash)
-        {
-            var opstr = Download(_url + "/chains/main/blocks/" + hash + "/operations");
-            if (opstr == null)
-                return null;
-            var arr = JsonConvert.DeserializeObject<Operation[][]>(opstr);
-            return arr[0].Union(arr[1]).Union(arr[2]).Union(arr[3]).ToArray();
-        }
+        //public Operation[] GetBlockOperations(string hash)
+        //{
+        //    var opstr = Download(_url + "/chains/main/blocks/" + hash + "/operations");
+        //    if (opstr == null)
+        //        return null;
+        //    var arr = JsonConvert.DeserializeObject<Operation[][]>(opstr);
+        //    return arr[0].Union(arr[1]).Union(arr[2]).Union(arr[3]).ToArray();
+        //}
 
         public BlockHeader GetBlockHeader(string hash)
         {
