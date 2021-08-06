@@ -74,7 +74,7 @@ namespace TezosNotifyBot.Tezos
                 var ops = GetBlockOperations(bh.hash);
                 if (ops == null)
                     return DateTime.Now;
-                var ok = BlockReceived(bh, GetBlockMetadata(bh.hash), ops);
+                var ok = BlockReceived(bh, null/*GetBlockMetadata(bh.hash)*/, ops);
                 if (!ok)
                     return DateTime.Now;
 
@@ -180,11 +180,11 @@ namespace TezosNotifyBot.Tezos
             return JsonConvert.DeserializeObject<DelegateInfo>(str);
         }
 
-        public BlockMetadata GetBlockMetadata(string hash)
-        {
-            return JsonConvert.DeserializeObject<BlockMetadata>(Download(_url + "/chains/main/blocks/" + hash +
-                                                                         "/metadata"));
-        }
+        //public BlockMetadata GetBlockMetadata(string hash)
+        //{
+        //    return JsonConvert.DeserializeObject<BlockMetadata>(Download(_url + "/chains/main/blocks/" + hash +
+        //                                                                 "/metadata"));
+        //}
 
         public Ballots GetBallots(string hash)
         {

@@ -3544,19 +3544,19 @@ namespace TezosNotifyBot
             var chatId = update.Message.Chat?.Id ?? update.Message.From.Id;
             string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")})\n";
             var bh = _nodeManager.Client.GetBlockHeader(lastHash);
-            var bm = _nodeManager.Client.GetBlockMetadata(lastHash);
+            //var bm = _nodeManager.Client.GetBlockMetadata(lastHash);
             result += $"#{bh.level} ({bh.timestamp.ToString("dd.MM.yyyy HH:mm:ss")})\n";
-            if (bm.voting_period_kind == "proposal")
-            {
-                result += "Голосование: период подачи предложений\n";
-                var proposals = _nodeManager.Client.GetProposals(lastHash);
-                if (proposals.Count == 0)
-                    result += "Ни одного предложения не поступило";
-                else
-                    result += "Текущие предложения: " + String.Join("; ",
-                        proposals.Select(o => (repo.GetProposal(o.Key)?.Name ?? o.Key) + $" - {o.Value} rolls")
-                            .ToArray());
-            }
+            //if (bm.voting_period_kind == "proposal")
+            //{
+            //    result += "Голосование: период подачи предложений\n";
+            //    var proposals = _nodeManager.Client.GetProposals(lastHash);
+            //    if (proposals.Count == 0)
+            //        result += "Ни одного предложения не поступило";
+            //    else
+            //        result += "Текущие предложения: " + String.Join("; ",
+            //            proposals.Select(o => (repo.GetProposal(o.Key)?.Name ?? o.Key) + $" - {o.Value} rolls")
+            //                .ToArray());
+            //}
 
             Bot.SendTextMessageAsync(chatId, result, ParseMode.Html).ConfigureAwait(true).GetAwaiter().GetResult();
         }
