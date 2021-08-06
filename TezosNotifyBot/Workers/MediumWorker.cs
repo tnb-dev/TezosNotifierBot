@@ -55,8 +55,8 @@ namespace TezosNotifyBot.Workers
                     try
                     {
                         var prevCycle = cycles.Single(c => c.index == currentCycle.index - 1);
-                        var result = CreatePost(repo, bot.MarketData, prevCycle, currentCycle);
-                        bot.NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
+                        var result = CreatePost(repo, prevCycle, currentCycle);
+                        bot.NotifyUserActivity($"🧐 New Medium post: [{result.data.title}]({result.data.url})");
                         lastCycle = currentCycle.index;
                     }
                     catch (Exception e)
@@ -70,7 +70,7 @@ namespace TezosNotifyBot.Workers
             }
         }
 
-        public Medium.Response CreatePost(Repository repo, Tezos.MarketData md, Cycle prevCycle, Cycle currentCycle)
+        public Medium.Response CreatePost(Repository repo, Cycle prevCycle, Cycle currentCycle)
 		{
             StringBuilder post = new StringBuilder();
             post.AppendLine($"<h1>Tezos Blockchain cycle {prevCycle.index} stats</h1>");
@@ -83,7 +83,7 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("<h1>Transaction stats</h1>");
             post.AppendLine($"<p>In the {prevCycle.index} cycle was made {_tzKtClient.GetTransactionsCount(prevCycle.firstLevel, prevCycle.lastLevel).ToString("###,###,###,###")} transactions.</p>");
 
-            FillRates(post, prevCycle, currentCycle);
+            Tezos.MarketData md = FillRates(post, prevCycle, currentCycle);
 
             post.AppendLine("<h1>Whale transactions</h1>");
 
@@ -232,7 +232,7 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("</ul>");
         }
 
-        void FillRates(StringBuilder post, Cycle prevCycle, Cycle cycle)
+        Tezos.MarketData FillRates(StringBuilder post, Cycle prevCycle, Cycle cycle)
 		{
             var histUrl = $"https://min-api.cryptocompare.com/data/v2/histohour?fsym=XTZ&tsym=USD&limit=72&toTs={new DateTimeOffset(cycle.startTime).ToUnixTimeSeconds()}&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f";
             WebClient wc = new WebClient();
@@ -259,6 +259,7 @@ namespace TezosNotifyBot.Workers
             var stat = _tzKtClient.GetCycleStats(prevCycle.index);
             post.AppendLine($"<p>Current Market Cap is {(dtoPrice.USD * (stat.totalSupply / 1000000)).ToString("###,###,###,###,###,###")} USD</p>");
             post.AppendLine($"<p>Current Supply is {(stat.totalSupply / 1000000).ToString("###,###,###,###,###,###")} XTZ</p>");
+            return new Tezos.MarketData { price_usd = dtoPrice.USD, price_btc = dtoPrice.BTC, price_eur = dtoPrice.EUR };
         }
 
         void FillLinks(StringBuilder post)
