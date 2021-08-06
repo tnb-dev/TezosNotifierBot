@@ -147,32 +147,32 @@ namespace TezosNotifyBot.Tezos
                 .ToDictionary(o => o.Item1, o => o.Item2);
         }
 
-        //public Operation[] GetBlockOperations(string hash)
-        //{
-        //    var opstr = Download(_url + "/chains/main/blocks/" + hash + "/operations");
-        //    if (opstr == null)
-        //        return null;
-        //    var arr = JsonConvert.DeserializeObject<Operation[][]>(opstr);
-        //    return arr[0].Union(arr[1]).Union(arr[2]).Union(arr[3]).ToArray();
-        //}
+		//public Operation[] GetBlockOperations(string hash)
+		//{
+		//    var opstr = Download(_url + "/chains/main/blocks/" + hash + "/operations");
+		//    if (opstr == null)
+		//        return null;
+		//    var arr = JsonConvert.DeserializeObject<Operation[][]>(opstr);
+		//    return arr[0].Union(arr[1]).Union(arr[2]).Union(arr[3]).ToArray();
+		//}
 
-        public BlockHeader GetBlockHeader(string hash)
-        {
-            var str = Download(_url + "/chains/main/blocks/" + hash + "/header");
-            return JsonConvert.DeserializeObject<BlockHeader>(str);
-        }
+		public BlockHeader GetBlockHeader(string hash)
+		{
+			var str = Download(_url + "/chains/main/blocks/" + hash + "/header");
+			return JsonConvert.DeserializeObject<BlockHeader>(str);
+		}
 
-        public BlockHeader GetBlockHeader(int level)
-        {
-            var str = Download(_url + "/chains/main/blocks/head/header");
-            var head = JsonConvert.DeserializeObject<BlockHeader>(str);
-            if (head.level == level)
-                return head;
-            str = Download($"{_url}/chains/main/blocks/{head.hash}~{head.level - level}/header");
-            return JsonConvert.DeserializeObject<BlockHeader>(str);
-        }
+		public BlockHeader GetBlockHeader(int level)
+		{
+			var str = Download(_url + "/chains/main/blocks/head/header");
+			var head = JsonConvert.DeserializeObject<BlockHeader>(str);
+			if (head.level == level)
+				return head;
+			str = Download($"{_url}/chains/main/blocks/{head.hash}~{head.level - level}/header");
+			return JsonConvert.DeserializeObject<BlockHeader>(str);
+		}
 
-        public DelegateInfo GetDelegateInfo(string addr, string hash = "head")
+		public DelegateInfo GetDelegateInfo(string addr, string hash = "head")
         {
             var str = Download(_url + "/chains/main/blocks/" + hash + "/context/delegates/" + addr);
             if (!str.Contains("staking_balance"))
