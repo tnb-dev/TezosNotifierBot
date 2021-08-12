@@ -249,7 +249,7 @@ namespace TezosNotifyBot.Model
         public List<UserAddress> GetUserDelegates()
         {
             lock (_dbLock)
-                return _db.UserAddresses.Where(o => !o.IsDeleted && o.NotifyCycleCompletion && !o.User.Inactive)
+                return _db.UserAddresses.Where(o => !o.IsDeleted && (o.NotifyCycleCompletion || o.NotifyBakingRewards) && !o.User.Inactive)
                     .Join(_db.Delegates, o => o.Address, o => o.Address, (o, d) => o).Include(x => x.User).ToList();
         }
 

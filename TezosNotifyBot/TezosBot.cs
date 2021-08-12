@@ -387,7 +387,7 @@ namespace TezosNotifyBot
             var tzKt = _serviceProvider.GetService<ITzKtClient>();
             var tzKtHead = tzKt.GetHead();
             Logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
-            if (tzKtHead.level < blockLevel)
+            if (tzKtHead.level < blockLevel + 1)
                 return false;
 
             var block = tzKt.GetBlock(blockLevel);
@@ -405,7 +405,6 @@ namespace TezosNotifyBot
                 return false;
 
             var periods = tzKt.GetVotingPeriods();
-            var cycles = tzKt.GetCycles();
             var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
             var prevPeriod = periods.Single(p => p.index == currentPeriod.index - 1);
             
@@ -1658,7 +1657,7 @@ namespace TezosNotifyBot
             foreach (var op in operations)
                 rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
             */
-            //ProcessBlockMetadata(blockMetadata, header.hash);
+            ProcessBlockMetadata(block, tzktClient);
             Logger.LogInformation($"Block {block.Level} baking data processed");
             return true;
         }
@@ -1671,70 +1670,71 @@ namespace TezosNotifyBot
             public UserAddress UserAddress;
         }
 
-        void ProcessBlockMetadata(BlockMetadata blockMetadata, string hash)
+        void ProcessBlockMetadata(Block block, ITzKtClient tzKtClient)
         {
-            Logger.LogDebug($"ProcessBlockMetadata {blockMetadata.level.level}");
-            var bakingRewards = blockMetadata.balance_updates.Where(o =>
-                    o.kind == "contract" || (o.kind == "freezer" && o.category == "deposits"))
-                .GroupBy(o => o.contract ?? o.@delegate)
-                .Select(o => new {Delegate = o.Key, Change = o.Sum(o1 => o1.change)}).ToList();
-            //User,rewards,tags,lang
-            List<RewardMsg> msgList = new List<RewardMsg>();
-            foreach (var d in bakingRewards)
+            Logger.LogDebug($"ProcessBlockMetadata {block.Level}");
+            var cycles = tzKtClient.GetCycles();
+            var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+            if (cycle.lastLevel == block.Level)
             {
-                if (d.Change > 0)
+                //User,rewards,tags,lang
+                List<RewardMsg> msgList = new List<RewardMsg>();
+                var delegates = repo.GetUserDelegates();
+                foreach (var d in delegates.Where(ua => ua.NotifyBakingRewards).GroupBy(ua => ua.Address))
                 {
-                    var ualist = repo.GetUserAddresses(d.Delegate).Where(o => o.NotifyBakingRewards).ToList();
-                    if (ualist.Count > 0)
+                    var rewards = tzKtClient.GetBakerRewards(d.Key, cycle.index - 5);
+                    if (rewards.TotalBakerRewards > 0)
                     {
-                        DelegateInfo di;
-                        try
+                        var ualist = d.ToList();
+                        if (ualist.Count > 0)
                         {
-                            di = addrMgr.GetDelegate(_nodeManager.Client, hash, d.Delegate, true);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-
-                        foreach (var ua in ualist)
-                        {
-                            var t = Explorer.FromId(ua.User.Explorer);
-                            string result = resMgr.Get(Res.RewardDeliveredItem,
-                                new ContextObject {u = ua.User, ua = ua, Amount = d.Change / 1000000M}) + " ";
-                            ua.FullBalance = di.Bond / 1000000;
-                            result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n\n";
-
-                            var reward = msgList.LastOrDefault(o =>
-                                o.User == ua.User && o.UserAddress.ChatId == ua.ChatId);
-                            if (reward == null || reward.Message.Length > 3500)
+                            DelegateInfo di;
+                            try
                             {
-                                reward = new RewardMsg {User = ua.User, Message = "", Tags = "", UserAddress = ua};
-                                msgList.Add(reward);
+                                di = addrMgr.GetDelegate(_nodeManager.Client, block.Hash, d.Key, true);
+                            }
+                            catch
+                            {
+                                continue;
                             }
 
-                            if (!ua.User.HideHashTags)
-                                reward.Tags += ua.HashTag();
-                            reward.Message += result;
+                            foreach (var ua in ualist)
+                            {
+                                var t = Explorer.FromId(ua.User.Explorer);
+                                string result = resMgr.Get(Res.RewardDeliveredItem,
+                                    new ContextObject { u = ua.User, ua = ua, Amount = rewards.TotalBakerRewards / 1000000M }) + " ";
+                                ua.FullBalance = di.Bond / 1000000;
+                                result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n\n";
+
+                                var reward = msgList.LastOrDefault(o =>
+                                    o.User == ua.User && o.UserAddress.ChatId == ua.ChatId);
+                                if (reward == null || reward.Message.Length > 3500)
+                                {
+                                    reward = new RewardMsg { User = ua.User, Message = "", Tags = "", UserAddress = ua };
+                                    msgList.Add(reward);
+                                }
+
+                                if (!ua.User.HideHashTags)
+                                    reward.Tags += ua.HashTag();
+                                reward.Message += result;
+                            }
                         }
                     }
                 }
-            }
 
-            foreach (var msg in msgList)
-            {
-                SendTextMessageUA(msg.UserAddress,
-                    resMgr.Get(Res.RewardDelivered,
-                        new ContextObject {u = msg.User, Cycle = blockMetadata.level.cycle - 5}) + "\n\n" +
-                    msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
+                foreach (var msg in msgList)
+                {
+                    SendTextMessageUA(msg.UserAddress,
+                        resMgr.Get(Res.RewardDelivered,
+                            new ContextObject { u = msg.User, Cycle = cycle.index - 5 }) + "\n\n" +
+                        msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
+                }
             }
-
-            if (blockMetadata.level.cycle_position == 0)
+            if (cycle.firstLevel == block.Level)
             {
                 var uad = repo.GetUserDelegates();
 
-                var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
-                var penalties = tzKtClient.GetRevelationPenalties(blockMetadata.level.level - 1);
+                var penalties = tzKtClient.GetRevelationPenalties(block.Level - 1);
                 foreach (var penalty in penalties)
                 {
                     foreach (var ua in uad.Where(a => a.Address == penalty.baker.address && a.NotifyMisses))
@@ -1753,40 +1753,44 @@ namespace TezosNotifyBot
                     }
                 }
 
-                foreach (var d in uad.Select(o => o.Address).Distinct())
-                {
-                    DelegateInfo di;
-                    try
-                    {
-                        di = addrMgr.GetDelegate(_nodeManager.Client, hash, d, true);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
+                //foreach (var d in uad.Select(o => o.Address).Distinct())
+                //{
+                //    DelegateInfo di;
+                //    try
+                //    {
+                //        di = addrMgr.GetDelegate(_nodeManager.Client, block.Hash, d, true);
+                //    }
+                //    catch
+                //    {
+                //        continue;
+                //    }
 
-                    if (di != null)
-                    {
-                        decimal accured =
-                            addrMgr.GetRewardsForCycle(_nodeManager.Client, d, di, blockMetadata.level.cycle - 1);
-                        repo.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long) accured);
-                    }
-                }
+                //    if (di != null)
+                //    {
+                //        decimal accured =
+                //            addrMgr.GetRewardsForCycle(_nodeManager.Client, d, di, blockMetadata.level.cycle - 1);
+                //        repo.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long) accured);
+                //    }
+                //}
 
                 var dispatcher = GetService<IEventDispatcher>();
 
                 dispatcher.Dispatch(new CycleCompletedEvent());
                 
-                var cyclePast = tzKtClient.GetCycle(blockMetadata.level.cycle - 1);
-                var cycleNext = tzKtClient.GetCycle(blockMetadata.level.cycle);
+                var cyclePast = cycles.Single(o => o.index == cycle.index - 1);
+                var cycleNext = cycles.Single(o => o.index == cycle.index + 1);
+                Dictionary<string, Rewards> rewards = new Dictionary<string, Rewards>();
+                foreach (var d in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => o.Address))
+                    rewards.Add(d.Key, tzKtClient.GetBakerRewards(d.Key, cyclePast.index));
                 foreach (var usr in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => new {o.UserId, o.ChatId}))
                 {
                     string perf = resMgr.Get(Res.CycleCompleted,
-                        new ContextObject {u = usr.First().User, Cycle = blockMetadata.level.cycle - 1, CycleLength = cyclePast.Length, NextEnd = cycleNext.endTime});
+                        new ContextObject {u = usr.First().User, Cycle = cycle.index - 1, CycleLength = cyclePast.Length, NextEnd = cycleNext.endTime});
                     foreach (var dr in usr)
                     {
-                        var rew = rewardsManager.GetLastActualRewards(dr.Address);
-                        var rewMax = rewardsManager.GetLastMaxRewards(dr.Address);
+                        var r = rewards[dr.Address];
+                        var rew = r?.TotalBakerRewards ?? 0;
+                        var rewMax = rew + r?.TotalBakerLoss ?? 0;
                         if (rewMax > 0)
                         {
                             dr.Performance = 100M * rew / rewMax;
@@ -1794,7 +1798,7 @@ namespace TezosNotifyBot
                             perf += "\n" + resMgr.Get(Res.Accrued,
                                 new ContextObject
                                 {
-                                    u = usr.First().User, Cycle = blockMetadata.level.cycle - 1, Amount = rew / 1000000M
+                                    u = usr.First().User, Cycle = cycle.index - 1, Amount = rew / 1000000M
                                 });
                         }
                     }
@@ -1806,27 +1810,27 @@ namespace TezosNotifyBot
 
                 // TODO: TNB-22
                 
-                NotifyAssignedRights(tzKtClient, uad, blockMetadata.level.cycle);
+                NotifyAssignedRights(tzKtClient, uad, cycle.index);
 
                 LoadAddressList();
 
                 // Notification of the availability of the award to the delegator
                 var userAddressDelegators = repo.GetDelegators();
                 var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
-                int cycle = blockMetadata.level.cycle - 6;
+                int cycle1 = cycle.index - 6;
                 foreach (var addr in addrs)
 				{
-                    var rewards = tzKtClient.GetDelegatorRewards(addr, cycle);
-                    if (rewards != null)
+                    var ua_rewards = tzKtClient.GetDelegatorRewards(addr, cycle1);
+                    if (ua_rewards != null)
 					{
                         foreach(var ua in userAddressDelegators.Where(o => o.Address == addr))
 						{
                             var context = new ContextObject
                             {
                                 u = ua.User,
-                                Cycle = cycle,
-                                Amount = rewards.TotalRewards,
-                                ua_to = repo.GetUserTezosAddress(ua.UserId, rewards.baker.address),
+                                Cycle = cycle1,
+                                Amount = ua_rewards.TotalRewards,
+                                ua_to = repo.GetUserTezosAddress(ua.UserId, ua_rewards.baker.address),
                                 ua = ua
                             };
                             var message = resMgr.Get(Res.AwardAvailable, context);
@@ -1838,7 +1842,7 @@ namespace TezosNotifyBot
 					}
                 }
             }
-
+            /*
             if (blockMetadata.level.voting_period_position == 0 && blockMetadata.voting_period_kind == "testing_vote")
             {
                 var proposals = _nodeManager.Client.GetProposals(hash + "~2");
@@ -1934,8 +1938,8 @@ namespace TezosNotifyBot
                     }
                 }
             }
-
-            Logger.LogDebug($"ProcessBlockMetadata {blockMetadata.level.level} completed");
+            */
+            Logger.LogDebug($"ProcessBlockMetadata {block.Level} completed");
         }
 
         void NotifyAssignedRights(ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
