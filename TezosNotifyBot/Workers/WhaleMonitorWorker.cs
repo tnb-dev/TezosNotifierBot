@@ -31,6 +31,7 @@ namespace TezosNotifyBot.Workers
 			_logger = logger;
 			_provider = provider;
             _config = config.Value;
+            resMgr = resourceManager;
 		}
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
