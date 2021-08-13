@@ -1683,7 +1683,7 @@ namespace TezosNotifyBot
                 foreach (var d in delegates.Where(ua => ua.NotifyBakingRewards).GroupBy(ua => ua.Address))
                 {
                     var rewards = tzKtClient.GetBakerRewards(d.Key, cycle.index - 5);
-                    if (rewards.TotalBakerRewards > 0)
+                    if (rewards != null && rewards.TotalBakerRewards > 0)
                     {
                         var ualist = d.ToList();
                         if (ualist.Count > 0)
