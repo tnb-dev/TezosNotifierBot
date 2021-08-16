@@ -1790,7 +1790,8 @@ namespace TezosNotifyBot
                     {
                         var r = rewards[dr.Address];
                         var rew = r?.TotalBakerRewards ?? 0;
-                        var rewMax = rew + r?.TotalBakerLoss ?? 0;
+                        var rewPlan = r?.TotalBakerRewardsPlan ?? 0;
+                        var rewMax = rewPlan + r?.TotalBakerLoss ?? 0;
                         if (rewMax > 0)
                         {
                             dr.Performance = 100M * rew / rewMax;
