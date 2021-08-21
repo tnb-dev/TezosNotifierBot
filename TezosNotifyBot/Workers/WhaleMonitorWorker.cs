@@ -14,6 +14,7 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
 
@@ -25,12 +26,14 @@ namespace TezosNotifyBot.Workers
 		private readonly IServiceProvider _provider;
         private readonly ResourceManager resMgr;
         private readonly BotConfig _config;
+        private readonly NodeManager _nodeManager;
         int lastBlock = 0;
-        public WhaleMonitorWorker(IOptions<BotConfig> config, ILogger<WhaleMonitorWorker> logger, ResourceManager resourceManager, IServiceProvider provider)
+        public WhaleMonitorWorker(IOptions<BotConfig> config, ILogger<WhaleMonitorWorker> logger, ResourceManager resourceManager, IServiceProvider provider, NodeManager nodeManager)
 		{
 			_logger = logger;
 			_provider = provider;
             _config = config.Value;
+            _nodeManager = nodeManager;
             resMgr = resourceManager;
 		}
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -63,6 +66,7 @@ namespace TezosNotifyBot.Workers
                 var repo = _provider.GetRequiredService<Repository>();
                 var wtlist = repo.GetWhaleTransactions();
                 var allUsers = repo.GetUsers();
+                var md = _nodeManager.Client.GetMarketData();
 
                 foreach (var address in wtlist.GroupBy(o => o.FromAddress).Where(o => o.Sum(o1 => o1.Amount) >= 250000))
                 {
@@ -87,7 +91,7 @@ namespace TezosNotifyBot.Workers
                             {
                                 u = u,
                                 Amount = from_start - from_end,
-                                md = bot.MarketData,
+                                md = md,
                                 ua = ua_from,
                                 Period = (int)Math.Ceiling(tzKtBlock.Timestamp.Subtract(timeStamp).TotalDays)
                             });
@@ -100,7 +104,7 @@ namespace TezosNotifyBot.Workers
                             {
                                 u = u,
                                 Amount = op.Amount,
-                                md = bot.MarketData,
+                                md = md,
                                 ua = ua_to,
                                 Block = op.Level,
                                 OpHash = op.OpHash
