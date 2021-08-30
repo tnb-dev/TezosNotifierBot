@@ -79,7 +79,7 @@ namespace TezosNotifyBot.Workers
                     var from_end = tzKt.GetBalance(address.Key, block.Level);
                     var amount = (from_start - from_end);
                     foreach (var u in allUsers.Where(o =>
-                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount && o.SmartWhaleAlerts))
                     {
                         var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
                         var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id) && o.Amount < u.WhaleThreshold);
@@ -112,6 +112,7 @@ namespace TezosNotifyBot.Workers
                             repo.AddWhaleTransactionNotify(op.Id, u.Id);
                             tags += ua_to.HashTag();
                         }
+                        result += "\n" + resMgr.Get(Res.TurnOff, u) + ": /outflow_off";
                         if (!u.HideHashTags)
                         {
                             result += "\n\n#whale" + ua_from.HashTag() + tags;

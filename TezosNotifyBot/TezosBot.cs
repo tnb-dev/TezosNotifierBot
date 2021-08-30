@@ -2334,6 +2334,18 @@ namespace TezosNotifyBot
                     repo.UpdateUser(user);
                     SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, ev.CallbackQuery.Message.MessageId);
                 }
+                else if (callbackData.StartsWith("set_swa_off"))
+                {
+                    user.SmartWhaleAlerts = false;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
+                }
+                else if (callbackData.StartsWith("set_swa_on"))
+                {
+                    user.SmartWhaleAlerts = true;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
+                }
                 else if (callbackData.StartsWith("set_nialert"))
                 {
                     SendTextMessage(user.Id, resMgr.Get(Res.NetworkIssueAlertsTip, user),
@@ -2964,6 +2976,12 @@ namespace TezosNotifyBot
                         var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
                         NotifyDev(str, user.Id, ParseMode.Default, true);
                     }
+                    else if (message.Text == "/outflow_off")
+                    {
+                        user.SmartWhaleAlerts = false;
+                        repo.UpdateUser(user);
+                        SendTextMessage(user.Id, resMgr.Get(Res.WhaleOutflowOff, user), ReplyKeyboards.MainMenu(resMgr, user));
+                    }
                     else if (message.Text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
                     {
                         var str = message.Text.Substring("/medium ".Length);
@@ -2990,11 +3008,11 @@ namespace TezosNotifyBot
                     {
                         var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
                         var msg = repo.GetMessage(msgid);
-                        var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int) msg.TelegramMessageId)
+                        var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int)msg.TelegramMessageId)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                         SendTextMessage(user.Id, $"Message forwarded for user {UserLink(repo.GetUser(msg.UserId))}",
                             ReplyKeyboards.MainMenu(resMgr, user), parseMode: ParseMode.Markdown);
-                        Bot.ForwardMessageAsync(user.Id, msg.UserId, (int) msg.TelegramMessageId);
+                        Bot.ForwardMessageAsync(user.Id, msg.UserId, (int)msg.TelegramMessageId);
                     }
                     else if (message.Text.StartsWith("/help") && Config.DevUserNames.Contains(message.From.Username))
                     {
@@ -3163,7 +3181,7 @@ namespace TezosNotifyBot
                                     .Replace("щ", "sh").Replace("э", "e").Replace("ю", "u").Replace("я", "ya");
                                 var da = repo.GetDelegates()
                                     .Where(o => o.Name != null && o.Name.Replace("'", "").Replace("`", "")
-                                        .Replace(" ", "").ToLower().Contains(q)).Select(o => new {o.Address, o.Name});
+                                        .Replace(" ", "").ToLower().Contains(q)).Select(o => new { o.Address, o.Name });
                                 addr = da.Select(o => o.Address).FirstOrDefault();
                             }
                         }

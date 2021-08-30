@@ -54,7 +54,8 @@ namespace TezosNotifyBot.Storage
                 .Property(b => b.Level)
                 .HasDefaultValue(0);
             
-            modelBuilder.Entity<User>();
+            modelBuilder.Entity<User>(builder =>
+                builder.Property(x => x.SmartWhaleAlerts).HasDefaultValue(true));
             modelBuilder.Entity<UserAddress>(builder =>
             {
                 builder.Property(x => x.NotifyPayout).HasDefaultValue(true);

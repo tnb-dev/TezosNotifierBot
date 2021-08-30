@@ -454,3 +454,9 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #WhaleOutflow;ru;🐋 Отток средств от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в размере <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> за последние {Period} дня, самые крупные транзакции:
 #WhaleOutflowItem;en;▫️<a href='{t.op(OpHash)}'>{Amount.TezToString()}</a> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> at block <a href='{t.block(Block)}'>{Block}</a>
 #WhaleOutflowItem;ru;▫️<a href='{t.op(OpHash)}'>{Amount.TezToString()}</a> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в блоке <a href='{t.block(Block)}'>{Block}</a>
+#SmartWhale;en;Outflow
+#SmartWhale;ru;Отток
+#WhaleOutflowOff;en;Large outflow notifications for a period of time are turned off. You can turn them back on in the settings 🐋 <b>Whale alerts</b>.
+#WhaleOutflowOff;ru;Уведомления о крупных оттоках средств за период времени отключены. Вы можете снова включить их в настройках 🐋 <b>Оповещения о китах</b>.
+#TurnOff;ru;Отключить
+#TurnOff;en;Turn off
