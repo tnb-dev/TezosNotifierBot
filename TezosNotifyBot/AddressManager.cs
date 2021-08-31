@@ -82,25 +82,25 @@ namespace TezosNotifyBot
 			}
 		}
 
-		Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
-		public decimal? GetAvgPerformance(Model.Repository repo, string addr)
-		{
-			int cycle = new Level(repo.GetLastBlockLevel().Item1).Cycle;
-			if (avgPerf.ContainsKey((cycle, addr)))
-				return avgPerf[(cycle, addr)];
-			decimal rew = 0;
-			decimal max = 0;
-			for (int i = 0; i < 10; i++)
-			{
-				rew += repo.GetRewards(addr, cycle - i, false);
-				max += repo.GetRewards(addr, cycle - i, true);
-			}
-			if (max > 0)
-				avgPerf[(cycle, addr)] = 100M * rew / max;
-			else
-				avgPerf[(cycle, addr)] = null;
-			return avgPerf[(cycle, addr)];
-		}
+		//Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
+		//public decimal? GetAvgPerformance(Model.Repository repo, string addr)
+		//{
+		//	int cycle = new Level(repo.GetLastBlockLevel().Item1).Cycle;
+		//	if (avgPerf.ContainsKey((cycle, addr)))
+		//		return avgPerf[(cycle, addr)];
+		//	decimal rew = 0;
+		//	decimal max = 0;
+		//	for (int i = 0; i < 10; i++)
+		//	{
+		//		rew += repo.GetRewards(addr, cycle - i, false);
+		//		max += repo.GetRewards(addr, cycle - i, true);
+		//	}
+		//	if (max > 0)
+		//		avgPerf[(cycle, addr)] = 100M * rew / max;
+		//	else
+		//		avgPerf[(cycle, addr)] = null;
+		//	return avgPerf[(cycle, addr)];
+		//}
 
 		internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
 		{

@@ -1,4 +1,4 @@
-﻿namespace TezosNotifyBot
+﻿/*namespace TezosNotifyBot
 {
 	public struct Level
 	{
@@ -25,3 +25,4 @@
 		public static implicit operator int(Level level) => level.Height;
 	}
 }
+*/
