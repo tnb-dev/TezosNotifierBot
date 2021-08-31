@@ -3710,8 +3710,9 @@ namespace TezosNotifyBot
                         SendTextMessage(chat.Id, resMgr.Get(Res.IncorrectTezosAddress, user));
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Logger.LogError(e, $"Error on adding \"{msg}\":\n{e.Message}");
                 if (chat == null)
                     SendTextMessage(user.Id, resMgr.Get(Res.IncorrectTezosAddress, user),
                         ReplyKeyboards.MainMenu(resMgr, user));
