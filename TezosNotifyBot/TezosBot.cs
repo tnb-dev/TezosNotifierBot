@@ -162,8 +162,9 @@ namespace TezosNotifyBot
                 
                 NotifyDev(message.ToString(), 0);
 
-                var cycle = _serviceProvider.GetRequiredService<ITzKtClient>()
-                    .GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle);
+                var lbl = repo.GetLastBlockLevel();
+                var cycles = _serviceProvider.GetRequiredService<ITzKtClient>().GetCycles();
+                var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);                    
                 // TODO: Check why `snapshot_cycle` is null
                 NotifyDev($"Current cycle: {cycle.index}, rolls: {cycle.totalRolls}", 0);
                 if (Config.TwitterConsumerKey != null)
