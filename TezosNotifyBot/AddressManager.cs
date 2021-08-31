@@ -82,8 +82,8 @@ namespace TezosNotifyBot
 			}
 		}
 
-		Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
-		public decimal? GetAvgPerformance(Model.Repository repo, string addr)
+		//Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
+		/*public decimal? GetAvgPerformance(Model.Repository repo, string addr)
 		{
 			int cycle = new Level(repo.GetLastBlockLevel().Item1).Cycle;
 			if (avgPerf.ContainsKey((cycle, addr)))
@@ -100,7 +100,7 @@ namespace TezosNotifyBot
 			else
 				avgPerf[(cycle, addr)] = null;
 			return avgPerf[(cycle, addr)];
-		}
+		}*/
 
 		internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
 		{

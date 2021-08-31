@@ -75,7 +75,7 @@ namespace TezosNotifyBot
         // Node CurrentNode;
         int NetworkIssueMinutes = 2;
         Worker worker;
-        RewardsManager rewardsManager;
+        //RewardsManager rewardsManager;
         AddressManager addrMgr;
         private readonly ResourceManager resMgr;
 		//string lastHash;
@@ -130,7 +130,7 @@ namespace TezosNotifyBot
                 //     File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nodes.json")));
                 // CurrentNode = Nodes[0];
 
-                rewardsManager = new RewardsManager(repo);
+                //rewardsManager = new RewardsManager(repo);
 
                 //{
                 //    var block = repo.GetLastBlockLevel();
@@ -2217,8 +2217,10 @@ namespace TezosNotifyBot
                     var userAddress = repo.GetUserAddress(userId, addrId);
                     if (userAddress != null)
                     {
+                        var cycles = _serviceProvider.GetService<ITzKtClient>().GetCycles();
                         if (userAddress.IsOwner && !user.IsAdmin(Config.Telegram) &&
-                            (new Level(prevBlock.Level)).Cycle == (new Level(userAddress.LastMessageLevel)).Cycle)
+                            cycles.Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel) ==
+                            cycles.Single(c => c.firstLevel <= userAddress.LastMessageLevel && userAddress.LastMessageLevel <= c.lastLevel))
 						{
                             SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
                             return;
@@ -3264,7 +3266,7 @@ namespace TezosNotifyBot
                             repo.SetLastBlockLevel(num, h.priority, h.hash);
                             lastBlockChanged = true;
                             var c = _serviceProvider.GetService<ITzKtClient>()
-                                .GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle);
+                                .GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
                             NotifyDev(
                                 $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, rolls: {c.totalRolls}",
                                 0);
@@ -3739,7 +3741,7 @@ namespace TezosNotifyBot
 
             //number of rolls, participating in staking
             var totalRolls = _serviceProvider.GetService<ITzKtClient>()
-                .GetCycle(new Level(repo.GetLastBlockLevel().Item1).Cycle).totalRolls;
+                .GetCycles().Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel ).totalRolls;
 
             //how many rolls and staking balance the baker should have in order to lock the whole balance
             var bakerRollsCapacity = totalRolls * bakerShare;
@@ -3800,12 +3802,12 @@ namespace TezosNotifyBot
                     ua.Delegators = di.NumDelegators;
                     result += resMgr.Get(Res.StakingInfo, ua) + "\n";
                     result += FreeSpace(ua);
-                    decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
+                    /*decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
                     if (perf.HasValue)
                     {
                         ua.AveragePerformance = perf.Value;
                         result += resMgr.Get(Res.AveragePerformance, ua) + "\n";
-                    }
+                    }*/
                 }
                 catch
                 {

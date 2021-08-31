@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
+/*
 namespace TezosNotifyBot
 {
 	public class RewardsManager
@@ -71,3 +72,4 @@ namespace TezosNotifyBot
 		}
 	}
 }
+*/
