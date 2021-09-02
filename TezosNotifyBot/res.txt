@@ -85,7 +85,7 @@ Full description & manual: http://tzsnt.fr/
 #MyAddresses;ru;👛 Мои адреса
 #MyAddresses;en;👛 My Addresses
 #Contact;ru;✉️ Обратная связь
-#Contact;en;✉️ Feedback
+#Contact;en;✉️ Contact us
 #Settings;ru;⚙️ Настройки
 #Settings;en;⚙️ Settings
 #GoBack;ru;⬅️ Назад
