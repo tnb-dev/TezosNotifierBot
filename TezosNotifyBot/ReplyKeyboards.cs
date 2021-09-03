@@ -375,8 +375,8 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
-                        Text = resMgr.Get(Res.RenameAddress, u),
-                        CallbackData = "setname " + id
+                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
+                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
                     },
                     new InlineKeyboardButton
                     {
@@ -388,8 +388,8 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
-                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
-                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
+                        Text = resMgr.Get(Res.RenameAddress, u),
+                        CallbackData = "setname " + id
                     },
                     new InlineKeyboardButton
                     {
