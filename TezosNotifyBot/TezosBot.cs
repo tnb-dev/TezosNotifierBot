@@ -402,8 +402,9 @@ namespace TezosNotifyBot
             /*var prevMD = lastMetadata?.level?.level == header.level - 1
                 ? lastMetadata
                 : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());*/
-            if (!ProcessBlockBakingData(block))//  prevHeader/*, prevMD*/))
-                return false;
+            ProcessBlockBakingData(block);
+
+            ProcessBlockMetadata(block, tzKt);
 
             var periods = tzKt.GetVotingPeriods();
             var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
@@ -678,8 +679,7 @@ namespace TezosNotifyBot
                             }
                         }
                     }
-*/
-/*
+
                     if (content.metadata?.operation_result?.status != "applied")
                         continue;
                     if (content.kind == "transaction")
@@ -1496,7 +1496,7 @@ namespace TezosNotifyBot
                 }
             }
         }
-        List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
+        /*List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
         {
             List<(string from, string to, decimal amount)>
                 result = new List<(string from, string to, decimal amount)>();
@@ -1531,8 +1531,8 @@ namespace TezosNotifyBot
 
 			return result;
         }
-        
-        bool ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
+        */
+        void ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
         {
             Logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
@@ -1658,9 +1658,7 @@ namespace TezosNotifyBot
             foreach (var op in operations)
                 rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
             */
-            ProcessBlockMetadata(block, tzktClient);
             Logger.LogInformation($"Block {block.Level} baking data processed");
-            return true;
         }
 
         class RewardMsg
@@ -1678,6 +1676,7 @@ namespace TezosNotifyBot
             var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
             if (cycle.lastLevel == block.Level)
             {
+                Logger.LogDebug($"Calc delegates rewards on {block.Level}");
                 //User,rewards,tags,lang
                 List<RewardMsg> msgList = new List<RewardMsg>();
                 var delegates = repo.GetUserDelegates();
@@ -1730,6 +1729,7 @@ namespace TezosNotifyBot
                             new ContextObject { u = msg.User, Cycle = cycle.index - 5 }) + "\n\n" +
                         msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
                 }
+                Logger.LogDebug($"Calc delegates rewards finished on {block.Level}");
             }
             if (cycle.firstLevel == block.Level)
             {
@@ -1778,6 +1778,8 @@ namespace TezosNotifyBot
 
                 dispatcher.Dispatch(new CycleCompletedEvent());
                 
+                Logger.LogDebug($"Calc delegates performance on {block.Level - 1}");
+
                 var cyclePast = cycles.Single(o => o.index == cycle.index - 1);
                 var cycleNext = cycles.Single(o => o.index == cycle.index + 1);
                 Dictionary<string, Rewards> rewards = new Dictionary<string, Rewards>();
@@ -1809,13 +1811,14 @@ namespace TezosNotifyBot
                         perf += "\n\n#cycle" + String.Join("", usr.Select(o => o.HashTag()));
                     SendTextMessageUA(usr.First(), perf);
                 }
-
+                Logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
                 // TODO: TNB-22
-                
+
                 NotifyAssignedRights(tzKtClient, uad, cycle.index);
 
                 LoadAddressList();
 
+                Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
                 // Notification of the availability of the award to the delegator
                 var userAddressDelegators = repo.GetDelegators();
                 var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
@@ -1843,6 +1846,7 @@ namespace TezosNotifyBot
                         }
 					}
                 }
+                Logger.LogDebug($"Calc delegators awards on {block.Level - 1} finished");
             }
             /*
             if (blockMetadata.level.voting_period_position == 0 && blockMetadata.voting_period_kind == "testing_vote")
