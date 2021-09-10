@@ -456,7 +456,11 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #WhaleOutflowItem;ru;▫️<a href='{t.op(OpHash)}'>{Amount.TezToString()}</a> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в блоке <a href='{t.block(Block)}'>{Block}</a>
 #SmartWhale;en;Outflow
 #SmartWhale;ru;Отток
-#WhaleOutflowOff;en;Large outflow notifications for a period of time are turned off. You can turn them back on in the settings 🐋 <b>Whale alerts</b>.
-#WhaleOutflowOff;ru;Уведомления о крупных оттоках средств за период времени отключены. Вы можете снова включить их в настройках 🐋 <b>Оповещения о китах</b>.
+#WhaleOutflowOff;en;Outflow notifications are turned off. You can turn it back on using the <b>⚙️ Settings → 🐋 Whale alerts</b>.
+#WhaleOutflowOff;ru;Уведомления о крупных оттоках средств отключены. Вы можете снова включить их в меню <b>⚙️ Настройки →  🐋 Оповещения о китах</b>.
 #TurnOff;ru;Отключить
 #TurnOff;en;Turn off
+#NotifyOutOfFreeSpace;ru;{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Нет свободного места
+#NotifyOutOfFreeSpace;en;{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Out of free space
+#DelegateOutOfFreeSpace;ru;🙅 Нет свободного места: {(ua.NotifyOutOfFreeSpace ? "🔔 вкл" : "🔕 выкл")}
+#DelegateOutOfFreeSpace;en;🙅 Out of free space: {(ua.NotifyOutOfFreeSpace ? "🔔 on" : "🔕 off")}
