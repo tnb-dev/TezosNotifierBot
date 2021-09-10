@@ -55,15 +55,16 @@ namespace TezosNotifyBot.Workers
         async Task Run(CancellationToken stoppingToken)
 		{
             using var scope = _provider.CreateScope();
+            var provider = scope.ServiceProvider;
             using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
             var bot = scope.ServiceProvider.GetRequiredService<TezosBot>();
 
             var block = db.LastBlock.Single();
             if (block.Level > lastBlock)
             {
-                var tzKt = _provider.GetService<ITzKtClient>();
+                var tzKt = provider.GetService<ITzKtClient>();
                 var tzKtBlock = tzKt.GetBlock(block.Level);
-                var repo = _provider.GetRequiredService<Repository>();
+                var repo = provider.GetRequiredService<Repository>();
                 var wtlist = repo.GetWhaleTransactions();
                 var allUsers = repo.GetUsers();
                 var md = _nodeManager.Client.GetMarketData();
