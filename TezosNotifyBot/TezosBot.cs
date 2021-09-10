@@ -164,7 +164,7 @@ namespace TezosNotifyBot
 
                 var lbl = repo.GetLastBlockLevel();
                 var cycles = _serviceProvider.GetRequiredService<ITzKtClient>().GetCycles();
-                var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);
+                var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);                    
                 // TODO: Check why `snapshot_cycle` is null
                 NotifyDev($"Current cycle: {cycle.index}, rolls: {cycle.totalRolls}", 0);
                 if (Config.TwitterConsumerKey != null)
@@ -402,8 +402,9 @@ namespace TezosNotifyBot
             /*var prevMD = lastMetadata?.level?.level == header.level - 1
                 ? lastMetadata
                 : _nodeManager.Client.GetBlockMetadata((header.level - 1).ToString());*/
-            if (!ProcessBlockBakingData(block))//  prevHeader/*, prevMD*/))
-                return false;
+            ProcessBlockBakingData(block);
+
+            ProcessBlockMetadata(block, tzKt);
 
             var periods = tzKt.GetVotingPeriods();
             var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
@@ -678,8 +679,7 @@ namespace TezosNotifyBot
                             }
                         }
                     }
-*/
-/*
+
                     if (content.metadata?.operation_result?.status != "applied")
                         continue;
                     if (content.kind == "transaction")
@@ -1496,7 +1496,7 @@ namespace TezosNotifyBot
                 }
             }
         }
-        List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
+        /*List<(string from, string to, decimal amount)> TokenTransfers(Token token, Operation op)
         {
             List<(string from, string to, decimal amount)>
                 result = new List<(string from, string to, decimal amount)>();
@@ -1531,8 +1531,8 @@ namespace TezosNotifyBot
 
 			return result;
         }
-        
-        bool ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
+        */
+        void ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
         {
             Logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
@@ -1658,9 +1658,7 @@ namespace TezosNotifyBot
             foreach (var op in operations)
                 rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
             */
-            ProcessBlockMetadata(block, tzktClient);
             Logger.LogInformation($"Block {block.Level} baking data processed");
-            return true;
         }
 
         class RewardMsg
@@ -1678,6 +1676,7 @@ namespace TezosNotifyBot
             var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
             if (cycle.lastLevel == block.Level)
             {
+                Logger.LogDebug($"Calc delegates rewards on {block.Level}");
                 //User,rewards,tags,lang
                 List<RewardMsg> msgList = new List<RewardMsg>();
                 var delegates = repo.GetUserDelegates();
@@ -1730,6 +1729,7 @@ namespace TezosNotifyBot
                             new ContextObject { u = msg.User, Cycle = cycle.index - 5 }) + "\n\n" +
                         msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
                 }
+                Logger.LogDebug($"Calc delegates rewards finished on {block.Level}");
             }
             if (cycle.firstLevel == block.Level)
             {
@@ -1778,6 +1778,8 @@ namespace TezosNotifyBot
 
                 dispatcher.Dispatch(new CycleCompletedEvent());
                 
+                Logger.LogDebug($"Calc delegates performance on {block.Level - 1}");
+
                 var cyclePast = cycles.Single(o => o.index == cycle.index - 1);
                 var cycleNext = cycles.Single(o => o.index == cycle.index + 1);
                 Dictionary<string, Rewards> rewards = new Dictionary<string, Rewards>();
@@ -1809,13 +1811,14 @@ namespace TezosNotifyBot
                         perf += "\n\n#cycle" + String.Join("", usr.Select(o => o.HashTag()));
                     SendTextMessageUA(usr.First(), perf);
                 }
-
+                Logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
                 // TODO: TNB-22
-                
+
                 NotifyAssignedRights(tzKtClient, uad, cycle.index);
 
                 LoadAddressList();
 
+                Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
                 // Notification of the availability of the award to the delegator
                 var userAddressDelegators = repo.GetDelegators();
                 var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
@@ -1843,6 +1846,7 @@ namespace TezosNotifyBot
                         }
 					}
                 }
+                Logger.LogDebug($"Calc delegators awards on {block.Level - 1} finished");
             }
             /*
             if (blockMetadata.level.voting_period_position == 0 && blockMetadata.voting_period_kind == "testing_vote")
@@ -2336,6 +2340,18 @@ namespace TezosNotifyBot
                     user.WhaleAlertThreshold = wat * 1000;
                     repo.UpdateUser(user);
                     SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, ev.CallbackQuery.Message.MessageId);
+                }
+                else if (callbackData.StartsWith("set_swa_off"))
+                {
+                    user.SmartWhaleAlerts = false;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
+                }
+                else if (callbackData.StartsWith("set_swa_on"))
+                {
+                    user.SmartWhaleAlerts = true;
+                    repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_nialert"))
                 {
@@ -2967,6 +2983,12 @@ namespace TezosNotifyBot
                         var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
                         NotifyDev(str, user.Id, ParseMode.Default, true);
                     }
+                    else if (message.Text == "/outflow_off")
+                    {
+                        user.SmartWhaleAlerts = false;
+                        repo.UpdateUser(user);
+                        SendTextMessage(user.Id, resMgr.Get(Res.WhaleOutflowOff, user), ReplyKeyboards.MainMenu(resMgr, user));
+                    }
                     else if (message.Text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
                     {
                         var str = message.Text.Substring("/medium ".Length);
@@ -2993,11 +3015,11 @@ namespace TezosNotifyBot
                     {
                         var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
                         var msg = repo.GetMessage(msgid);
-                        var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int) msg.TelegramMessageId)
+                        var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int)msg.TelegramMessageId)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                         SendTextMessage(user.Id, $"Message forwarded for user {UserLink(repo.GetUser(msg.UserId))}",
                             ReplyKeyboards.MainMenu(resMgr, user), parseMode: ParseMode.Markdown);
-                        Bot.ForwardMessageAsync(user.Id, msg.UserId, (int) msg.TelegramMessageId);
+                        Bot.ForwardMessageAsync(user.Id, msg.UserId, (int)msg.TelegramMessageId);
                     }
                     else if (message.Text.StartsWith("/help") && Config.DevUserNames.Contains(message.From.Username))
                     {
@@ -3166,7 +3188,7 @@ namespace TezosNotifyBot
                                     .Replace("щ", "sh").Replace("э", "e").Replace("ю", "u").Replace("я", "ya");
                                 var da = repo.GetDelegates()
                                     .Where(o => o.Name != null && o.Name.Replace("'", "").Replace("`", "")
-                                        .Replace(" ", "").ToLower().Contains(q)).Select(o => new {o.Address, o.Name});
+                                        .Replace(" ", "").ToLower().Contains(q)).Select(o => new { o.Address, o.Name });
                                 addr = da.Select(o => o.Address).FirstOrDefault();
                             }
                         }
@@ -3723,7 +3745,7 @@ namespace TezosNotifyBot
 
             //number of rolls, participating in staking
             var totalRolls = _serviceProvider.GetService<ITzKtClient>()
-                .GetCycles().Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel).totalRolls;
+                .GetCycles().Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel ).totalRolls;
 
             //how many rolls and staking balance the baker should have in order to lock the whole balance
             var bakerRollsCapacity = totalRolls * bakerShare;

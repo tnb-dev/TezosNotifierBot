@@ -150,7 +150,8 @@ namespace TezosNotifyBot
                     CallbackData = data2
                 }
             });
-            add((u.WhaleAlertThreshold == 0 ? "☑️" : "") + " " + resMgr.Get(Res.Off, u), "set_wa_0");
+            add2((u.WhaleAlertThreshold == 0 ? "☑️" : "") + " " + resMgr.Get(Res.Off, u), "set_wa_0",
+                (u.SmartWhaleAlerts ? "☑️" : "🔲") + " " + resMgr.Get(Res.SmartWhale, u), "set_swa_" + (u.SmartWhaleAlerts ? "off" : "on"));
             add2((u.WhaleAlertThreshold == 250000 ? "☑️" : "") + " 250 000 XTZ", "set_wa_250",
                 (u.WhaleAlertThreshold == 500000 ? "☑️" : "") + " 500 000 XTZ", "set_wa_500");
             add2((u.WhaleAlertThreshold == 750000 ? "☑️" : "") + " 750 000 XTZ", "set_wa_750",
@@ -374,8 +375,8 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
-                        Text = resMgr.Get(Res.RenameAddress, u),
-                        CallbackData = "setname " + id
+                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
+                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
                     },
                     new InlineKeyboardButton
                     {
@@ -387,8 +388,8 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
-                        Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
-                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
+                        Text = resMgr.Get(Res.RenameAddress, u),
+                        CallbackData = "setname " + id
                     },
                     new InlineKeyboardButton
                     {

@@ -85,7 +85,7 @@ Full description & manual: http://tzsnt.fr/
 #MyAddresses;ru;👛 Мои адреса
 #MyAddresses;en;👛 My Addresses
 #Contact;ru;✉️ Обратная связь
-#Contact;en;✉️ Feedback
+#Contact;en;✉️ Contact us
 #Settings;ru;⚙️ Настройки
 #Settings;en;⚙️ Settings
 #GoBack;ru;⬅️ Назад
@@ -450,7 +450,13 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #DelegateInactive;en;🌚 Delegate <a href='{t.account(delegateAddress)}'>{delegateName}</a> related to <a href='{t.account(delegatorAddress)}'>{delegatorName}</a> is inactive for {inactiveTime}. Maybe it's time for you to check it out?
 #NotifyDelegateInactive;ru;🌚 Уведомления о делегате: {(ua.NotifyRightsAssigned ? "🔔 вкл" : "🔕 выкл")}
 #NotifyDelegateInactive;en;🌚 Delegate status: {(ua.NotifyRightsAssigned ? "🔔 on" : "🔕 off")}
-#WhaleOutflow;en;🐋 Outflow of funds from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> in the amount of <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> for the last {Period} days, most large transactions:
-#WhaleOutflow;ru;🐋 Отток средств от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в размере <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> за последние {Period} дня, самые крупные транзакции:
+#WhaleOutflow;en;🐋 Outflow of funds from <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> in the amount of <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> for the last {Period} days, largest transactions:
+#WhaleOutflow;ru;🐋 Отток средств от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в размере <b>{Amount.TezToString()} ({Amount.TezToCurrency(md, u)})</b> за последние {Period} дня, крупнейшие транзакции:
 #WhaleOutflowItem;en;▫️<a href='{t.op(OpHash)}'>{Amount.TezToString()}</a> to <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> at block <a href='{t.block(Block)}'>{Block}</a>
 #WhaleOutflowItem;ru;▫️<a href='{t.op(OpHash)}'>{Amount.TezToString()}</a> к <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> в блоке <a href='{t.block(Block)}'>{Block}</a>
+#SmartWhale;en;Outflow
+#SmartWhale;ru;Отток
+#WhaleOutflowOff;en;Large outflow notifications for a period of time are turned off. You can turn them back on in the settings 🐋 <b>Whale alerts</b>.
+#WhaleOutflowOff;ru;Уведомления о крупных оттоках средств за период времени отключены. Вы можете снова включить их в настройках 🐋 <b>Оповещения о китах</b>.
+#TurnOff;ru;Отключить
+#TurnOff;en;Turn off

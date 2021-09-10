@@ -55,15 +55,16 @@ namespace TezosNotifyBot.Workers
         async Task Run(CancellationToken stoppingToken)
 		{
             using var scope = _provider.CreateScope();
+            var provider = scope.ServiceProvider;
             using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
             var bot = scope.ServiceProvider.GetRequiredService<TezosBot>();
 
             var block = db.LastBlock.Single();
             if (block.Level > lastBlock)
             {
-                var tzKt = _provider.GetService<ITzKtClient>();
+                var tzKt = provider.GetService<ITzKtClient>();
                 var tzKtBlock = tzKt.GetBlock(block.Level);
-                var repo = _provider.GetRequiredService<Repository>();
+                var repo = provider.GetRequiredService<Repository>();
                 var wtlist = repo.GetWhaleTransactions();
                 var allUsers = repo.GetUsers();
                 var md = _nodeManager.Client.GetMarketData();
@@ -79,7 +80,7 @@ namespace TezosNotifyBot.Workers
                     var from_end = tzKt.GetBalance(address.Key, block.Level);
                     var amount = (from_start - from_end);
                     foreach (var u in allUsers.Where(o =>
-                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
+                         !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount && o.SmartWhaleAlerts))
                     {
                         var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
                         var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id) && o.Amount < u.WhaleThreshold);
@@ -112,6 +113,7 @@ namespace TezosNotifyBot.Workers
                             repo.AddWhaleTransactionNotify(op.Id, u.Id);
                             tags += ua_to.HashTag();
                         }
+                        result += "\n" + resMgr.Get(Res.TurnOff, u) + ": /outflow_off";
                         if (!u.HideHashTags)
                         {
                             result += "\n\n#whale" + ua_from.HashTag() + tags;

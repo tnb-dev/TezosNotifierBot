@@ -31,6 +31,7 @@ namespace TezosNotifyBot.Domain
 
         public int NetworkIssueNotify { get; set; }
         public int Explorer { get; set; }
+        public bool SmartWhaleAlerts { get; set; }
 
         public override string ToString()
         {

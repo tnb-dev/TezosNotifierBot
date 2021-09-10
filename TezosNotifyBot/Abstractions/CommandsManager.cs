@@ -61,8 +61,10 @@ namespace TezosNotifyBot.Abstractions
             
             var handlerType = handler.Value.Value;
             // step 3: resolve handler instance
-            var handlerInstance = (ICallbackHandler) scope.ServiceProvider.GetRequiredService(handlerType);
-
+            var handlerInstance = (ICallbackHandler) scope.ServiceProvider.GetService(handlerType);
+            if (handlerInstance is null)
+                throw new ArgumentException($"Handler for callback {name} not found");
+            
             try
             {
                 // step 4: awaiting handler result
