@@ -42,8 +42,8 @@ namespace TezosNotifyBot.Domain
         public bool NotifyRightsAssigned { get; set; }
         public bool NotifyDelegateStatus { get; set; }
         public bool IsOwner { get; set; }
-        public int LastMessageLevel { get; set; }        
-
+        public int LastMessageLevel { get; set; }
+        public bool NotifyOutOfFreeSpace { get; set; }
         public string HashTag()
         {
             if (String.IsNullOrEmpty(Name))

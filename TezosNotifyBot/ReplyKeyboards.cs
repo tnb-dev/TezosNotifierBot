@@ -388,6 +388,14 @@ namespace TezosNotifyBot
                 {
                     new InlineKeyboardButton
                     {
+                        Text = resMgr.Get(Res.NotifyOutOfFreeSpace, ua),
+                        CallbackData = (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon") + " " + id
+                    }
+                });
+                buttons.Add(new[]
+                {
+                    new InlineKeyboardButton
+                    {
                         Text = resMgr.Get(Res.RenameAddress, u),
                         CallbackData = "setname " + id
                     },

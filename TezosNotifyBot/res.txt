@@ -464,3 +464,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #NotifyOutOfFreeSpace;en;{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Out of free space
 #DelegateOutOfFreeSpace;ru;🙅 Нет свободного места: {(ua.NotifyOutOfFreeSpace ? "🔔 вкл" : "🔕 выкл")}
 #DelegateOutOfFreeSpace;en;🙅 Out of free space: {(ua.NotifyOutOfFreeSpace ? "🔔 on" : "🔕 off")}
+#OutOfFreeSpace;en;🙅 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has run out of free space. Misses expected during cycle {Cycle} (starting {NextEnd.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC).
+#OutOfFreeSpace;ru;🙅 У делегата <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> закончилось свободное место. Пропуски ожидаются в течение цикла {Cycle} (начинается {RusDT(NextEnd)} UTC).
