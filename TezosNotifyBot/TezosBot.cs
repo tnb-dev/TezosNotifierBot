@@ -1995,7 +1995,7 @@ namespace TezosNotifyBot
                 if (fr == null)
                     continue;
                 fr.Reverse();
-                long freeBalance = (long)(addrMgr.GetDelegate(_nodeManager.Client, block.Hash, addr, true).balance * 1000000M)
+                long freeBalance = (long)addrMgr.GetDelegate(_nodeManager.Client, block.Hash, addr, true).balance
                     - fr[6].futureBlockDeposits - fr[6].futureEndorsementDeposits;
                 for (int c = 7; c < 12; c++)
                 {
