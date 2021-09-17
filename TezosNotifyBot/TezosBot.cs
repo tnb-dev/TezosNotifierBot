@@ -2025,7 +2025,7 @@ namespace TezosNotifyBot
                 tags += ua.HashTag();
 
                 if (!ua.User.HideHashTags)
-                    message += "#outoffreespace" + tags;
+                    message += "#nofreespace" + tags;
                 SendTextMessage(ua.User.Id, message, ReplyKeyboards.MainMenu(resMgr, ua.User));
             }
         }
