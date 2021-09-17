@@ -1,8 +1,8 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Shared.Extensions;
@@ -10,12 +10,12 @@ using TezosNotifyBot.Storage;
 
 namespace TezosNotifyBot.Commands.Addresses
 {
-    public class AddressLinksCallbackHandler : BaseHandler, ICallbackHandler
+    public class AddressInfoHandler : BaseHandler, ICallbackHandler
     {
         private readonly Repository _repo;
         private readonly ResourceManager _lang;
 
-        public AddressLinksCallbackHandler(Repository repo, ResourceManager lang, TezosDataContext db,
+        public AddressInfoHandler(Repository repo, ResourceManager lang, TezosDataContext db,
             TezosBotFacade botClient)
             : base(db, botClient)
         {
@@ -39,7 +39,7 @@ namespace TezosNotifyBot.Commands.Addresses
             var isDelegate = _repo.IsDelegate(address.Address);
 
             var lang = user.Language;
-            var title = _lang.Get(Res.AddressInfoTitle, lang, new {ua = address});
+            var title = _lang.Get(Res.AddressInfoTitle, lang, new { ua = address });
 
             var message = new MessageBuilder()
                 .AddLine(title)
@@ -48,7 +48,7 @@ namespace TezosNotifyBot.Commands.Addresses
                 .WithHashTag("rating")
                 .WithHashTag(address);
 
-            var linkData = new {address = address.Address};
+            var linkData = new { address = address.Address };
 
             if (isDelegate)
             {
@@ -59,9 +59,21 @@ namespace TezosNotifyBot.Commands.Addresses
             {
                 message.AddLine(_lang.Get(Res.AddressLinkBackingBad, lang, linkData));
             }
+            
+            var buttons = new InlineKeyboardMarkup(
+                InlineKeyboardButton.WithCallbackData(
+                    "TODO: Transaction list", 
+                    $"address-transaction-list {address.Address} 1"
+                )
+            );
 
-            await Bot.SendText(query.From.Id, message.Build(!user.HideHashTags), ParseMode.Html,
-                disableWebPagePreview: true);
+            await Bot.SendText(
+                query.From.Id,
+                message.Build(!user.HideHashTags),
+                ParseMode.Html,
+                disableWebPagePreview: true,
+                replyMarkup: buttons
+            );
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -28,5 +27,7 @@ namespace TezosNotifyBot.Tzkt
 		BigmapItem GetBigmapItem(string contract, string address);
 		T Download<T>(string path);
 		decimal GetBalance(string address, int level);
+		IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
+			where T : Operation;
 	}
 }

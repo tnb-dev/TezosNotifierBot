@@ -13,7 +13,8 @@ namespace TezosNotifyBot.Commands
             AddCommand<ExcludeWhaleCommand>("/exclude-whale");
             
             // Callbacks
-            AddCallback<AddressLinksCallbackHandler>("address-links");
+            AddCallback<AddressInfoHandler>("address-links");
+            AddCallback<AddressTransactionListHandler>("address-transaction-list");
         }
     }
 }

@@ -305,6 +305,8 @@ namespace TezosNotifyBot
 		TurnOff,
 		NotifyOutOfFreeSpace,
 		DelegateOutOfFreeSpace,
-		OutOfFreeSpace
+		OutOfFreeSpace,
+		AddressTransactionListTitle,
+		AddressTransactionListItem,
 	}
 }

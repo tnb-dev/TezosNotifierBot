@@ -56,6 +56,26 @@ namespace TezosNotifyBot
             );
         }
 
+        public Task<Message> EditText(
+            ChatId chatId, 
+            int messageId,
+            string content, 
+            ParseMode parseMode = ParseMode.Markdown,
+            bool disableWebPagePreview = false,
+            bool disableNotification = false,
+            int replyToMessageId = 0,
+            InlineKeyboardMarkup replyMarkup = null)
+        {
+            return Client.EditMessageTextAsync(
+                chatId,
+                messageId,
+                content,
+                parseMode: parseMode,
+                disableWebPagePreview: disableWebPagePreview,
+                replyMarkup: replyMarkup
+            );
+        }
+
         public async Task NotifyAdmins(string content)
         {
             // TODO: Replace with telegram admins
