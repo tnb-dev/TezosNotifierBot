@@ -20,6 +20,7 @@ namespace TezosNotifyBot.Tzkt
 		DateTime? GetAccountLastActive(string address);
 		Rewards GetDelegatorRewards(string address, int cycle);
 		Rewards GetBakerRewards(string address, int cycle);
+		List<Rewards> GetBakerFutureRewards(string address);
 		List<Right> GetRights(int level);
 		List<Right> GetRights(string baker, int cycle);
 		List<Endorsement> GetEndorsements(int level);

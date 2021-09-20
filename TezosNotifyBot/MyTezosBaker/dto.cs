@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -22,3 +22,4 @@ namespace TezosNotifyBot.MyTezosBaker
 		public List<Baker> bakers { get; set; }
 	}
 }
+*/

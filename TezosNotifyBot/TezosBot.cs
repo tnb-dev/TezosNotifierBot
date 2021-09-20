@@ -1816,6 +1816,8 @@ namespace TezosNotifyBot
 
                 NotifyAssignedRights(tzKtClient, uad, cycle.index);
 
+                NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
+
                 LoadAddressList();
 
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
@@ -1950,7 +1952,6 @@ namespace TezosNotifyBot
 
         void NotifyAssignedRights(ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
 		{
-
             var delegates = userAddresses.Where(ua => ua.NotifyCycleCompletion).Select(ua => ua.Address).Distinct();
             Dictionary<string, List<Right>> rights = new Dictionary<string, List<Right>>();
             foreach(var addr in delegates)
@@ -1984,7 +1985,50 @@ namespace TezosNotifyBot
                 SendTextMessage(u.Key.Id, message, ReplyKeyboards.MainMenu(resMgr, u.Key));
             }
 		}
+        void NotifyOutOfFreeSpace(Block block, ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle, List<Cycle> cycles)
+        {
+            var delegates = userAddresses.Where(ua => ua.NotifyOutOfFreeSpace).Select(ua => ua.Address).Distinct();
+            Dictionary<string, Cycle> delegateUncoveredCycle = new Dictionary<string, Cycle>();
+            foreach (var addr in delegates)
+            {
+                var fr = tzKtClient.GetBakerFutureRewards(addr);
+                if (fr == null)
+                    continue;
+                fr.Reverse();
+                long freeBalance = (long)addrMgr.GetDelegate(_nodeManager.Client, block.Hash, addr, true).balance
+                    - fr[6].futureBlockDeposits - fr[6].futureEndorsementDeposits;
+                for (int c = 7; c < 12; c++)
+                {
+                    freeBalance += fr[c - 6].blockDeposits + fr[c - 6].endorsementDeposits;
+                    freeBalance -= fr[c].futureBlockDeposits + fr[c].futureEndorsementDeposits;
+                    freeBalance += fr[c - 6].TotalBakerRewards;
+                    if (freeBalance < 0)
+					{
+                        delegateUncoveredCycle[addr] = cycles.Single(o => o.index == fr[c].cycle);
+                        break;
+					}
+                }
+            }
 
+            foreach (var ua in userAddresses.Where(ua => ua.NotifyOutOfFreeSpace && delegateUncoveredCycle.ContainsKey(ua.Address)))
+            {
+                string tags = "";
+
+                var message = resMgr.Get(Res.OutOfFreeSpace, new ContextObject
+                {
+                    u = ua.User,
+                    ua = ua,
+                    Cycle = delegateUncoveredCycle[ua.Address].index,
+                    NextEnd = delegateUncoveredCycle[ua.Address].startTime
+                }) + "\n\n";
+
+                tags += ua.HashTag();
+
+                if (!ua.User.HideHashTags)
+                    message += "#nofreespace" + tags;
+                SendTextMessage(ua.User.Id, message, ReplyKeyboards.MainMenu(resMgr, ua.User));
+            }
+        }
         private void LoadAddressList()
         {
             try
@@ -2490,6 +2534,33 @@ namespace TezosNotifyBot
                     if (ua != null)
                     {
                         ua.NotifyRightsAssigned = false;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+                if (callbackData.StartsWith("outoffreespaceon"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("outoffreespaceon ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyOutOfFreeSpace = true;
+                        repo.UpdateUserAddress(ua);
+                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                    }
+                    else
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
+                }
+
+                if (callbackData.StartsWith("outoffreespaceoff"))
+                {
+                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                        o.Id.ToString() == callbackData.Substring("outoffreespaceoff ".Length));
+                    if (ua != null)
+                    {
+                        ua.NotifyOutOfFreeSpace = false;
                         repo.UpdateUserAddress(ua);
                         ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
@@ -3909,6 +3980,8 @@ namespace TezosNotifyBot
                     }
                     if (ua.NotifyRightsAssigned)
                         result += "👉";
+                    if (ua.NotifyOutOfFreeSpace)
+                        result += "🙅";
                 }
                 else
                 {
@@ -3920,6 +3993,7 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
                     result += resMgr.Get(Res.DelegateRightsAssigned, ua) + "\n";
+                    result += resMgr.Get(Res.DelegateOutOfFreeSpace, ua) + "\n";
                     result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count + "\n";
                 }
 

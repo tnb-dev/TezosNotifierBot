@@ -302,6 +302,9 @@ namespace TezosNotifyBot
 		WhaleOutflowItem,
 		SmartWhale,
 		WhaleOutflowOff,
-		TurnOff
+		TurnOff,
+		NotifyOutOfFreeSpace,
+		DelegateOutOfFreeSpace,
+		OutOfFreeSpace
 	}
 }
