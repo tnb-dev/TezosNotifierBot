@@ -52,6 +52,10 @@ namespace TezosNotifyBot.Workers
 			}
 		}
 
+		Tezos.MarketData md;
+
+        DateTime mdReceived;
+
         async Task Run(CancellationToken stoppingToken)
 		{
             using var scope = _provider.CreateScope();
@@ -67,7 +71,18 @@ namespace TezosNotifyBot.Workers
                 var repo = provider.GetRequiredService<Repository>();
                 var wtlist = repo.GetWhaleTransactions();
                 var allUsers = repo.GetUsers();
-                var md = _nodeManager.Client.GetMarketData();
+                if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
+                {
+                    try
+                    {
+                        md = _nodeManager.Client.GetMarketData();
+                    }
+                    catch
+                    {
+                    }
+
+                    mdReceived = DateTime.Now;
+                }
 
                 foreach (var address in wtlist.GroupBy(o => o.FromAddress).Where(o => o.Sum(o1 => o1.Amount) >= 250000))
                 {
