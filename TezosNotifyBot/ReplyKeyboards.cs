@@ -76,7 +76,7 @@ namespace TezosNotifyBot
                 new InlineKeyboardButton
                 {
                     Text = text,
-                    CallbackData = data
+                    CallbackData = (user.Type != 0 ? $"_{user.Id}_" : "") + data
                 }
             });
             Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new[]
@@ -84,12 +84,12 @@ namespace TezosNotifyBot
                 new InlineKeyboardButton
                 {
                     Text = text1,
-                    CallbackData = data1
+                    CallbackData = (user.Type != 0 ? $"_{user.Id}_" : "") + data1
                 },
                 new InlineKeyboardButton
                 {
                     Text = text2,
-                    CallbackData = data2
+                    CallbackData = (user.Type != 0 ? $"_{user.Id}_" : "") + data2
                 }
             });
 
@@ -102,7 +102,7 @@ namespace TezosNotifyBot
                 add(resMgr.Get(Res.HashTags, user), "hidehashtags");
 
             add(resMgr.Get(Res.WhaleAlerts, user), "set_whalealert");
-            add(resMgr.Get(Res.NetworkIssueAlerts, user), "set_nialert");
+            //add(resMgr.Get(Res.NetworkIssueAlerts, user), "set_nialert");
             if (user.VotingNotify)
                 add(resMgr.Get(Res.VotingNotify, user), "hidevotingnotify");
             else
@@ -129,25 +129,17 @@ namespace TezosNotifyBot
         public static InlineKeyboardMarkup WhaleAlertSettings(ResourceManager resMgr, User u)
         {
             var buttons = new List<InlineKeyboardButton[]>();
-            Action<string, string> add = (text, data) => buttons.Add(new[]
-            {
-                new InlineKeyboardButton
-                {
-                    Text = text,
-                    CallbackData = data
-                }
-            });
             Action<string, string, string, string> add2 = (text1, data1, text2, data2) => buttons.Add(new[]
             {
                 new InlineKeyboardButton
                 {
                     Text = text1,
-                    CallbackData = data1
+                    CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + data1
                 },
                 new InlineKeyboardButton
                 {
                     Text = text2,
-                    CallbackData = data2
+                    CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + data2
                 }
             });
             add2((u.WhaleAlertThreshold == 0 ? "☑️" : "") + " " + resMgr.Get(Res.Off, u), "set_wa_0",
@@ -168,7 +160,7 @@ namespace TezosNotifyBot
                 new InlineKeyboardButton
                 {
                     Text = text,
-                    CallbackData = data
+                    CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + data
                 }
             });
             add((u.Explorer == 4 ? "☑️" : "") + " mininax.io", "set_explorer_4");
@@ -223,17 +215,17 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.AddressInfoButton, u),
-                        CallbackData = "address-links " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "address-links " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),
-                        CallbackData = "deleteaddress " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "deleteaddress " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.ManageAddress, u),
-                        CallbackData = "manageaddress " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "manageaddress " + id
                     }
                 });
             else
@@ -243,7 +235,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.TransactionNotify, ua),
-                        CallbackData = (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id
                     },
                     new InlineKeyboardButton
                     {
@@ -255,12 +247,12 @@ namespace TezosNotifyBot
                 {
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.PayoutNotifyToggle, ua),
-                        callbackData: $"toggle_payout_notify {id}"
+                        callbackData: (u.Type != 0 ? $"_{u.Id}_" : "") + $"toggle_payout_notify {id}"
                     ),
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.AwardNotify, ua),
-                        CallbackData = (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
                     }
                 });
                 buttons.Add(new[]
@@ -272,14 +264,14 @@ namespace TezosNotifyBot
                     },
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.DelegateStatusToggle, ua),
-                        callbackData: $"toggle-delegate-status {id}"
+                        callbackData: (u.Type != 0 ? $"_{u.Id}_" : "") + $"toggle-delegate-status {id}"
                     )
                 });
                 buttons.Add(new []
                 {
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.Delete, u),
-                        callbackData: $"deleteaddress {id}"
+                        callbackData: (u.Type != 0 ? $"_{u.Id}_" : "") + $"deleteaddress {id}"
                     )
                 });
             }
@@ -290,7 +282,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.AddAddress, u) + " " + addDelegate.Item1,
-                        CallbackData = "addaddress " + addDelegate.Item2
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "addaddress " + addDelegate.Item2
                     }
                 });
             return new InlineKeyboardMarkup(buttons);
@@ -306,17 +298,17 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.AddressInfoButton, u),
-                        CallbackData = "address-links " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "address-links " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),
-                        CallbackData = "deleteaddress " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "deleteaddress " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.ManageAddress, u),
-                        CallbackData = "manageaddress " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "manageaddress " + id
                     }
                 });
             else
@@ -326,7 +318,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.TransactionNotify, ua),
-                        CallbackData = (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id
                     },
                     new InlineKeyboardButton
                     {
@@ -339,7 +331,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.DelegationNotify, ua),
-                        CallbackData = (ua.NotifyDelegations ? "dlgoff" : "dlgon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyDelegations ? "dlgoff" : "dlgon") + " " + id
                     },
                     new InlineKeyboardButton
                     {
@@ -351,7 +343,7 @@ namespace TezosNotifyBot
                 {
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.DelegatorsBalanceNotifyToggle, ua),
-                        callbackData: $"toggle_delegators_balance {id}"
+                        callbackData: (u.Type != 0 ? $"_{u.Id}_" : "") + $"toggle_delegators_balance {id}"
                     ),
                     InlineKeyboardButton.WithCallbackData(
                         text: resMgr.Get(Res.DelegatorsBalanceThresholdButton, ua),
@@ -363,12 +355,12 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.RewardNotify, ua),
-                        CallbackData = (ua.NotifyBakingRewards ? "bakingoff" : "bakingon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyBakingRewards ? "bakingoff" : "bakingon") + " " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.CycleNotify, ua),
-                        CallbackData = (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id
                     }
                 });
                 buttons.Add(new[]
@@ -376,12 +368,12 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.NotifyRightsAssigned, ua),
-                        CallbackData = (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id
                     },
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.MissesNotify, ua),
-                        CallbackData = (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id
                     }
                 });
                 buttons.Add(new[]
@@ -389,7 +381,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.NotifyOutOfFreeSpace, ua),
-                        CallbackData = (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon") + " " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon") + " " + id
                     }
                 });
                 buttons.Add(new[]
@@ -402,7 +394,7 @@ namespace TezosNotifyBot
                     new InlineKeyboardButton
                     {
                         Text = resMgr.Get(Res.Delete, u),
-                        CallbackData = "deleteaddress " + id
+                        CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + "deleteaddress " + id
                     }
                 });
                 if (u.IsAdmin(options) || ua.IsOwner)

@@ -2165,11 +2165,23 @@ namespace TezosNotifyBot
             {
                 var message = ev.CallbackQuery.Message;
                 var callbackData = ev.CallbackQuery.Data;
+                long userId = ev.CallbackQuery.From.Id;
+                if (callbackData.StartsWith("_"))
+				{
+                    userId = long.Parse(callbackData.Substring(1, callbackData.IndexOf('_', 1) - 1));
+                    callbackData = callbackData.Substring(callbackData.IndexOf('_', 1) + 1);
+                    var cm = Bot.GetChatAdministratorsAsync(userId).ConfigureAwait(true).GetAwaiter().GetResult();
+                    if (!cm.Any(m => m.User.Id == ev.CallbackQuery.From.Id))
+                    {
+                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, "🤚 Forbidden");
+                        return;
+					}
+                }
                 var callbackArgs = callbackData.Split(' ').Skip(1).ToArray();
-                repo.LogMessage(ev.CallbackQuery.From, message.MessageId, null, callbackData);
-                Logger.LogInformation(UserTitle(ev.CallbackQuery.From) + ": button " + callbackData);
-                var userId = ev.CallbackQuery.From.Id;
+                
+                repo.LogMessage(userId, message.MessageId, null, callbackData);
                 var user = repo.GetUser(userId);
+                Logger.LogInformation(user.ToString() + ": button " + callbackData);
                 var t = Explorer.FromId(user.Explorer);
                 if (callbackData == "donate")
                 {
@@ -2894,15 +2906,13 @@ namespace TezosNotifyBot
                     Bot.SendTextMessageAsync(update.ChannelPost.Chat.Id, $"Chat Id: {update.ChannelPost.Chat.Id}");
             }
 
-
-            if (message == null) return;
             try
             {
-                if (message.From.IsBot)
+                if (message != null && message.From.IsBot)
                     return;
-                var user = repo.UserExists(message.From.Id) ? repo.GetUser(message.From.Id) : null;
+                var user = message != null ? repo.GetUser(message.From.Id) : null;
 
-                if (message.Type == MessageType.Photo &&
+                if (message != null && message.Type == MessageType.Photo &&
                     message.Chat.Type == ChatType.Private &&
                     (user?.UserState == UserState.Broadcast ||
                      user?.UserState == UserState.NotifyFollowers))
@@ -2979,7 +2989,7 @@ namespace TezosNotifyBot
                     user.UserState = UserState.Default;
                 }
 
-                if (message.Type == MessageType.Text &&
+                if (message != null && message.Type == MessageType.Text &&
                     message.Chat.Type == ChatType.Private)
                 {
                     bool newUser = !repo.UserExists(message.From.Id);
@@ -3232,6 +3242,7 @@ namespace TezosNotifyBot
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
+                    /*
                     else if (message.Text.StartsWith("/perf"))
                     {
                         string addr = null;
@@ -3304,6 +3315,7 @@ namespace TezosNotifyBot
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
+                    */
                     else if (message.Text == "/info")
                     {
                         Info(update);
@@ -3445,7 +3457,7 @@ namespace TezosNotifyBot
                     }
                     else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, user))
                     {
-                        SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
+                        SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
                     else
                     {
@@ -3568,14 +3580,32 @@ namespace TezosNotifyBot
 
                     user.UserState = UserState.Default;
                 }
-                else if (message.Type == MessageType.Text)
+                if ((message?.Type == MessageType.Text || update.ChannelPost?.Type == MessageType.Text) &&
+                    (message?.Chat.Type == ChatType.Group || message?.Chat.Type == ChatType.Supergroup ||
+                    update.ChannelPost != null))
                 {
-                    if (message.Chat.Type == ChatType.Group || message.Chat.Type == ChatType.Supergroup)
+                    bool newChat = !repo.UserExists(message?.Chat.Id ?? update.ChannelPost.Chat.Id);
+                    var chat = message?.Chat ?? update.ChannelPost.Chat;
+                    var from = message?.From ?? update.ChannelPost.From;
+                    int messageId = message?.MessageId ?? update.ChannelPost.MessageId;
+                    string messageText = message?.Text ?? update.ChannelPost.Text;
+                    repo.LogMessage(chat, messageId, messageText, null);
+                    user = repo.GetUser(chat.Id);
+                    Logger.LogInformation(ChatTitle(chat) + ": " + messageText);
+                    if (newChat)
+                        NotifyUserActivity("👥 New chat: " + ChatLink(user));
+    
+                    if (messageText.StartsWith("/info"))
                     {
-                        if (message.Text.StartsWith("/info"))
-                        {
-                            Info(update);
-                        }
+                        Info(update);
+                    }
+
+                    if (messageText.StartsWith("/settings"))
+					{
+                        var cm = Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
+                        if (cm.Any(m => m.User.Id == from.Id))
+                            SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
+                    }
 
                         /*
                         var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
@@ -3593,7 +3623,6 @@ namespace TezosNotifyBot
                                 }
                             }
                         }*/
-                    }
                 }
 
                 if (message.Type == MessageType.Document && Config.DevUserNames.Contains(message.From.Username))
@@ -3713,7 +3742,7 @@ namespace TezosNotifyBot
             }
         }
 
-        void OnNewAddressEntered(User user, string msg, Chat chat = null)
+        void OnNewAddressEntered(User user, string msg, Telegram.Bot.Types.Chat chat = null)
         {
             Bot.SendChatActionAsync(chat?.Id ?? user.Id, ChatAction.Typing);
             string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
@@ -4042,7 +4071,7 @@ namespace TezosNotifyBot
             }
         }
 
-        (UserAddress, DelegateInfo) NewUserAddress(int userId, string addr, string name, decimal balance, long chatId)
+        (UserAddress, DelegateInfo) NewUserAddress(long userId, string addr, string name, decimal balance, long chatId)
         {
             var ua = repo.AddUserAddress(userId, addr, balance, name, chatId);
             DelegateInfo di = null;
@@ -4077,7 +4106,7 @@ namespace TezosNotifyBot
 
         #endregion
 
-        public void NotifyDev(string text, int currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
+        public void NotifyDev(string text, long currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
         {
             foreach (var devUser in Config.DevUserNames)
             {
@@ -4229,11 +4258,21 @@ namespace TezosNotifyBot
             return (u.FirstName + " " + u.LastName).Trim() +
                    (!String.IsNullOrEmpty(u.Username) ? " @" + u.Username + "" : "");
         }
+        string ChatTitle(Telegram.Bot.Types.Chat c)
+        {
+            return c.Title +
+                   (!String.IsNullOrEmpty(c.Username) ? " @" + c.Username + "" : "");
+        }
 
         string UserLink(User u)
         {
             return $"[{(u.Firstname + " " + u.Lastname).Trim()}](tg://user?id={u.Id}) [[{u.Id}]]";
         }
+
+        string ChatLink(User c)
+        {
+            return $"[{c.Title}](tg://user?id={c.Id}) [[{c.Id}]]";
+		}
 
         Stream GenerateStreamFromString(string s)
         {

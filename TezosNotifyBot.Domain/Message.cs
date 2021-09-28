@@ -6,7 +6,7 @@ namespace TezosNotifyBot.Domain
     {
         public int Id { get; set; }
         public User User { get; set; }
-        public int UserId { get; set; }
+        public long UserId { get; set; }
 
         public MessageKind Kind { get; set; } = MessageKind.Simple;
 
@@ -19,7 +19,7 @@ namespace TezosNotifyBot.Domain
         public int? TelegramMessageId { get; set; }
 
 
-        public static Message Push(int userId, string text)
+        public static Message Push(long userId, string text)
         {
             return new Message
             {

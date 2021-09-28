@@ -10,6 +10,6 @@ namespace TezosNotifyBot.Domain
 		public WhaleTransaction WhaleTransaction { get; set; }
 		public int WhaleTransactionId { get; set; }
 		public User User { get; set; }
-		public int UserId { get; set; }
+		public long UserId { get; set; }
 	}
 }
