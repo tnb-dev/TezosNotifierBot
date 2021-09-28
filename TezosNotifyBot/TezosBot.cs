@@ -3602,7 +3602,7 @@ namespace TezosNotifyBot
 
                     if (messageText.StartsWith("/settings"))
 					{
-                        if (update.ChannelPost == null ||
+                        if (update.ChannelPost != null ||
                             Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
                             SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
