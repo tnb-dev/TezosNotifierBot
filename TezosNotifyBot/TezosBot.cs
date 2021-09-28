@@ -3623,6 +3623,15 @@ namespace TezosNotifyBot
                         }
                     }
 
+                    if (messageText.StartsWith("/list"))
+					{
+                        if (update.ChannelPost != null ||
+                            Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
+                        {
+                            OnMyAddresses(chat.Id, user);
+                        }
+                    }
+
                     /*
                     var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))

@@ -28,8 +28,8 @@ namespace TezosNotifyBot
 
         public static ReplyKeyboardMarkup MainMenu(ResourceManager resMgr, User u)
         {
-            return GetMarkup(CmdNewAddress(resMgr, u), CmdMyAddresses(resMgr, u))
-                .AddRow(CmdContact(resMgr, u), CmdSettings(resMgr, u));
+            return u.Type == 0 ? GetMarkup(CmdNewAddress(resMgr, u), CmdMyAddresses(resMgr, u))
+                .AddRow(CmdContact(resMgr, u), CmdSettings(resMgr, u)) : null;
         }
 
         public static ReplyKeyboardMarkup BackMenu(ResourceManager resMgr, User u)
