@@ -97,6 +97,7 @@ namespace TezosNotifyBot
         string twitterAccountName;
         bool twitterNetworkIssueNotified = false;
         bool paused = false;
+        string botUserName;
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
             TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient,
@@ -150,6 +151,7 @@ namespace TezosNotifyBot
                 Bot.OnUpdate += OnUpdate;
                 Bot.StartReceiving();
                 var me = await Bot.GetMeAsync();
+                botUserName = me.Username;
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                 //_nodeManager.Client.BlockReceived += Client_BlockReceived;
 
@@ -3607,25 +3609,39 @@ namespace TezosNotifyBot
                             SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
 
-                        /*
-                        var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
-                        if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
-                        {
-                            if (chatAdmins.Any(o => o.User.Id == message.From.Id))
+                    if (messageText.StartsWith("/add"))
+                    {
+                        if (update.ChannelPost != null ||
+                            Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
+						{
+                            if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                var u = repo.GetUser(message.From.Id);
-                                if (message.ForwardFrom == null)
-                                    OnNewAddressEntered(u, message.Text, message.Chat);
-                                else
-                                {
-                                    var nameMatch = Regex.Match(message.Text, "👑?(.*)?\\s*([tK][zT][a-zA-Z0-9]{34})");
-                                    OnNewAddressEntered(u, nameMatch.Groups[2].Value + " " + nameMatch.Groups[1].Value, message.Chat);
-                                }
+                                OnNewAddressEntered(user, messageText.Substring($"/add@{botUserName} ".Length));
                             }
-                        }*/
+                            else
+                                SendTextMessage(user.Id, $"Use <b>add</b> command with Tezos address and the title for this address (optional). For example::\n/add@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Аrthur</i>");
+                        }
+                    }
+
+                    /*
+                    var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
+                    if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
+                    {
+                        if (chatAdmins.Any(o => o.User.Id == message.From.Id))
+                        {
+                            var u = repo.GetUser(message.From.Id);
+                            if (message.ForwardFrom == null)
+                                OnNewAddressEntered(u, message.Text, message.Chat);
+                            else
+                            {
+                                var nameMatch = Regex.Match(message.Text, "👑?(.*)?\\s*([tK][zT][a-zA-Z0-9]{34})");
+                                OnNewAddressEntered(u, nameMatch.Groups[2].Value + " " + nameMatch.Groups[1].Value, message.Chat);
+                            }
+                        }
+                    }*/
                 }
 
-                if (message.Type == MessageType.Document && Config.DevUserNames.Contains(message.From.Username))
+                if (message?.Type == MessageType.Document && Config.DevUserNames.Contains(message.From.Username))
                 {
                     Upload(message, repo.GetUser(message.From.Id));
                 }
