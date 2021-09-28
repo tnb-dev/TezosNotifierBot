@@ -4153,7 +4153,7 @@ namespace TezosNotifyBot
         public int SendTextMessage(long userId, string text, IReplyMarkup keyboard, int replaceId = 0,
             ParseMode parseMode = ParseMode.Html, bool disableNotification = false)
         {
-            var u = repo.GetUser((int) userId);
+            var u = repo.GetUser(userId);
             if (u.Inactive)
                 return 0;
             try
@@ -4164,7 +4164,7 @@ namespace TezosNotifyBot
                     Message msg = Bot
                             .SendTextMessageAsync(userId, text, parseMode, true, disableNotification, replyMarkup: keyboard)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
-                        repo.LogOutMessage((int)userId, msg.MessageId, text);
+                        repo.LogOutMessage(userId, msg.MessageId, text);
                         Thread.Sleep(50);
                     return msg.MessageId;
                 }
@@ -4173,7 +4173,7 @@ namespace TezosNotifyBot
                     var msg = Bot
                         .EditMessageTextAsync(userId, replaceId, text, parseMode, true,
                             replyMarkup: (InlineKeyboardMarkup) keyboard).ConfigureAwait(true).GetAwaiter().GetResult();
-                    repo.LogOutMessage((int) userId, msg.MessageId, text);
+                    repo.LogOutMessage( userId, msg.MessageId, text);
                     return msg.MessageId;
                 }
             }
@@ -4184,11 +4184,11 @@ namespace TezosNotifyBot
             {
                 u.Inactive = true;
                 repo.UpdateUser(u);
-                NotifyDev("😕 User " + UserLink(u) + " not started chat with bot", (int) userId);
+                NotifyDev("😕 User " + UserLink(u) + " not started chat with bot", userId);
             }
             catch (ApiRequestException are)
             {
-                NotifyDev("🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, (int) userId);
+                NotifyDev("🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, userId);
                 if (are.Message.StartsWith("Forbidden"))
                 {
                     u.Inactive = true;
@@ -4203,7 +4203,7 @@ namespace TezosNotifyBot
                 {
                     u.Inactive = true;
                     repo.UpdateUser(u);
-                    NotifyDev("😕 Bot was blocked by the user " + UserLink(u), (int) userId);
+                    NotifyDev("😕 Bot was blocked by the user " + UserLink(u), userId);
                 }
                 else
                     LogError(ex);
@@ -4271,7 +4271,7 @@ namespace TezosNotifyBot
 
         string ChatLink(User c)
         {
-            return $"[{c.Title}](tg://user?id={c.Id}) [[{c.Id}]]";
+            return $"{c.Title} [[{c.Id}]]";
 		}
 
         Stream GenerateStreamFromString(string s)
