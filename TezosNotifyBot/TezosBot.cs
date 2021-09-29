@@ -3591,6 +3591,13 @@ namespace TezosNotifyBot
                     var from = message?.From ?? update.ChannelPost.From;
                     int messageId = message?.MessageId ?? update.ChannelPost.MessageId;
                     string messageText = message?.Text ?? update.ChannelPost.Text;
+                    if (!messageText.StartsWith("/info") &&
+                        !messageText.StartsWith("/settings") &&
+                        !messageText.StartsWith("/add") &&
+                        !messageText.StartsWith("/list") &&
+                        !messageText.StartsWith("/trnthreshold") &&
+                        !messageText.StartsWith("/dlgthreshold"))
+                        return;
                     repo.LogMessage(chat, messageId, messageText, null);
                     user = repo.GetUser(chat.Id);
                     Logger.LogInformation(ChatTitle(chat) + ": " + messageText);
@@ -3639,7 +3646,7 @@ namespace TezosNotifyBot
                         {
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                var msg = messageText.Substring($"/add@{botUserName} ".Length);
+                                var msg = messageText.Substring($"/trnthreshold@{botUserName} ".Length);
                                 string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
                                 string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                                 if (long.TryParse(threshold, out long t))
@@ -3661,6 +3668,34 @@ namespace TezosNotifyBot
                         }
                     }
 
+                    if (messageText.StartsWith("/dlgthreshold"))
+                    {
+                        if (update.ChannelPost != null ||
+                            Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
+                        {
+                            if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
+                            {
+                                var msg = messageText.Substring($"/dlgthreshold@{botUserName} ".Length);
+                                string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
+                                string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
+                                if (long.TryParse(threshold, out long t))
+                                {
+                                    var ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    if (ua.Id == 0)
+                                    {
+                                        OnNewAddressEntered(user, addr);
+                                        ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    }
+                                    ua.DelegationAmountThreshold = t;
+                                    repo.UpdateUserAddress(ua);
+                                    SendTextMessage(chat.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
+                                    return;
+                                }
+                            }
+
+                            SendTextMessage(user.Id, $"Use <b>dlgthreshold</b> command with Tezos address and the delegation amount (XTZ) threshold for this address. For example::\n/dlgthreshold@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf 1000</i>");
+                        }
+                    }
                     /*
                     var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
