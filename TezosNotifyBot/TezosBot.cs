@@ -3591,6 +3591,7 @@ namespace TezosNotifyBot
                     var from = message?.From ?? update.ChannelPost.From;
                     int messageId = message?.MessageId ?? update.ChannelPost.MessageId;
                     string messageText = message?.Text ?? update.ChannelPost.Text;
+                    messageText = messageText.Replace($"@{botUserName}", "");
                     if (!messageText.StartsWith("/info") &&
                         !messageText.StartsWith("/settings") &&
                         !messageText.StartsWith("/add") &&
@@ -3623,7 +3624,7 @@ namespace TezosNotifyBot
 						{
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                OnNewAddressEntered(user, messageText.Substring($"/add@{botUserName} ".Length));
+                                OnNewAddressEntered(user, messageText.Substring($"/add ".Length));
                             }
                             else
                                 SendTextMessage(user.Id, $"Use <b>add</b> command with Tezos address and the title for this address (optional). For example::\n/add@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Аrthur</i>");
@@ -3646,7 +3647,7 @@ namespace TezosNotifyBot
                         {
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                var msg = messageText.Substring($"/trnthreshold@{botUserName} ".Length);
+                                var msg = messageText.Substring($"/trnthreshold ".Length);
                                 string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
                                 string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                                 if (long.TryParse(threshold, out long t))
@@ -3675,7 +3676,7 @@ namespace TezosNotifyBot
                         {
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                var msg = messageText.Substring($"/dlgthreshold@{botUserName} ".Length);
+                                var msg = messageText.Substring($"/dlgthreshold ".Length);
                                 string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
                                 string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                                 if (long.TryParse(threshold, out long t))
