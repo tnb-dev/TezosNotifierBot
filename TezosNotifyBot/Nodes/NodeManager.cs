@@ -12,7 +12,7 @@ namespace TezosNotifyBot.Nodes
     public class NodeManager
     {
         private readonly HttpClient _http;
-        private readonly BotConfig _config;
+        private readonly IOptions<BotConfig> _config;
         private readonly ILogger<Node> _logger;
         
         /// <summary>
@@ -27,7 +27,7 @@ namespace TezosNotifyBot.Nodes
         
         public NodeClient Client { get; }
 
-        public NodeManager(Node[] nodes, HttpClient http, BotConfig config, ILogger<Node> logger)
+        public NodeManager(Node[] nodes, HttpClient http, IOptions<BotConfig> config, ILogger<Node> logger)
         {
             _http = http;
             _config = config;
@@ -78,7 +78,7 @@ namespace TezosNotifyBot.Nodes
 
         private NodeClient CreateNodeClient(Node node)
         {
-            return new NodeClient(node.Url, _http, _config.CryptoCompareToken, _logger);
+            return new NodeClient(node.Url, _http, _config.Value.CryptoCompareToken, _logger);
         }
     }
 }
