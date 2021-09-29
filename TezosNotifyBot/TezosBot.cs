@@ -3632,6 +3632,35 @@ namespace TezosNotifyBot
                         }
                     }
 
+                    if (messageText.StartsWith("/trnthreshold"))
+                    {
+                        if (update.ChannelPost != null ||
+                            Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
+                        {
+                            if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
+                            {
+                                var msg = messageText.Substring($"/add@{botUserName} ".Length);
+                                string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
+                                string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
+                                if (long.TryParse(threshold, out long t))
+                                {
+                                    var ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    if (ua.Id == 0)
+                                    {
+                                        OnNewAddressEntered(user, addr);
+                                        ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    }
+                                    ua.AmountThreshold = t;
+                                    repo.UpdateUserAddress(ua);
+                                    SendTextMessage(chat.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
+                                    return;
+                                }
+                            }
+                            
+                            SendTextMessage(user.Id, $"Use <b>trnthreshold</b> command with Tezos address and the transaction amount (XTZ) threshold for this address. For example::\n/trnthreshold@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf 1000</i>");
+                        }
+                    }
+
                     /*
                     var chatAdmins = Bot.GetChatAdministratorsAsync(message.Chat.Id).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
@@ -3790,7 +3819,7 @@ namespace TezosNotifyBot
                 if (ci != null)
                 {
                     decimal bal = ci.balance / 1000000M;
-                    (UserAddress ua, DelegateInfo di) = NewUserAddress(user.Id, addr, name, bal, chat?.Id ?? 0);
+                    (UserAddress ua, DelegateInfo di) = NewUserAddress(user, addr, name, bal, chat?.Id ?? 0);
                     string result = resMgr.Get(Res.AddressAdded, ua) + "\n";
 
                     result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
@@ -4041,8 +4070,11 @@ namespace TezosNotifyBot
                 {
                     result += resMgr.Get(Res.DelegationNotifications, ua) + "\n";
                     result += resMgr.Get(Res.DelegationAmountThreshold, ua) + "\n";
-                    result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
-                    result += resMgr.Get(Res.DelegatorsBalanceThreshold, ua) + "\n";
+                    if (ua.User.Type == 0)
+                    {
+                        result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
+                        result += resMgr.Get(Res.DelegatorsBalanceThreshold, ua) + "\n";
+                    }
                     result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
@@ -4096,9 +4128,9 @@ namespace TezosNotifyBot
             }
         }
 
-        (UserAddress, DelegateInfo) NewUserAddress(long userId, string addr, string name, decimal balance, long chatId)
+        (UserAddress, DelegateInfo) NewUserAddress(User user, string addr, string name, decimal balance, long chatId)
         {
-            var ua = repo.AddUserAddress(userId, addr, balance, name, chatId);
+            var ua = repo.AddUserAddress(user, addr, balance, name, chatId);
             DelegateInfo di = null;
             try
             {

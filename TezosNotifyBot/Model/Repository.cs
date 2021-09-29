@@ -395,19 +395,20 @@ namespace TezosNotifyBot.Model
                 _db.SaveChanges();
         }
 
-        public UserAddress AddUserAddress(long userId, string addr, decimal bal, string name, long chatId)
+        public UserAddress AddUserAddress(User user, string addr, decimal bal, string name, long chatId)
         {
             lock (_dbLock)
             {
                 var ua = _db.UserAddresses.FirstOrDefault(o =>
-                    o.Address == addr && o.UserId == userId && o.ChatId == chatId);
+                    o.Address == addr && o.UserId == user.Id && o.ChatId == chatId);
                 if (ua == null)
                 {
                     ua = new UserAddress();
-                    ua.UserId = userId;
+                    ua.UserId = user.Id;
                     ua.Address = addr;
                     ua.CreateDate = DateTime.Now;
-                    ua.NotifyBakingRewards = true;
+                    ua.NotifyBakingRewards = user.Type == 0;
+                    ua.NotifyDelegatorsBalance = user.Type == 0;
                     ua.ChatId = chatId;
                     _db.Add(ua);
                 }

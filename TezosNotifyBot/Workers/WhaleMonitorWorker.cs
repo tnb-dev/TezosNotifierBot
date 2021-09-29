@@ -128,7 +128,8 @@ namespace TezosNotifyBot.Workers
                             repo.AddWhaleTransactionNotify(op.Id, u.Id);
                             tags += ua_to.HashTag();
                         }
-                        result += "\n" + resMgr.Get(Res.TurnOff, u) + ": /outflow_off";
+                        if (u.Type == 0)
+                            result += "\n" + resMgr.Get(Res.TurnOff, u) + ": /outflow_off";
                         if (!u.HideHashTags)
                         {
                             result += "\n\n#whale" + ua_from.HashTag() + tags;
