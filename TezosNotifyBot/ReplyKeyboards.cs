@@ -260,22 +260,22 @@ namespace TezosNotifyBot
                 {
                     buttons.Add2(u,
                             resMgr.Get(Res.TransactionNotify, ua), (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id,
-                            resMgr.Get(Res.SetThreshold, u), "setthreshold " + id);
+                            resMgr.Get(Res.SetThreshold, ua), "setthreshold " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.DelegationNotify, ua), (ua.NotifyDelegations ? "dlgoff" : "dlgon") + " " + id,
-                            resMgr.Get(Res.SetDlgThreshold, u), "setdlgthreshold " + id);
+                            resMgr.Get(Res.SetDlgThreshold, ua), "setdlgthreshold " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.DelegatorsBalanceNotifyToggle, ua), $"toggle_delegators_balance {id}",
-                            resMgr.Get(Res.DelegatorsBalanceThresholdButton, u), "change_delegators_balance_threshold " + id);
+                            resMgr.Get(Res.DelegatorsBalanceThresholdButton, ua), "change_delegators_balance_threshold " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.RewardNotify, ua), (ua.NotifyBakingRewards ? "bakingoff" : "bakingon") + " " + id,
-                            resMgr.Get(Res.CycleNotify, u), (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id);
+                            resMgr.Get(Res.CycleNotify, ua), (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.NotifyRightsAssigned, ua), (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id,
-                            resMgr.Get(Res.MissesNotify, u), (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id);
+                            resMgr.Get(Res.MissesNotify, ua), (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id);
                     buttons.Add(u, resMgr.Get(Res.NotifyOutOfFreeSpace, ua), (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon") + " " + id);
                     buttons.Add2(u,
-                             resMgr.Get(Res.RenameAddress, u), "setname " + id,
+                             resMgr.Get(Res.RenameAddress, ua), "setname " + id,
                              resMgr.Get(Res.Delete, ua), "deleteaddress " + id);
                     if (u.IsAdmin(options) || ua.IsOwner)
                         buttons.Add(u, resMgr.Get(Res.NotifyFollowers, u), "notifyfollowers " + id);
@@ -287,10 +287,10 @@ namespace TezosNotifyBot
                             resMgr.Get(Res.DelegationNotify, ua), (ua.NotifyDelegations ? "dlgoff" : "dlgon") + " " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.RewardNotify, ua), (ua.NotifyBakingRewards ? "bakingoff" : "bakingon") + " " + id,
-                            resMgr.Get(Res.CycleNotify, u), (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id);
+                            resMgr.Get(Res.CycleNotify, ua), (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon") + " " + id);
                     buttons.Add2(u,
                             resMgr.Get(Res.NotifyRightsAssigned, ua), (ua.NotifyRightsAssigned ? "rightsoff" : "rightson") + " " + id,
-                            resMgr.Get(Res.MissesNotify, u), (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id);
+                            resMgr.Get(Res.MissesNotify, ua), (ua.NotifyMisses ? "missesoff" : "misseson") + " " + id);
                     buttons.Add2(u,
                              resMgr.Get(Res.NotifyOutOfFreeSpace, ua), (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon") + " " + id,
                              resMgr.Get(Res.Delete, ua), "deleteaddress " + id);
