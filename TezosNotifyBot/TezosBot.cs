@@ -3597,7 +3597,8 @@ namespace TezosNotifyBot
                         !messageText.StartsWith("/add") &&
                         !messageText.StartsWith("/list") &&
                         !messageText.StartsWith("/trnthreshold") &&
-                        !messageText.StartsWith("/dlgthreshold"))
+                        !messageText.StartsWith("/dlgthreshold") &&
+                        !Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                         return;
                     repo.LogMessage(chat, messageId, messageText, null);
                     user = repo.GetUser(chat.Id);
@@ -3617,14 +3618,15 @@ namespace TezosNotifyBot
                             SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
 
-                    if (messageText.StartsWith("/add"))
+                    if (messageText.StartsWith("/add") || Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                     {
                         if (update.ChannelPost != null ||
                             Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
 						{
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
-                                OnNewAddressEntered(user, messageText.Substring($"/add ".Length));
+                                string addr = Regex.Matches(messageText, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
+                                OnNewAddressEntered(user, messageText.Substring(messageText.IndexOf(addr)));
                             }
                             else
                                 SendTextMessage(user.Id, $"Use <b>add</b> command with Tezos address and the title for this address (optional). For example::\n/add@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Аrthur</i>");
