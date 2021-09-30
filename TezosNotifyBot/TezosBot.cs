@@ -1992,7 +1992,7 @@ namespace TezosNotifyBot
             foreach (var addr in delegates)
             {
                 var fr = tzKtClient.GetBakerFutureRewards(addr);
-                if (fr == null)
+                if (fr == null || fr.Count < 12)
                     continue;
                 fr.Reverse();
                 long freeBalance = (long)addrMgr.GetDelegate(_nodeManager.Client, block.Hash, addr, true).balance
