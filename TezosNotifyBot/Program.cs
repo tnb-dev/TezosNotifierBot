@@ -36,7 +36,7 @@ namespace TezosNotifyBot
             {
                 using var scope = builder.Services.CreateScope();
                 using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
-
+                db.Database.SetCommandTimeout(600);
                 db.Database.Migrate();
             }
 
