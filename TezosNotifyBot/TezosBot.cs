@@ -3589,6 +3589,8 @@ namespace TezosNotifyBot
                     bool newChat = !repo.UserExists(message?.Chat.Id ?? update.ChannelPost.Chat.Id);
                     var chat = message?.Chat ?? update.ChannelPost.Chat;
                     var from = message?.From ?? update.ChannelPost.From;
+                    if (from.IsBot)
+                        return;
                     int messageId = message?.MessageId ?? update.ChannelPost.MessageId;
                     string messageText = message?.Text ?? update.ChannelPost.Text;
                     messageText = messageText.Replace($"@{botUserName}", "");
