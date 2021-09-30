@@ -36,7 +36,6 @@ namespace TezosNotifyBot
             {
                 using var scope = builder.Services.CreateScope();
                 using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
-                db.Database.SetCommandTimeout(600);
                 db.Database.Migrate();
             }
 
@@ -56,7 +55,7 @@ namespace TezosNotifyBot
                 .ConfigureServices((context, services) =>
                 {
                     services.AddDbContext<TezosDataContext>(builder => builder
-                        .UseNpgsql(context.Configuration.GetConnectionString("Default"))
+                        .UseNpgsql(context.Configuration.GetConnectionString("Default"), opt => opt.CommandTimeout(600))
                     );
 
                     services.Configure<BotConfig>(context.Configuration);
