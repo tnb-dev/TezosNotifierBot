@@ -8,9 +8,9 @@ namespace TezosNotifyBot.Domain
     public class UserAddress : IHasId<int>, IHasHashTag
     {
         public int Id { get; set; }
-        public string Address { get; set; }
+        public string Address { get; set; } = "";
         public User User { get; set; }
-        public int UserId { get; set; }
+        public long UserId { get; set; }
         public DateTime CreateDate { get; set; }
         public decimal Balance { get; set; }
         public DateTime LastUpdate { get; set; }

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NornPool.Model;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Tezos;
 
@@ -11,6 +12,7 @@ namespace TezosNotifyBot.Nodes
     public class NodeManager
     {
         private readonly HttpClient _http;
+        private readonly IOptions<BotConfig> _config;
         private readonly ILogger<Node> _logger;
         
         /// <summary>
@@ -25,14 +27,15 @@ namespace TezosNotifyBot.Nodes
         
         public NodeClient Client { get; }
 
-        public NodeManager(Node[] nodes, HttpClient http, ILogger<Node> logger)
+        public NodeManager(Node[] nodes, HttpClient http, IOptions<BotConfig> config, ILogger<Node> logger)
         {
             _http = http;
+            _config = config;
             _logger = logger;
             
             Nodes = nodes;
             Active = Nodes[0];
-            Client = new NodeClient(Active.Url, http, logger);
+            Client = CreateNodeClient(Active);
         }
 
         public void SwitchTo(int index)
@@ -48,7 +51,7 @@ namespace TezosNotifyBot.Nodes
         // TODO: For refactoring
         public string GetStatus(Node node)
         {
-            var client = new NodeClient(node.Url, _http, _logger);
+            var client = CreateNodeClient(node);
             try
             {
                 var bh = client.GetBlockHeader("head");
@@ -62,7 +65,7 @@ namespace TezosNotifyBot.Nodes
 
         public BlockHeader GetNodeHeader(Node node)
         {
-            var client = new NodeClient(node.Url, _http, _logger);
+            var client = CreateNodeClient(node);
             try
             {
                 return client.GetBlockHeader("head");
@@ -71,6 +74,11 @@ namespace TezosNotifyBot.Nodes
             {
                 return null;
             }
+        }
+
+        private NodeClient CreateNodeClient(Node node)
+        {
+            return new NodeClient(node.Url, _http, _config.Value.CryptoCompareToken, _logger);
         }
     }
 }

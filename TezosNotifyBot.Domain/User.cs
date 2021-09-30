@@ -5,9 +5,10 @@ using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class User: IHasId<int>
+    public class User: IHasId<long>
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
+        public string Title { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
         public string Username { get; set; }
@@ -19,6 +20,7 @@ namespace TezosNotifyBot.Domain
         public bool HideHashTags { get; set; }
         public int WhaleAlertThreshold { get; set; }
         public bool VotingNotify { get; set; }
+        public int Type { get; set; }
 
         public UserCurrency Currency { get; set; } = UserCurrency.Usd;
 
@@ -35,7 +37,7 @@ namespace TezosNotifyBot.Domain
 
         public override string ToString()
         {
-            return Firstname + " " + Lastname + (Username != "" ? " @" + Username : "");
+            return (string.IsNullOrEmpty(Title) ? Firstname + " " + Lastname : Title) + (Username != "" ? " @" + Username : "");
         }
 
         public int WhaleThreshold
@@ -49,7 +51,7 @@ namespace TezosNotifyBot.Domain
         {
         }
 
-        public static User New(int id, string username, string firstName, string lastName, string languageCode)
+        public static User New(long id, string Title, string username, string firstName, string lastName, string languageCode, int type)
         {
             return new User
             {
@@ -61,8 +63,10 @@ namespace TezosNotifyBot.Domain
                 Language = languageCode,
                 // Enable release notifications only for new users
                 ReleaseNotify = true,
-                WhaleAlertThreshold = 500000,
-                VotingNotify = true
+                WhaleAlertThreshold = type == 0 ? 500000 : 0,
+                VotingNotify = true,
+                Type = type,
+                SmartWhaleAlerts = type == 0,
             };
         }
     }

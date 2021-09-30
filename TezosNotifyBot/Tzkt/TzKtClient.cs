@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -160,9 +161,15 @@ namespace TezosNotifyBot.Tzkt
 
 		public IEnumerable<Operation> GetAccountOperations(string address, string filter = "")
 		{
+			return GetAccountOperations<Operation>(address, filter);
+		}
+
+		public IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
+			where T : Operation
+		{
 			var response = Download($"/v1/accounts/{address}/operations?{filter}");
 
-			return JsonConvert.DeserializeObject<Operation[]>(response, _jsonSerializerSettings);
+			return JsonConvert.DeserializeObject<T[]>(response, _jsonSerializerSettings);
 		}
 
 		List<Transaction> ITzKtClient.GetTransactions(string filter)

@@ -114,11 +114,7 @@ namespace TezosNotifyBot
                         return manager;
                     });
 
-                    services.AddSingleton(provider =>
-                    {
-                        var config = provider.GetService<IOptions<BotConfig>>();
-                        return config?.Value.Nodes;
-                    });
+                    services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
 
                     services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
                         .SetHandlerLifetime(TimeSpan.FromMinutes(1))

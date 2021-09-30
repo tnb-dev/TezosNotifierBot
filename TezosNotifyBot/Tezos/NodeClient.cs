@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -12,12 +12,14 @@ namespace TezosNotifyBot.Tezos
     {
         private string _url;
         private readonly HttpClient _http;
+        private readonly string _cryptoCompareToken;
         private readonly ILogger<Node> _logger;
 
-        public NodeClient(string url, HttpClient http, ILogger<Node> logger)
+        public NodeClient(string url, HttpClient http, string cryptoCompareToken, ILogger<Node> logger)
         {
             _url = url;
             _http = http;
+            _cryptoCompareToken = cryptoCompareToken;
             _logger = logger;
         }
 
@@ -220,7 +222,7 @@ namespace TezosNotifyBot.Tezos
         {
             string str =
                 Download(
-                    "https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key=84fb0e80ac990febe044ce000a8f92ddd0e70ac0c2f6651c7414a39cce01dcea");
+                    $"https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key={_cryptoCompareToken}");
             var dto = JsonConvert.DeserializeObject<CryptoComparePrice>(str);
             return new MarketData
             {

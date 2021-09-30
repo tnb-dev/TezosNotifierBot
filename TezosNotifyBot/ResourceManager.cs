@@ -119,7 +119,7 @@ namespace TezosNotifyBot
 		public TimeSpan CycleLength { get; set; }
 		public DateTime NextEnd { get; set; }
 		public UserAddress Delegate { get; set; }
-		public List<Tzkt.Right> Rights { get; set; }
+		public RightsInfo Rights { get; set; }
 
 		public static implicit operator ContextObject(User user) => new ContextObject { u = user };
 		public static implicit operator ContextObject(UserAddress userAddress) => new ContextObject { u = userAddress.User, ua = userAddress };
@@ -305,6 +305,8 @@ namespace TezosNotifyBot
 		TurnOff,
 		NotifyOutOfFreeSpace,
 		DelegateOutOfFreeSpace,
-		OutOfFreeSpace
+		OutOfFreeSpace,
+		AddressTransactionListTitle,
+		AddressTransactionListItem,
 	}
 }

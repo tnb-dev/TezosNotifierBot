@@ -16,14 +16,11 @@ namespace TezosNotifyBot.Storage
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<LastBlock> LastBlock { get; set; }
         public DbSet<Delegate> Delegates { get; set; }
-        public DbSet<UserAddressDelegation> UserAddressDelegations { get; set; }
         public DbSet<DelegateRewards> DelegateRewards { get; set; }
         public DbSet<Proposal> Proposals { get; set; }
         public DbSet<KnownAddress> KnownAddresses { get; set; }
         public DbSet<ProposalVote> ProposalVotes { get; set; }
-        //public DbSet<BakingRights> BakingRights { get; set; }
-        //public DbSet<EndorsingRights> EndorsingRights { get; set; }
-        public DbSet<BalanceUpdate> BalanceUpdates { get; set; }
+        
         public DbSet<TwitterMessage> TwitterMessages { get; set; }
         public DbSet<Token> Tokens { get; set; }
         public DbSet<WhaleTransaction> WhaleTransactions { get; set; }
@@ -55,7 +52,10 @@ namespace TezosNotifyBot.Storage
                 .HasDefaultValue(0);
             
             modelBuilder.Entity<User>(builder =>
-                builder.Property(x => x.SmartWhaleAlerts).HasDefaultValue(true));
+            {
+                builder.Property(x => x.SmartWhaleAlerts).HasDefaultValue(true);
+                builder.Property(x => x.Type).HasDefaultValue(0);
+            });
             modelBuilder.Entity<UserAddress>(builder =>
             {
                 builder.Property(x => x.NotifyPayout).HasDefaultValue(true);
@@ -65,7 +65,6 @@ namespace TezosNotifyBot.Storage
                 builder.Property(x => x.NotifyDelegateStatus).HasDefaultValue(true);
                 builder.Property(x => x.NotifyOutOfFreeSpace).HasDefaultValue(true);
             });
-            modelBuilder.Entity<UserAddressDelegation>();
             modelBuilder.Entity<Message>(builder =>
             {
                 builder.Property(x => x.Status)
@@ -79,7 +78,6 @@ namespace TezosNotifyBot.Storage
                 builder.HasIndex(x => x.PayoutFor);
             });
             modelBuilder.Entity<TwitterMessage>();
-            modelBuilder.Entity<BalanceUpdate>();
             modelBuilder.Entity<Proposal>();
             modelBuilder.Entity<ProposalVote>();
             modelBuilder.Entity<Token>();

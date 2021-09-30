@@ -28,6 +28,7 @@ namespace NornPool.Model
 		public int CarthageStart { get; set; }
 		public int WhaleSeriesLength { get; set; }
 
+		public string CryptoCompareToken { get; set; }
 
 		public Node[] Nodes { get; set; }
 
