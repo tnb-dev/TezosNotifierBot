@@ -1581,7 +1581,7 @@ namespace TezosNotifyBot
                                 ua = ua,
                                 Block = block.Level,
                                 Amount = block.Reward / 1000000M,
-                                Rights = new List<Right> { baking_right }
+                                Rights = new RightsInfo(baking_right)
                             });
 
                         if (!ua.User.HideHashTags)
@@ -1643,7 +1643,7 @@ namespace TezosNotifyBot
                             ua = ua,
                             Block = block.Level,
                             Amount = rewards / 1000000M,
-                            Rights = new List<Right> { d }
+                            Rights = new RightsInfo(d)
                         });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#missed_endorsing" + ua.HashTag();
@@ -1955,11 +1955,11 @@ namespace TezosNotifyBot
         void NotifyAssignedRights(ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
 		{
             var delegates = userAddresses.Where(ua => ua.NotifyCycleCompletion).Select(ua => ua.Address).Distinct();
-            Dictionary<string, List<Right>> rights = new Dictionary<string, List<Right>>();
+            Dictionary<string, RightsInfo> rights = new Dictionary<string, RightsInfo>();
             foreach(var addr in delegates)
 			{
                 var r = tzKtClient.GetRights(addr, cycle);
-                rights.Add(addr, r);
+                rights.Add(addr, new RightsInfo(r));
             }
 
             foreach(var u in userAddresses.Where(ua => ua.NotifyCycleCompletion).GroupBy(ua => ua.User))
@@ -3655,15 +3655,13 @@ namespace TezosNotifyBot
                                 if (long.TryParse(threshold, out long t))
                                 {
                                     var ua = repo.GetUserTezosAddress(chat.Id, addr);
-                                    if (ua.Id == 0)
+                                    if (ua.Id != 0)
                                     {
-                                        OnNewAddressEntered(user, addr);
-                                        ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                        ua.AmountThreshold = t;
+                                        repo.UpdateUserAddress(ua);
+                                        SendTextMessage(chat.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
+                                        return;
                                     }
-                                    ua.AmountThreshold = t;
-                                    repo.UpdateUserAddress(ua);
-                                    SendTextMessage(chat.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
-                                    return;
                                 }
                             }
                             
@@ -3684,15 +3682,13 @@ namespace TezosNotifyBot
                                 if (long.TryParse(threshold, out long t))
                                 {
                                     var ua = repo.GetUserTezosAddress(chat.Id, addr);
-                                    if (ua.Id == 0)
+                                    if (ua.Id != 0)
                                     {
-                                        OnNewAddressEntered(user, addr);
-                                        ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                        ua.DelegationAmountThreshold = t;
+                                        repo.UpdateUserAddress(ua);
+                                        SendTextMessage(chat.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
+                                        return;
                                     }
-                                    ua.DelegationAmountThreshold = t;
-                                    repo.UpdateUserAddress(ua);
-                                    SendTextMessage(chat.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
-                                    return;
                                 }
                             }
 
