@@ -3077,6 +3077,7 @@ namespace TezosNotifyBot
                         var str = message.Text.Substring("/medium ".Length);
                         var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
                         var mw = new Workers.MediumWorker(tzKtClient, _serviceProvider.GetService<IOptions<MediumOptions>>(),
+                            _serviceProvider.GetService<IOptions<BotConfig>>(),
                             _serviceProvider.GetService<ILogger<Workers.MediumWorker>>(), _serviceProvider);
                         var cycles = tzKtClient.GetCycles();
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
