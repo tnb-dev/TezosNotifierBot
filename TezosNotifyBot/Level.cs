@@ -1,5 +1,5 @@
-﻿namespace TezosNotifyBot
-{/*
+﻿/*namespace TezosNotifyBot
+{
 	public struct Level
 	{
 		public const int CycleSize = 4096;
@@ -23,5 +23,6 @@
 		public static implicit operator Level(int level) => new Level(level);
 
 		public static implicit operator int(Level level) => level.Height;
-	}*/
+	}
 }
+*/

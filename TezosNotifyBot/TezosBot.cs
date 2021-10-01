@@ -2283,7 +2283,7 @@ namespace TezosNotifyBot
                         if (userAddress.IsOwner && !user.IsAdmin(Config.Telegram) &&
                             cycles.Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel) ==
                             cycles.Single(c => c.firstLevel <= userAddress.LastMessageLevel && userAddress.LastMessageLevel <= c.lastLevel))
-						{
+                        {
                             SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
                             return;
 						}
@@ -3077,6 +3077,7 @@ namespace TezosNotifyBot
                         var str = message.Text.Substring("/medium ".Length);
                         var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
                         var mw = new Workers.MediumWorker(tzKtClient, _serviceProvider.GetService<IOptions<MediumOptions>>(),
+                            _serviceProvider.GetService<IOptions<BotConfig>>(),
                             _serviceProvider.GetService<ILogger<Workers.MediumWorker>>(), _serviceProvider);
                         var cycles = tzKtClient.GetCycles();
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
@@ -3963,7 +3964,7 @@ namespace TezosNotifyBot
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
             result += $"<a href='{t.account(ua.Address)}'>" + ua.Address + "</a>\n";
-            var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock.Hash, ua.Address, true);
+            var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock?.Hash, ua.Address, true);
             if (ci != null)
                 ua.Balance = ci.balance / 1000000M;
 
@@ -3989,19 +3990,19 @@ namespace TezosNotifyBot
             {
                 try
                 {
-                    var di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock.Hash, ua.Address, enqueue: true);
+                    var di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock?.Hash, ua.Address, enqueue: true);
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
                     ua.Delegators = di.NumDelegators;
                     result += resMgr.Get(Res.StakingInfo, ua) + "\n";
                     result += FreeSpace(ua);
-                    /*decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
-                    if (perf.HasValue)
-                    {
-                        ua.AveragePerformance = perf.Value;
-                        result += resMgr.Get(Res.AveragePerformance, ua) + "\n";
-                    }*/
+                    //decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
+                    //if (perf.HasValue)
+                    //{
+                    //    ua.AveragePerformance = perf.Value;
+                    //    result += resMgr.Get(Res.AveragePerformance, ua) + "\n";
+                    //}
                 }
                 catch
                 {

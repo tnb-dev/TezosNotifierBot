@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using NornPool.Model;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
@@ -22,16 +23,18 @@ namespace TezosNotifyBot.Workers
         private readonly ILogger<MediumWorker> _logger;
         private readonly IServiceProvider _provider;
         private readonly MediumOptions _options;
+        private readonly BotConfig _config;
         private readonly ITzKtClient _tzKtClient;
         private int lastCycle = 0;
         private int lastLevel = 0;
 
-        public MediumWorker(ITzKtClient tzKtClient, IOptions<MediumOptions> options, ILogger<MediumWorker> logger, IServiceProvider provider)
+        public MediumWorker(ITzKtClient tzKtClient, IOptions<MediumOptions> options, IOptions<BotConfig> config, ILogger<MediumWorker> logger, IServiceProvider provider)
         {
             _options = options.Value;
             _tzKtClient = tzKtClient;
             _logger = logger;
             _provider = provider;
+            _config = config.Value;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -234,12 +237,12 @@ namespace TezosNotifyBot.Workers
 
         Tezos.MarketData FillRates(StringBuilder post, Cycle prevCycle, Cycle cycle)
 		{
-            var histUrl = $"https://min-api.cryptocompare.com/data/v2/histohour?fsym=XTZ&tsym=USD&limit=72&toTs={new DateTimeOffset(cycle.startTime).ToUnixTimeSeconds()}&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f";
+            var histUrl = $"https://min-api.cryptocompare.com/data/v2/histohour?fsym=XTZ&tsym=USD&limit=72&toTs={new DateTimeOffset(cycle.startTime).ToUnixTimeSeconds()}&api_key={_config.CryptoCompareToken}";
             WebClient wc = new WebClient();
             var histDataStr = wc.DownloadString(histUrl);
             var histData = JsonSerializer.Deserialize<CryptoCompare.HistohourResult>(histDataStr);
             
-            string strPrices = wc.DownloadString("https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key=378ecd1eb63001a82b202939e2c731e12b65b4854d308b580e9b5c448565a54f");
+            string strPrices = wc.DownloadString("https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key={_config.CryptoCompareToken}");
             var dtoPrice = JsonSerializer.Deserialize<Tezos.CryptoComparePrice>(strPrices);
 
             post.AppendLine("<h1>Market data</h1>");
