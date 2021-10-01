@@ -258,7 +258,7 @@ namespace TezosNotifyBot.Tezos
 		public string pkh { get; set; }
 		public string ballot { get; set; }
 	}
-
+    /*
 	public class Constants
 	{
 		public int proof_of_work_nonce_size { get; set; }
@@ -287,5 +287,5 @@ namespace TezosNotifyBot.Tezos
 		public long cost_per_byte { get; set; }
 		public long hard_storage_limit_per_operation { get; set; }
 		public string test_chain_duration { get; set; }
-	}
+	}*/
 }

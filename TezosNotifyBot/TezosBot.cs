@@ -81,13 +81,6 @@ namespace TezosNotifyBot
 		//string lastHash;
 		Constants _currentConstants;
 
-		Constants GetConstants()
-		{
-			if (_currentConstants == null)
-				_currentConstants = _nodeManager.Client.GetConstants(prevBlock.Hash);
-			return _currentConstants;
-		}
-
 		DateTime lastReceived = DateTime.Now; //Дата и время получения последнего блока
         DateTime lastWebExceptionNotify = DateTime.MinValue;
         TwitterClient twitter;
@@ -153,9 +146,7 @@ namespace TezosNotifyBot
                 var me = await Bot.GetMeAsync();
                 botUserName = me.Username;
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
-                //_nodeManager.Client.BlockReceived += Client_BlockReceived;
-
-                
+                                
                 var message = new StringBuilder();
                 message.AppendLine($"{me.Username} v{version} started, last block: {repo.GetLastBlockLevel()}");
                 message.AppendLine();
@@ -388,6 +379,8 @@ namespace TezosNotifyBot
 
             lastReceived = DateTime.Now;
             var tzKt = _serviceProvider.GetService<ITzKtClient>();
+            if (_currentConstants == null)
+                _currentConstants = tzKt.GetCurrentProtocol().constants;
             var tzKtHead = tzKt.GetHead();
             Logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
             if (tzKtHead.level < blockLevel + 1)
@@ -3925,10 +3918,12 @@ namespace TezosNotifyBot
 
         string FreeSpace(UserAddress ua)
         {
-            var c = GetConstants();
+            var c = _currentConstants;
+            if (c == null)
+                return "";
             //how much tez can be locked in total (by all bakers) as a security deposit
-            var totalLocked = (c.block_security_deposit + c.endorsement_security_deposit * c.endorsers_per_block) *
-                              c.blocks_per_cycle * (c.preserved_cycles + 1);
+            var totalLocked = (c.blockDeposit + c.endorsementDeposit * c.endorsersPerBlock) *
+                              c.blocksPerCycle * (c.preservedCycles + 1);
 
             //how much of that the baker can cover with his balance
             var bakerBalance = ua.FullBalance * 1000000;
@@ -3940,7 +3935,7 @@ namespace TezosNotifyBot
 
             //how many rolls and staking balance the baker should have in order to lock the whole balance
             var bakerRollsCapacity = totalRolls * bakerShare;
-            var bakerStakingCapacity = bakerRollsCapacity * c.tokens_per_roll;
+            var bakerStakingCapacity = bakerRollsCapacity * c.tokensPerRoll;
 
             decimal maxStakingThreshold = 1;
             var maxStakingBalance = bakerStakingCapacity * maxStakingThreshold;

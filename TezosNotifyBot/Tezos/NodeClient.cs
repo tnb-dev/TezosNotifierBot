@@ -22,12 +22,12 @@ namespace TezosNotifyBot.Tezos
             _cryptoCompareToken = cryptoCompareToken;
             _logger = logger;
         }
-
+        /*
         public DateTime Run(int lastLevel)
         {
             return Download("head", lastLevel);
         }
-
+        
         public DateTime Download(string hash, int lastLevel)
         {
             int index = 0;
@@ -76,7 +76,7 @@ namespace TezosNotifyBot.Tezos
                 //var ops = GetBlockOperations(bh.hash);
                 //if (ops == null)
                 //    return DateTime.Now;
-                var ok = BlockReceived(bh, null,null/*GetBlockMetadata(bh.hash), ops*/);
+                var ok = BlockReceived(bh, null,null);
                 if (!ok)
                     return DateTime.Now;
 
@@ -90,7 +90,7 @@ namespace TezosNotifyBot.Tezos
                 lastLevel = bh.level;
             } while (true);
         }
-
+        */
         public delegate bool BlockRecieved(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations);
 
         public event BlockRecieved BlockReceived;
@@ -255,7 +255,7 @@ namespace TezosNotifyBot.Tezos
         {
             string str = Download($"{_url}/chains/main/blocks/{hash}/helpers/endorsing_rights?cycle={cycle}");
             return JsonConvert.DeserializeObject<EndorsingRights[]>(str);
-        }*/
+        }
 
         public string[] GetDelegates(string hash)
         {
@@ -275,7 +275,7 @@ namespace TezosNotifyBot.Tezos
             string str = Download(_url + "/chains/main/blocks/" + hash + "/context/constants");
             return JsonConvert.DeserializeObject<Constants>(str);
         }
-
+*/
         public string Download(string addr)
         {
             try

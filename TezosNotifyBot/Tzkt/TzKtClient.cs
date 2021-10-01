@@ -110,7 +110,11 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/blocks/{level}?operations=true");
 			return JsonConvert.DeserializeObject<Block>(str);
 		}
-
+		Protocol ITzKtClient.GetCurrentProtocol()
+		{
+			var str = Download($"v1/protocols/current");
+			return JsonConvert.DeserializeObject<Protocol>(str);
+		}
 		decimal ITzKtClient.GetBalance(string address, int level)
 		{
 			var str = Download($"v1/accounts/{address}/balance_history/{level}");
@@ -142,8 +146,7 @@ namespace TezosNotifyBot.Tzkt
 				_logger.LogError(e, $"Error downloading from {_client.BaseAddress}{addr}");
 				throw;
 			}
-		}
-		
+		}		
 		public T Download<T>(string path)
 		{
 			var result = Download(path);
@@ -158,12 +161,10 @@ namespace TezosNotifyBot.Tzkt
 				return default;
 			}
 		}
-
 		public IEnumerable<Operation> GetAccountOperations(string address, string filter = "")
 		{
 			return GetAccountOperations<Operation>(address, filter);
 		}
-
 		public IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
 			where T : Operation
 		{
@@ -171,13 +172,11 @@ namespace TezosNotifyBot.Tzkt
 
 			return JsonConvert.DeserializeObject<T[]>(response, _jsonSerializerSettings);
 		}
-
 		List<Transaction> ITzKtClient.GetTransactions(string filter)
 		{
 			var str = Download($"v1/operations/transactions?{filter}");
 			return JsonConvert.DeserializeObject<List<Transaction>>(str);
 		}
-
 		List<VotingPeriod> ITzKtClient.GetVotingPeriods()
 		{
 			var str = Download($"v1/voting/periods?sort.desc=id");

@@ -29,5 +29,6 @@ namespace TezosNotifyBot.Tzkt
 		decimal GetBalance(string address, int level);
 		IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
 			where T : Operation;
+		Protocol GetCurrentProtocol();
 	}
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace TezosNotifyBot.TezosRpc
-{
+{/*
 	public class Block
 	{
 		public string protocol { get; set; }
@@ -13,7 +13,7 @@ namespace TezosNotifyBot.TezosRpc
 		public BlockMetadata metadata { get; set; }
 		public List<List<Operation>> operations { get; set; }
 	}
-
+	
 	public class Header
 	{
 		public int level { get; set; }
@@ -123,5 +123,5 @@ namespace TezosNotifyBot.TezosRpc
 		public string @delegate { get; set; }
 		//script
 		//public Metadata metadata { get; set; }
-	}
+	}*/
 }
