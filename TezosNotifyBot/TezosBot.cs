@@ -3964,7 +3964,7 @@ namespace TezosNotifyBot
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
             result += $"<a href='{t.account(ua.Address)}'>" + ua.Address + "</a>\n";
-            var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock.Hash, ua.Address, true);
+            var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock?.Hash, ua.Address, true);
             if (ci != null)
                 ua.Balance = ci.balance / 1000000M;
 
@@ -3990,7 +3990,7 @@ namespace TezosNotifyBot
             {
                 try
                 {
-                    var di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock.Hash, ua.Address, enqueue: true);
+                    var di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock?.Hash, ua.Address, enqueue: true);
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
