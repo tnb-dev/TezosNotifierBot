@@ -220,14 +220,14 @@ namespace TezosNotifyBot
                 {
                     buttons.Add2(u,
                         resMgr.Get(Res.TransactionNotify, ua), (ua.NotifyTransactions ? "tranoff" : "tranon") + " " + id,
-                        resMgr.Get(Res.SetThreshold, u), "setthreshold " + id);
+                        resMgr.Get(Res.SetThreshold, ua), "setthreshold " + id);
                     buttons.Add2(u,
                         resMgr.Get(Res.PayoutNotifyToggle, ua), $"toggle_payout_notify {id}",
-                        resMgr.Get(Res.AwardNotify, u), (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id);
+                        resMgr.Get(Res.AwardNotify, ua), (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id);
                     buttons.Add2(u,
-                        resMgr.Get(Res.RenameAddress, u), "setname " + id,
+                        resMgr.Get(Res.RenameAddress, ua), "setname " + id,
                         resMgr.Get(Res.DelegateStatusToggle, ua), $"toggle-delegate-status {id}");
-                    buttons.Add(u, resMgr.Get(Res.Delete, u), $"deleteaddress {id}");
+                    buttons.Add(u, resMgr.Get(Res.Delete, ua), $"deleteaddress {id}");
                 }
                 else
 				{
@@ -236,12 +236,12 @@ namespace TezosNotifyBot
                         resMgr.Get(Res.PayoutNotifyToggle, ua), $"toggle_payout_notify {id}");
                     buttons.Add2(u,
                         resMgr.Get(Res.DelegateStatusToggle, ua), $"toggle-delegate-status {id}",
-                        resMgr.Get(Res.Delete, u), $"deleteaddress {id}");
+                        resMgr.Get(Res.Delete, ua), $"deleteaddress {id}");
                 }
             }
 
             if (addDelegate.Item1 != "")
-                buttons.Add(u, resMgr.Get(Res.AddAddress, u) + " " + addDelegate.Item1, "addaddress " + addDelegate.Item2);
+                buttons.Add(u, resMgr.Get(Res.AddAddress, ua) + " " + addDelegate.Item1, "addaddress " + addDelegate.Item2);
             return new InlineKeyboardMarkup(buttons);
         }
 
@@ -278,7 +278,7 @@ namespace TezosNotifyBot
                              resMgr.Get(Res.RenameAddress, ua), "setname " + id,
                              resMgr.Get(Res.Delete, ua), "deleteaddress " + id);
                     if (u.IsAdmin(options) || ua.IsOwner)
-                        buttons.Add(u, resMgr.Get(Res.NotifyFollowers, u), "notifyfollowers " + id);
+                        buttons.Add(u, resMgr.Get(Res.NotifyFollowers, ua), "notifyfollowers " + id);
                 }
                 else
 				{
