@@ -241,7 +241,7 @@ namespace TezosNotifyBot
             }
 
             if (addDelegate.Item1 != "")
-                buttons.Add(u, resMgr.Get(Res.AddAddress, ua) + " " + addDelegate.Item1, "addaddress " + addDelegate.Item2);
+                buttons.Add(u, resMgr.Get(Res.AddAddress, u) + " " + addDelegate.Item1, "addaddress " + addDelegate.Item2);
             return new InlineKeyboardMarkup(buttons);
         }
 
