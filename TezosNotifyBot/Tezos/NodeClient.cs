@@ -90,11 +90,11 @@ namespace TezosNotifyBot.Tezos
                 lastLevel = bh.level;
             } while (true);
         }
-        */
+        
         public delegate bool BlockRecieved(BlockHeader header, BlockMetadata blockMetadata, Operation[] operations);
 
         public event BlockRecieved BlockReceived;
-
+*/
         public ContractInfo GetContractInfo(string block, string addr)
         {
             ContractInfo ci;
@@ -140,7 +140,7 @@ namespace TezosNotifyBot.Tezos
             var data = Download($"{_url}/chains/main/blocks/{hash}/votes/listings");
             return JsonConvert.DeserializeObject<VoteListing[]>(data);
         }
-
+        /*
         public Dictionary<string, int> GetProposals(string hash)
         {
             var data = Download($"{_url}/chains/main/blocks/{hash}/votes/proposals");
@@ -148,7 +148,7 @@ namespace TezosNotifyBot.Tezos
             return arr.Select(o => new Tuple<string, int>(o[0], int.Parse(o[1])))
                 .ToDictionary(o => o.Item1, o => o.Item2);
         }
-
+        */
 		//public Operation[] GetBlockOperations(string hash)
 		//{
 		//    var opstr = Download(_url + "/chains/main/blocks/" + hash + "/operations");
@@ -187,7 +187,7 @@ namespace TezosNotifyBot.Tezos
         //    return JsonConvert.DeserializeObject<BlockMetadata>(Download(_url + "/chains/main/blocks/" + hash +
         //                                                                 "/metadata"));
         //}
-
+        /*
         public Ballots GetBallots(string hash)
         {
             return JsonConvert.DeserializeObject<Ballots>(Download(_url + "/chains/main/blocks/" + hash +
@@ -199,7 +199,7 @@ namespace TezosNotifyBot.Tezos
             return JsonConvert.DeserializeObject<int>(Download(_url + "/chains/main/blocks/" + hash +
                                                                "/votes/current_quorum"));
         }
-
+        */
         public string GetCurrentProposal(string hash)
         {
             return JsonConvert.DeserializeObject<string>(Download(_url + "/chains/main/blocks/" + hash +
