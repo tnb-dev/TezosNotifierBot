@@ -3614,7 +3614,7 @@ namespace TezosNotifyBot
                             SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
 
-                    if (messageText.StartsWith("/add") || Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
+                    if (messageText.StartsWith("/add") || (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}") && update.ChannelPost == null))
                     {
                         if (update.ChannelPost != null ||
                             Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
