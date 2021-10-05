@@ -93,6 +93,8 @@ namespace TezosNotifyBot
 				}
 			}
 		}
+
+		public string Get(Res key, string lang) => Get(key, lang, new { });
 	}
 
 	public class ContextObject
@@ -306,7 +308,12 @@ namespace TezosNotifyBot
 		NotifyOutOfFreeSpace,
 		DelegateOutOfFreeSpace,
 		OutOfFreeSpace,
+		AddressTransactionListLink,
 		AddressTransactionListTitle,
 		AddressTransactionListItem,
+		AddressTransactionListNewer,
+		AddressTransactionListOlder,
+		AddressTransactionListLatest,
+		AddressTransactionListRefresh,
 	}
 }

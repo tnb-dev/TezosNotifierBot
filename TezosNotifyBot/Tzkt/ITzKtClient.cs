@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace TezosNotifyBot.Tzkt
 {
@@ -29,6 +30,8 @@ namespace TezosNotifyBot.Tzkt
 		decimal GetBalance(string address, int level);
 		IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
 			where T : Operation;
+		IEnumerable<T> GetAccountOperations<T>(string address, QueryString filter) where T : Operation 
+			=> GetAccountOperations<T>(address, filter.ToString().TrimStart('?'));
 		Protocol GetCurrentProtocol();
 	}
 }

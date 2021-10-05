@@ -59,10 +59,10 @@ namespace TezosNotifyBot.Commands.Addresses
             {
                 message.AddLine(_lang.Get(Res.AddressLinkBackingBad, lang, linkData));
             }
-            
+
             var buttons = new InlineKeyboardMarkup(
                 InlineKeyboardButton.WithCallbackData(
-                    "TODO: Transaction list", 
+                    _lang.Get(Res.AddressTransactionListLink, user.Language, new {}),
                     $"address-transaction-list {address.Address} 1"
                 )
             );

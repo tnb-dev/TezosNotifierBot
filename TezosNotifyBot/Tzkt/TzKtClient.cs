@@ -168,7 +168,7 @@ namespace TezosNotifyBot.Tzkt
 		public IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
 			where T : Operation
 		{
-			var response = Download($"/v1/accounts/{address}/operations?{filter}");
+			var response = Download($"v1/accounts/{address}/operations?{filter}");
 
 			return JsonConvert.DeserializeObject<T[]>(response, _jsonSerializerSettings);
 		}

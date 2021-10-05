@@ -470,3 +470,13 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #AddressTransactionListTitle;ru;Transaction list of {addressName}
 #AddressTransactionListItem;en;- <a href='{t.op(hash)}'>{amount.TezToString()}</a> to <a href='{t.account(targetAddress)}'>{targetName}</a> on {timestamp}
 #AddressTransactionListItem;ru;- <a href='{t.op(hash)}'>{amount.TezToString()}</a> -> <a href='{t.account(targetAddress)}'>{targetName}</a> {timestamp}
+#AddressTransactionListLink;en;📄 Transaction list
+#AddressTransactionListLink;ru;📄 Список транзакций
+#AddressTransactionListOlder;en;Older ➡️
+#AddressTransactionListOlder;ru;Далее ➡️
+#AddressTransactionListNewer;en;Newer ⬅️
+#AddressTransactionListNewer;ru;Назад ⬅️
+#AddressTransactionListLatest;en;Latest ⏺
+#AddressTransactionListLatest;ru;В начало ⏺
+#AddressTransactionListRefresh;en;Refresh ⏺
+#AddressTransactionListRefresh;ru;Обновить ⏺

@@ -16,6 +16,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
+using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
@@ -72,6 +73,9 @@ namespace TezosNotifyBot
                                 options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
                             );
                     });
+
+                    services.AddMemoryCache();
+                    services.AddSingleton<AddressTransactionsRepository>();
 
                     services.AddHttpClient<ReleasesClient>();
                     services.AddTransient<Tzkt.ITzKtClient>(sp =>
