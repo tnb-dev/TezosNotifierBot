@@ -39,7 +39,7 @@ namespace TezosNotifyBot.Workers
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (stoppingToken.IsCancellationRequested is false)
+            while (false/*stoppingToken.IsCancellationRequested is false*/)
             {
                 using var scope = _provider.CreateScope();
                 var bot = scope.ServiceProvider.GetRequiredService<TezosBot>();
