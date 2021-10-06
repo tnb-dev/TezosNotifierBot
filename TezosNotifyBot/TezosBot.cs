@@ -3075,8 +3075,15 @@ namespace TezosNotifyBot
                         var cycles = tzKtClient.GetCycles();
                         var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
                         var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
-                        var result = mw.CreatePost(repo, prevCycle, currentCycle);
-                        NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
+                        try
+                        {
+                            var result = mw.CreatePost(repo, prevCycle, currentCycle);
+                            NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
+                        }
+                        catch (Exception e)
+                        {
+                            NotifyDev("Failed to create medium post: " + e.Message + "\nAuth token:" + _serviceProvider.GetService<IOptions<MediumOptions>>().Value.AuthToken + "\n" + e.StackTrace, user.Id, ParseMode.Default, true);
+                        }
                     }
                     else if (message.Text == "/stop" && user.IsAdmin(Config.Telegram))
                     {
