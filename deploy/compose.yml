@@ -22,6 +22,8 @@ services:
       - db
     environment:
       - DOTNET_ENVIRONMENT=$ENV
+      - Medium__UserId
+      - Medium__AuthToken
       - Twitter__AccessToken
       - Twitter__AccessTokenSecret
       - Twitter__ConsumerKey
