@@ -41,12 +41,13 @@ namespace TezosNotifyBot.Commands.Addresses
         public async Task Handle(string[] args, CallbackQuery query)
         {
             var page = args.GetInt(1);
+            var userId = query.From.Id;
 
             var address = await Db.Set<UserAddress>()
-                .SingleOrDefaultAsync(x => x.Address == args[0]);
+                .SingleOrDefaultAsync(x => x.Address == args[0] && x.UserId == userId);
 
             if (address == null)
-                throw new ArgumentException("Bla bla");
+                throw new ArgumentException($"Address {args[0]} not found");
 
             var user = await Db.Users.ByIdAsync(address.UserId);
 
