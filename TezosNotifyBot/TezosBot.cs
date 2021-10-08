@@ -4280,6 +4280,17 @@ namespace TezosNotifyBot
                 repo.UpdateUser(u);
                 NotifyDev("😕 User " + UserLink(u) + " not started chat with bot", userId);
             }
+            catch (BadRequestException bre)
+			{
+                if(bre.Message.Contains("no rights to send"))
+				{
+                    u.Inactive = true;
+                    repo.UpdateUser(u);
+                    NotifyDev("😕 Bot have no rights to send a message for " + UserLink(u), userId);
+                }
+                else
+                    LogError(bre);
+            }
             catch (ApiRequestException are)
             {
                 NotifyDev("🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, userId);
