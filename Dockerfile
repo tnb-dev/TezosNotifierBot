@@ -2,6 +2,19 @@ ARG configuration=Release
 
 ###########################
 #
+# Runtime container build
+#
+###########################
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS runtime
+
+RUN apk update && apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+EXPOSE 80
+
+###########################
+#
 # Build container
 #
 ###########################
@@ -32,15 +45,11 @@ RUN dotnet publish --output /out --no-restore -v m /property:Version=${version}
 
 ###########################
 #
-# Runtime container build
+# Runtime layer
 #
 ###########################
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS runtime
+FROM runtime
 
 COPY --from=build /out /app
-
-WORKDIR /app
-
-EXPOSE 80
 
 ENTRYPOINT ["dotnet", "TezosNotifyBot.dll", "--migrate"]
