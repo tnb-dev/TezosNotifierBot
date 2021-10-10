@@ -14,6 +14,7 @@ WORKDIR /src
 # Project assemblies for layer caching
 COPY TezosNotifyBot.sln .
 COPY TezosNotifyBot/TezosNotifyBot.csproj ./TezosNotifyBot/
+COPY TezosNotifyBot.Dialog/TezosNotifyBot.Dialog.csproj ./TezosNotifyBot.Dialog/
 COPY TezosNotifyBot.Shared/TezosNotifyBot.Shared.csproj ./TezosNotifyBot.Shared/
 COPY TezosNotifyBot.Domain/TezosNotifyBot.Domain.csproj ./TezosNotifyBot.Domain/
 COPY TezosNotifyBot.Storage/TezosNotifyBot.Storage.csproj ./TezosNotifyBot.Storage/
