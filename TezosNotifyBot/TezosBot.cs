@@ -3475,15 +3475,13 @@ namespace TezosNotifyBot
                                 ReplyKeyboards.MainMenu(resMgr, user));
                             
                             if (action == "input.unknown")
-                            {
                                 SendTextMessage(user.Id, resMgr.Get(Res.MessageSentToSupport, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
-
-                                NotifyDev(
-                                    "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
-                                        .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
-                                    "\n\n#inbox", 0);
-                            }
+                                
+                            NotifyDev(
+                                "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
+                                    .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
+                                "\n\n#inbox", 0);
                         }
                         else if (user.UserState == UserState.SetAmountThreshold)
                         {
