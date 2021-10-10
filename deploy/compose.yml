@@ -33,9 +33,7 @@ services:
       - ConnectionStrings__Default=$DB
       - GOOGLE_APPLICATION_CREDENTIALS=/app/google-key.json
     volumes:
-      - type: volume
-        source: ../google-key.json
-        target: /app/google-key.json
+      - /home/tezos/google-key.json:/app/google-key.json:ro
   bi:
     image: metabase/metabase
     expose:
