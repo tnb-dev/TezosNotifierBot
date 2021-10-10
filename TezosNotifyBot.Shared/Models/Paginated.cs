@@ -8,29 +8,33 @@ namespace TezosNotifyBot.Shared.Models
     {
         public int Page { get; }
         public int Take { get; }
-        public int Pages { get; }
-        public int Total { get; }
+        public bool HasPrev { get; set; }
+        public bool HasNext { get; set; }
         public T[] Items { get; }
 
-        public Paginated(int page, int take, int total, T[] items)
+        public Paginated(int page, int take, T[] items, bool hasPrev, bool hasNext)
         {
             Page = page;
             Take = take;
-            Total = total;
             Items = items;
-            Pages = (int)Math.Ceiling((decimal)total / take);
+            HasPrev = hasPrev;
+            HasNext = hasNext;
         }
     }
 
     public static class PaginatedExtensions
     {
-        public static Paginated<T> Paginate<T>(this IEnumerable<T> enumerable, int page, int take)
+        public static Paginated<T> ToFlexPagination<T>(this IEnumerable<T> enumerable, int page, int take)
         {
+            var items = enumerable.ToArray();
+            var length = items.Length;
+            
             return new Paginated<T>(
                 page,
                 take,
-                enumerable.Count(),
-                enumerable.Skip((page - 1) * take).Take(take).ToArray()
+                items.Take(take).ToArray(),
+                page != 1,
+                length > take
             );
         }
     }

@@ -16,11 +16,12 @@ using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
+using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
-using TezosNotifyBot.Tezos;
+using TezosNotifyBot.Tzkt;
 using TezosNotifyBot.Workers;
 
 namespace TezosNotifyBot
@@ -74,16 +75,15 @@ namespace TezosNotifyBot
                             );
                     });
 
-                    services.AddMemoryCache();
                     services.AddSingleton<AddressTransactionsRepository>();
 
                     services.AddHttpClient<ReleasesClient>();
-                    services.AddTransient<Tzkt.ITzKtClient>(sp =>
-                        new Tzkt.TzKtClient(sp.GetService<ILogger<Tzkt.TzKtClient>>(),
+                    services.AddTransient<ITzKtClient>(sp =>
+                        new TzKtClient(sp.GetService<ILogger<TzKtClient>>(),
                             context.Configuration.GetValue<string>("TzKtUrl")));
-                    services.AddTransient<BetterCallDev.IBetterCallDevClient>(sp =>
-                        new BetterCallDev.BetterCallDevClient(
-                            sp.GetService<ILogger<BetterCallDev.BetterCallDevClient>>(),
+                    services.AddTransient<IBetterCallDevClient>(sp =>
+                        new BetterCallDevClient(
+                            sp.GetService<ILogger<BetterCallDevClient>>(),
                             context.Configuration.GetValue<string>("BetterCallDevUrl")));
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();

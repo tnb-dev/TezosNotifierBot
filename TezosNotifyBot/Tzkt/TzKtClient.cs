@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -186,6 +187,12 @@ namespace TezosNotifyBot.Tzkt
 		{
 			var str = Download($"v1/voting/proposals?epoch={epoch}&sort.desc=rolls");
 			return JsonConvert.DeserializeObject<List<Proposal>>(str);
+		}
+
+		public IEnumerable<T> GetTransactions<T>(QueryString filter = default) where T : Operation
+		{
+			var str = Download($"v1/operations/transactions{filter}");
+			return JsonConvert.DeserializeObject<List<T>>(str);
 		}
 	}
 }

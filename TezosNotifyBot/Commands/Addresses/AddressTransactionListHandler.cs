@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -42,34 +41,36 @@ namespace TezosNotifyBot.Commands.Addresses
         {
             var page = args.GetInt(1);
             var userId = query.From.Id;
+            var address = args[0];
 
-            var address = await Db.Set<UserAddress>()
-                .SingleOrDefaultAsync(x => x.Address == args[0] && x.UserId == userId);
+            var userAddress = await Db.Set<UserAddress>()
+                .SingleOrDefaultAsync(x => x.Address == address && x.UserId == userId);
 
-            if (address == null)
+            if (userAddress == null)
                 throw new ArgumentException($"Address {args[0]} not found");
 
-            var user = await Db.Users.ByIdAsync(address.UserId);
+            var user = await Db.Users.ByIdAsync(userAddress.UserId);
 
-            var pager = TransactionsRepository.GetPage(address.Address, page, takePerPage);
+            var pager = TransactionsRepository.GetPage(userAddress.Address, page, takePerPage);
 
             var message = new MessageBuilder()
                 .AddLine(
                     lang.Get(
                         Res.AddressTransactionListTitle,
                         user.Language,
-                        new { addressName = address.DisplayName() }
+                        new { addressName = userAddress.DisplayName() }
                     )
                 )
                 .AddEmptyLine()
                 .WithHashTag("transaction_list")
-                .WithHashTag(address);
+                .WithHashTag(userAddress);
 
             foreach (var tx in pager.Items)
             {
                 var row = lang.Get(Res.AddressTransactionListItem, user.Language, new
                 {
                     hash = tx.Hash,
+                    icon = BuildIcon(tx),
                     amount = tx.Amount,
                     targetName = tx.Target.DisplayName(),
                     targetAddress = tx.Target.address,
@@ -82,16 +83,25 @@ namespace TezosNotifyBot.Commands.Addresses
             await Bot.EditText(
                 query.From.Id,
                 query.Message.MessageId,
-                message.Build(!address.User.HideHashTags),
+                message.Build(!userAddress.User.HideHashTags),
                 parseMode: ParseMode.Html,
                 disableWebPagePreview: true,
                 replyMarkup: BuildKeyboard()
             );
 
+            string BuildIcon(Transaction transaction)
+            {
+                if (transaction.Sender.address == address)
+                    return "➖";
+                if (transaction.Target.address == address)
+                    return "➕";
+                return "?";
+            }
+            
             InlineKeyboardMarkup BuildKeyboard()
             {
-                var callback = $"address-transaction-list {address.Address}";
-                if (pager.Page == 1 && pager.Pages == 1)
+                var callback = $"address-transaction-list {userAddress.Address}";
+                if (pager.Page == 1 && !pager.HasNext)
                     return new InlineKeyboardMarkup(
                         InlineKeyboardButton.WithCallbackData(
                             lang.Get(Res.AddressTransactionListRefresh, user.Language), $"{callback} 1")
@@ -107,7 +117,7 @@ namespace TezosNotifyBot.Commands.Addresses
 
                 if (pager.Page == 1)
                     return new InlineKeyboardMarkup(older);
-                if (pager.Page == pager.Pages)
+                if (pager.HasPrev && !pager.HasNext)
                     return new InlineKeyboardMarkup(new[] { newer, latest, });
 
                 return new InlineKeyboardMarkup(new[] { newer, latest, older, });
@@ -122,39 +132,28 @@ namespace TezosNotifyBot.Commands.Addresses
 
     public class AddressTransactionsRepository
     {
-        private const string Space = "address:tx:";
-        private IMemoryCache Cache { get; }
         private ITzKtClient TzKtClient { get; }
 
-        public AddressTransactionsRepository(IMemoryCache cache, ITzKtClient tzKtClient)
+        public AddressTransactionsRepository(ITzKtClient tzKtClient)
         {
-            Cache = cache;
             TzKtClient = tzKtClient;
         }
 
         public Paginated<Transaction> GetPage(string address, int page, int take)
         {
-            var key = Space + address;
-
-            if (page == 1)
-                Cache.Remove(key);
-
-            var transactions = Cache.GetOrCreate(key, entry =>
+            var offset = (page - 1) * take;
+            var filter = new QueryBuilder
             {
-                var filter = new QueryBuilder
-                {
-                    { "type", "transaction" },
-                    { "limit", "100" },
-                    { "sender", address },
-                    { "sort.desc", "id" }
-                };
+                { "anyof.sender.target", address },
+                { "limit", "11" },
+                { "offset", $"{offset}" },
+                { "sort.desc", "id" },
+                { "status", "applied"}
+            };
 
-                entry.SetSlidingExpiration(TimeSpan.FromMinutes(5));
+            var result = TzKtClient.GetTransactions<Transaction>(filter.ToQueryString()).ToArray();
 
-                return TzKtClient.GetAccountOperations<Transaction>(address, filter.ToQueryString()).ToArray();
-            });
-
-            return transactions.Paginate(page, take);
+            return result.ToFlexPagination(page, take);
         }
     }
 }

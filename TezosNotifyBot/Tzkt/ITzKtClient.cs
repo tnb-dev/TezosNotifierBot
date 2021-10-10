@@ -32,6 +32,11 @@ namespace TezosNotifyBot.Tzkt
 			where T : Operation;
 		IEnumerable<T> GetAccountOperations<T>(string address, QueryString filter) where T : Operation 
 			=> GetAccountOperations<T>(address, filter.ToString().TrimStart('?'));
+
+		/// <inheritdoc cref="https://api.tzkt.io/#operation/Operations_GetOriginationsCount"/>
+		IEnumerable<T> GetTransactions<T>(QueryString filter = default)
+			where T : Operation;
+
 		Protocol GetCurrentProtocol();
 	}
 }

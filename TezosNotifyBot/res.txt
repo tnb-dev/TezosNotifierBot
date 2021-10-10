@@ -468,8 +468,8 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #OutOfFreeSpace;ru;🙅 У делегата <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> закончилось свободное место. Пропуски ожидаются в течение цикла {Cycle} (начинается {RusDT(NextEnd)} UTC).
 #AddressTransactionListTitle;en;Transaction list of {addressName}
 #AddressTransactionListTitle;ru;Transaction list of {addressName}
-#AddressTransactionListItem;en;- <a href='{t.op(hash)}'>{amount.TezToString()}</a> to <a href='{t.account(targetAddress)}'>{targetName}</a> on {timestamp}
-#AddressTransactionListItem;ru;- <a href='{t.op(hash)}'>{amount.TezToString()}</a> -> <a href='{t.account(targetAddress)}'>{targetName}</a> {timestamp}
+#AddressTransactionListItem;en;{icon} <a href='{t.op(hash)}'>{amount.TezToString()}</a> to <a href='{t.account(targetAddress)}'>{targetName}</a> on {timestamp}
+#AddressTransactionListItem;ru;{icon} <a href='{t.op(hash)}'>{amount.TezToString()}</a> -> <a href='{t.account(targetAddress)}'>{targetName}</a> {timestamp}
 #AddressTransactionListLink;en;📄 Transaction list
 #AddressTransactionListLink;ru;📄 Список транзакций
 #AddressTransactionListOlder;en;Older ➡️
