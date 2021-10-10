@@ -31,9 +31,7 @@ services:
       - Telegram__BotSecret
       - TzKtUrl
       - ConnectionStrings__Default=$DB
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/google-key.json
-    volumes:
-      - ./google-key.json:/app/keys/google-key.json:ro
+      - GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS
   bi:
     image: metabase/metabase
     expose:
