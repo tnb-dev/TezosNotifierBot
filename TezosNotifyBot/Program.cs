@@ -18,6 +18,7 @@ using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Commands.Addresses;
+using TezosNotifyBot.Dialog.Extensions;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
@@ -65,6 +66,8 @@ namespace TezosNotifyBot
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
                     services.Configure<MediumOptions>(context.Configuration.GetSection("Medium"));
 
+                    services.AddDialogFlow("tnb-utijmv");
+                    
                     services.AddLogging(builder =>
                     {
                         if (context.HostingEnvironment.IsDevelopment())

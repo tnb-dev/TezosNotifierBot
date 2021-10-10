@@ -51,6 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TezosNotifyBot.Dialog\TezosNotifyBot.Dialog.csproj" />
     <ProjectReference Include="..\TezosNotifyBot.Storage\TezosNotifyBot.Storage.csproj" />
   </ItemGroup>
 

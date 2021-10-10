@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using TezosNotifyBot.Shared;
 using TezosNotifyBot.Shared.Extensions;
 
@@ -34,6 +35,8 @@ namespace TezosNotifyBot.Domain
         public int NetworkIssueNotify { get; set; }
         public int Explorer { get; set; }
         public bool SmartWhaleAlerts { get; set; }
+
+        public CultureInfo Culture => new CultureInfo(Language);
 
         public override string ToString()
         {

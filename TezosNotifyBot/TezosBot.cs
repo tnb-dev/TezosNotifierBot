@@ -28,6 +28,7 @@ using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.BetterCallDev;
+using TezosNotifyBot.Dialog;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Events;
 using TezosNotifyBot.Model;
@@ -3467,12 +3468,22 @@ namespace TezosNotifyBot
                         if (user.UserState == UserState.Support)
                         {
                             user.UserState = UserState.Default;
-                            SendTextMessage(user.Id, resMgr.Get(Res.MessageSentToSupport, user),
+
+                            var dialog = _serviceProvider.GetRequiredService<DialogService>();
+                            var (action, answer) = dialog.Intent(user.Id.ToString(), message.Text, user.Culture);
+                            SendTextMessage(user.Id, answer,
                                 ReplyKeyboards.MainMenu(resMgr, user));
-                            NotifyDev(
-                                "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
-                                    .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
-                                "\n\n#inbox", 0);
+                            
+                            if (action == "input.unknown")
+                            {
+                                SendTextMessage(user.Id, resMgr.Get(Res.MessageSentToSupport, user),
+                                    ReplyKeyboards.MainMenu(resMgr, user));
+
+                                NotifyDev(
+                                    "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
+                                        .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
+                                    "\n\n#inbox", 0);
+                            }
                         }
                         else if (user.UserState == UserState.SetAmountThreshold)
                         {
