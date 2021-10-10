@@ -3474,10 +3474,6 @@ namespace TezosNotifyBot
                             SendTextMessage(user.Id, answer,
                                 ReplyKeyboards.MainMenu(resMgr, user));
                             
-                            if (action == "input.unknown")
-                                SendTextMessage(user.Id, resMgr.Get(Res.MessageSentToSupport, user),
-                                    ReplyKeyboards.MainMenu(resMgr, user));
-                                
                             NotifyDev(
                                 "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
                                     .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
