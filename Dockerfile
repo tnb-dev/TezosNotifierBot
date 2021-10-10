@@ -5,9 +5,7 @@ ARG configuration=Release
 # Runtime container build
 #
 ###########################
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-alpine AS runtime
-
-RUN apk update && apk add --no-cache libc6-compat
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-bionic AS runtime
 
 WORKDIR /app
 
