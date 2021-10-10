@@ -34,7 +34,7 @@ Deploy Bot:
     ENV: Staging
     BASE_DOMAIN: test.tnb.thegroup.tech
     DOCKER_VERSION: staging
-    GOOGLE_APPLICATION_CREDENTIALS: $(cat "$GOOGLE_APPLICATION_CREDENTIALS")
+    GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS
 
   environment:
     name: development
