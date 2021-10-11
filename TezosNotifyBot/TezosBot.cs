@@ -2110,47 +2110,6 @@ namespace TezosNotifyBot
                     }
                 }
 
-                url = "https://raw.githubusercontent.com/blockwatch-cc/tzstats/master/src/config/aliases.js";
-                txt = _nodeManager.Client.Download(url);
-
-                var matches = Regex.Matches(txt, "([tK][zT][a-zA-Z0-9]{34}):\\s{\\sname: ('|\")(.*?)\\2");
-                if (matches.Count == 0)
-                    NotifyDev($"Parsing failed: {url}", 0);
-                foreach (Match m in matches)
-                {
-                    var addr = m.Groups[1].Value;
-                    if (updated.Contains(addr))
-                        continue;
-                    var name = m.Groups[3].Value;
-                    if (delegates.Any(o => o.Address == addr))
-                    {
-                        if (delegates.Any(o => o.Address == addr && o.Name != name))
-                        {
-                            repo.SetDelegateName(addr, name);
-                            result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
-                            cnt++;
-                        }
-
-                        continue;
-                    }
-
-                    if (knownNames.Any(o => o.Address == addr))
-                    {
-                        if (knownNames.Any(o => o.Address == addr && o.Name != name))
-                        {
-                            repo.SetKnownAddress(addr, name);
-                            result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
-                            cnt++;
-                        }
-
-                        continue;
-                    }
-
-                    repo.SetKnownAddress(addr, name);
-                    result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
-                    cnt++;
-                }
-
                 result = "Updated names: " + cnt + "\n" + result;
                 NotifyDev(result, 0, ParseMode.Html);
             }
