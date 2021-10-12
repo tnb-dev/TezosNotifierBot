@@ -112,6 +112,8 @@ Full description & manual: http://tzsnt.fr/
 #RenameAddress;en;📝 Rename
 #UserCurrency;ru;Курс: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
 #UserCurrency;en;Rate: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}
+#UserCurrencyChanged;ru;{(u.CurrencyCode == "USD" ? "💵" : "💶")} Теперь в уведомлениях будет отображаться курс {u.CurrencyCode} 
+#UserCurrencyChanged;en;{(u.CurrencyCode == "USD" ? "💵" : "💶")} Now the {u.CurrencyCode} exchange rate will be displayed in the notifications
 #SetThreshold;ru;✂️ Порог транзакций
 #SetThreshold;en;✂️ Transaction Threshold
 #SetDlgThreshold;ru;✂️ Порог делегирования

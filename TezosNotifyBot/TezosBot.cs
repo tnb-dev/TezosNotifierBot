@@ -2688,6 +2688,7 @@ namespace TezosNotifyBot
                 {
                     user.Currency = user.Currency == UserCurrency.Usd ? UserCurrency.Eur : UserCurrency.Usd;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.UserCurrencyChanged, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
