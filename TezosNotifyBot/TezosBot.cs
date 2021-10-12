@@ -2670,6 +2670,7 @@ namespace TezosNotifyBot
                 {
                     user.HideHashTags = true;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.HashTagsOff, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
@@ -2678,6 +2679,7 @@ namespace TezosNotifyBot
                 {
                     user.HideHashTags = false;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.HashTagsOn, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }

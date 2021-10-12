@@ -230,6 +230,8 @@ namespace TezosNotifyBot
 		Search,
 		Explorer,
 		HashTags,
+		HashTagsOn,
+		HashTagsOff,
 		WhaleAlerts,
 		Language,
 		NetworkIssueAlerts,
