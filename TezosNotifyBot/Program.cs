@@ -60,7 +60,7 @@ namespace TezosNotifyBot
                     services.AddDbContext<TezosDataContext>(builder => builder
                         .UseNpgsql(context.Configuration.GetConnectionString("Default"), opt => opt.CommandTimeout(600))
                     );
-
+                    
                     services.Configure<BotConfig>(context.Configuration);
                     services.Configure<TwitterOptions>(context.Configuration.GetSection("Twitter"));
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));

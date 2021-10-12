@@ -2697,6 +2697,7 @@ namespace TezosNotifyBot
                 {
                     user.VotingNotify = true;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.VotingNotifyChanged, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
@@ -2705,6 +2706,7 @@ namespace TezosNotifyBot
                 {
                     user.VotingNotify = false;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.VotingNotifyChanged, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
@@ -2713,6 +2715,7 @@ namespace TezosNotifyBot
                 {
                     user.ReleaseNotify = true;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.ReleaseNotifyChanged, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
@@ -2721,6 +2724,7 @@ namespace TezosNotifyBot
                 {
                     user.ReleaseNotify = false;
                     repo.UpdateUser(user);
+                    SendTextMessage(user.Id, resMgr.Get(Res.ReleaseNotifyChanged, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }

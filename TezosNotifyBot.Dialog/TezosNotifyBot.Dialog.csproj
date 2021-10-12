@@ -6,6 +6,7 @@
 
     <ItemGroup>
       <PackageReference Include="Google.Cloud.Dialogflow.V2" Version="3.5.0" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="5.0.0" />
     </ItemGroup>
 
