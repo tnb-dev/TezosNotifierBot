@@ -67,8 +67,8 @@ Donate XTZ to support us: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 Full description & manual: http://tzsnt.fr/
 #WelcomeBack;ru;💚 С возвращением, {(u.Firstname + " " + u.Lastname).Trim()}!
 #WelcomeBack;en;💚 Welcome back {(u.Firstname + " " + u.Lastname).Trim()}!
-#HashTags;ru;Хэштеги {(u.HideHashTags ? "Выкл" : "Вкл️")}
-#HashTags;en;Hashtags {(u.HideHashTags ? "Off" : "On")}
+#HashTags;ru;#️⃣ Хэштеги {(u.HideHashTags ? "Выкл" : "Вкл️")}
+#HashTags;en;#️⃣ Hashtags {(u.HideHashTags ? "Off" : "On")}
 #HashTagsOn;ru;#️⃣ Хештеги включены и будут появляться в сообщениях
 #HashTagsOn;en;#️⃣ Hashtags are now turned On and will be displayed in the notifications
 #HashTagsOff;ru;#️⃣ Хештеги выключены и не будут появляться в сообщениях
