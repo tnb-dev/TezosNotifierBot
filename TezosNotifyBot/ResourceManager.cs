@@ -229,6 +229,7 @@ namespace TezosNotifyBot
 		NoAddresses,
 		Search,
 		Explorer,
+		ExplorerChanged,
 		HashTags,
 		HashTagsOn,
 		HashTagsOff,

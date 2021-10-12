@@ -2336,7 +2336,7 @@ namespace TezosNotifyBot
                     {
                         user.Explorer = exp;
                         repo.UpdateUser(user);
-                        SendTextMessage(user.Id, resMgr.Get(Res.ChooseExplorer, user), ReplyKeyboards.ExplorerSettings(user),
+                        SendTextMessage(user.Id, resMgr.Get(Res.ExplorerChanged, user), null,
                             ev.CallbackQuery.Message.MessageId);
                     }
                 }

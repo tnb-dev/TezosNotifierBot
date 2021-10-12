@@ -140,6 +140,8 @@ Full description & manual: http://tzsnt.fr/
 #WhaleAlerts;en;🐋 Whale alerts
 #Explorer;ru;🌐 Эксплорер
 #Explorer;en;🌐 Explorer
+#ExplorerChanged;ru;🌐 Ваш эксплорер по умолчанию уставновлен {t.name}
+#ExplorerChanged;en;🌐 Your default explorer is now set to {t.name}
 #Language;en;Language: {flag} {name}
 #Language;ru;Язык: {flag} {name}
 #NetworkIssueAlerts;ru;⚠️ Оповещения о сбоях сети
