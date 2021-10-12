@@ -1,8 +1,2 @@
 ﻿[
-  {
-    "username": "tonoff",
-    "commandname": "📊 P2P Stat",
-    "filepath": "/home/tezos/tezos/tezos-admin-client",
-    "arguments": "p2p stat"
-  }
 ]

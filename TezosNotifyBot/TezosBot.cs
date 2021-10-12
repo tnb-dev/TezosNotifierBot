@@ -2381,7 +2381,9 @@ namespace TezosNotifyBot
                 {
                     user.Language = callbackData.Substring("set_".Length);
                     repo.UpdateUser(user);
-                    SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                    // SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                        ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("bakingon"))
@@ -2727,11 +2729,6 @@ namespace TezosNotifyBot
                         user.UserState = UserState.Broadcast;
                         SendTextMessage(user.Id, $"Enter your message for [{user.Language}] bot users",
                             ReplyKeyboards.BackMenu(resMgr, user));
-                    }
-
-                    if (callbackData.StartsWith("getuserlist"))
-                    {
-                        OnSql(user, "select * from \"user\"");
                     }
 
                     if (callbackData.StartsWith("getuseraddresses"))
@@ -3287,17 +3284,16 @@ namespace TezosNotifyBot
                     {
                         Stat(update);
                     }
-                    else if (message.Text == "/set_ru")
+                    else if (message.Text == "/set_ru" || message.Text == "/set_en")
                     {
-                        user.Language = "ru";
-                        repo.UpdateUser(user);
-                        SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
-                    }
-                    else if (message.Text == "/set_en")
-                    {
-                        user.Language = "en";
-                        repo.UpdateUser(user);
-                        SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                        var lang = message.Text.Replace("/set_", string.Empty);
+                        if (lang != null)
+                        {
+                            user.Language = lang;
+                            repo.UpdateUser(user);
+                            SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                        }
+                            
                     }
                     else if (message.Text == "/block")
                     {

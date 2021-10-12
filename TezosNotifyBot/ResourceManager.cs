@@ -231,6 +231,7 @@ namespace TezosNotifyBot
 		Explorer,
 		HashTags,
 		WhaleAlerts,
+		Language,
 		NetworkIssueAlerts,
 		VotingNotify,
 		PayoutNotifyStatus,

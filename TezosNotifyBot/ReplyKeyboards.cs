@@ -93,7 +93,12 @@ namespace TezosNotifyBot
                 }
             });
 
-            add2("🇺🇸 English", "set_en", "🇷🇺 Русский", "set_ru");
+            add(resMgr.Get(Res.Language, user.Language, new
+            {
+                flag = Languages.Get(user.Language).Icon,
+                name = Languages.Get(user.Language).Name
+            }), "set_" + Languages.Next(user.Language).Code);
+            
             add(resMgr.Get(Res.UserCurrency, user), "change_currency");
             add(resMgr.Get(Res.Explorer, user), "set_explorer");
             if (user.HideHashTags)
@@ -116,7 +121,6 @@ namespace TezosNotifyBot
             if (user.IsAdmin(options))
             {
                 add("🖋 Broadcast message", "broadcast");
-                add("👫 Get user list", "getuserlist");
                 foreach (var cmd in TezosBot.Commands.Where(o =>
                     o.username == user.Username || o.username == user.Id.ToString()))
                     add(cmd.commandname, "cmd" + TezosBot.Commands.IndexOf(cmd));

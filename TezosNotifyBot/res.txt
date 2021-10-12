@@ -134,6 +134,8 @@ Full description & manual: http://tzsnt.fr/
 #WhaleAlerts;en;🐋 Whale alerts
 #Explorer;ru;🌐 Эксплорер
 #Explorer;en;🌐 Explorer
+#Language;en;Language: {flag} {name}
+#Language;ru;Язык: {flag} {name}
 #NetworkIssueAlerts;ru;⚠️ Оповещения о сбоях сети
 #NetworkIssueAlerts;en;⚠️ Network failure alerts
 #AddAddress;ru;👀 Следить за
@@ -163,8 +165,8 @@ Full description & manual: http://tzsnt.fr/
 #WhaleAlertsTip;en;Choose whale transactions average threshold
 #NetworkIssueAlertsTip;ru;Выберите время простоя сети Tezos в минутах до получения уведомления о сбое в работе блокчейна
 #NetworkIssueAlertsTip;en;Choose Tezos network downtime in minutes before sending notifications about blockchain faults
-#WhaleAlertSet;ru;Порог транзакций китов установлен: {((decimal)u.WhaleAlertThreshold).TezToString()}
-#WhaleAlertSet;en;Whale transactions threshold set: {((decimal)u.WhaleAlertThreshold).TezToString()}
+#WhaleAlertSet;ru;🐋 Порог транзакций китов установлен равным {((decimal)u.WhaleAlertThreshold).TezToString()}
+#WhaleAlertSet;en;🐋 Whale transactions threshold set to {((decimal)u.WhaleAlertThreshold).TezToString()}
 #IncorrectTezosAddress;ru;Некорректный адрес
 #IncorrectTezosAddress;en;Incorrect Tezos Address
 #NoAddresses;ru;У вас нет адресов
