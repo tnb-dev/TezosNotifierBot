@@ -28,6 +28,8 @@ namespace TezosNotifyBot.Commands.Addresses
         private readonly ITzKtClient tzKtClient;
         private readonly ResourceManager lang;
 
+        private static decimal TezosDecimals = 1_000_000;
+        
         public AddressTransactionListHandler(
             TezosDataContext db,
             TezosBotFacade botClient,
@@ -76,7 +78,7 @@ namespace TezosNotifyBot.Commands.Addresses
                 {
                     Hash = tx.Hash,
                     Icon = BuildIcon(tx),
-                    Amount = Utils.AmountToString(tx.Amount, null),
+                    Amount = Utils.AmountToString(tx.Amount / TezosDecimals, null),
                     TargetName = tx.Target.DisplayName(),
                     TargetAddress = tx.Target.address,
                     Timestamp = tx.Timestamp.ToLocaleString(user.Language),
