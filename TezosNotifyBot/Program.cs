@@ -21,6 +21,7 @@ using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.Dialog.Extensions;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
+using TezosNotifyBot.Services;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
 using TezosNotifyBot.Workers;
@@ -78,6 +79,7 @@ namespace TezosNotifyBot
                             );
                     });
 
+                    services.AddScoped<TokenService>();
                     services.AddSingleton<AddressTransactionsRepository>();
 
                     services.AddHttpClient<ReleasesClient>();

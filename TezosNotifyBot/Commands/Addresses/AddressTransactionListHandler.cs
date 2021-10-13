@@ -3,12 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.Services;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Shared.Models;
 using TezosNotifyBot.Storage;
@@ -19,6 +21,7 @@ namespace TezosNotifyBot.Commands.Addresses
 {
     public class AddressTransactionListHandler : BaseHandler, ICallbackHandler
     {
+        public TokenService TokenService { get; }
         private AddressTransactionsRepository TransactionsRepository { get; }
         private const int takePerPage = 10;
 
@@ -29,10 +32,12 @@ namespace TezosNotifyBot.Commands.Addresses
             TezosDataContext db,
             TezosBotFacade botClient,
             ResourceManager lang,
+            TokenService tokenService,
             AddressTransactionsRepository transactionsRepository
         )
             : base(db, botClient)
         {
+            TokenService = tokenService;
             TransactionsRepository = transactionsRepository;
             this.lang = lang;
         }
@@ -67,17 +72,38 @@ namespace TezosNotifyBot.Commands.Addresses
 
             foreach (var tx in pager.Items)
             {
-                var row = lang.Get(Res.AddressTransactionListItem, user.Language, new
+                var data = new TemplateData()
                 {
-                    hash = tx.Hash,
-                    icon = BuildIcon(tx),
-                    amount = tx.Amount,
-                    targetName = tx.Target.DisplayName(),
-                    targetAddress = tx.Target.address,
-                    timestamp = tx.Timestamp.ToLocaleString(user.Language),
-                    t = Explorer.FromId(user.Explorer),
-                });
-                message.AddLine(row);
+                    Hash = tx.Hash,
+                    Icon = BuildIcon(tx),
+                    Amount = Utils.AmountToString(tx.Amount, null),
+                    TargetName = tx.Target.DisplayName(),
+                    TargetAddress = tx.Target.address,
+                    Timestamp = tx.Timestamp.ToLocaleString(user.Language),
+                    Explorer = Explorer.FromId(user.Explorer)
+                };
+
+                if (tx.Parameter?.entrypoint == "transfer")
+                {
+                    if (tx.Parameter.value is JArray param)
+                    {
+                        var tokenId = param[0]["txs"]?[0]?["token_id"]?.Value<int>();
+                        if (tokenId is null)
+                            continue;
+                        var token = await TokenService.GetToken(tx.Target.address, (int)tokenId);
+                        var amount = param[0]["txs"]?[0]?["amount"]?.Value<decimal>();
+                        var target = param[0]["txs"]?[0]?["to_"]?.Value<string>();
+
+                        if (token != null && amount != null && target != null)
+                        {
+                            data.TargetName = target.ShortAddr();
+                            data.TargetAddress = target;
+                            data.Amount = Utils.AmountToString((decimal)amount, token);
+                        }
+                    }
+                }
+
+                message.AddLine(lang.Get(Res.AddressTransactionListItem, user.Language, data));
             }
 
             await Bot.EditText(
@@ -97,7 +123,7 @@ namespace TezosNotifyBot.Commands.Addresses
                     return "➕";
                 return "?";
             }
-            
+
             InlineKeyboardMarkup BuildKeyboard()
             {
                 var callback = $"address-transaction-list {userAddress.Address}";
@@ -148,12 +174,23 @@ namespace TezosNotifyBot.Commands.Addresses
                 { "limit", "11" },
                 { "offset", $"{offset}" },
                 { "sort.desc", "id" },
-                { "status", "applied"}
+                { "status", "applied" }
             };
 
             var result = TzKtClient.GetTransactions<Transaction>(filter.ToQueryString()).ToArray();
 
             return result.ToFlexPagination(page, take);
         }
+    }
+
+    public class TemplateData
+    {
+        public Explorer Explorer { get; set; }
+        public string Hash { get; set; }
+        public string Icon { get; set; }
+        public string Amount { get; set; }
+        public string TargetName { get; set; }
+        public string TargetAddress { get; set; }
+        public string Timestamp { get; set; }
     }
 }

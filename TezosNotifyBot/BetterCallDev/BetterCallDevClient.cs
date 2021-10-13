@@ -82,6 +82,13 @@ namespace TezosNotifyBot.BetterCallDev
 			}*/
 		}
 
+		public Token GetToken(string contract, int tokenId)
+		{
+			var response = Download($"v1/contract/mainnet/{contract}/tokens?token_id={tokenId}");
+			var tokens = JsonConvert.DeserializeObject<Token[]>(response);
+			return tokens.FirstOrDefault();
+		}
+
 		List<Operation> IBetterCallDevClient.GetOperations(string ophash)
 		{
 			return new List<Operation>();
