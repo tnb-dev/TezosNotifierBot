@@ -74,15 +74,18 @@ namespace TezosNotifyBot.Commands.Addresses
 
             foreach (var tx in pager.Items)
             {
-                var data = new TemplateData()
+                var isReceive = tx.Target.address == address;
+                
+                var data = new TemplateData
                 {
                     Hash = tx.Hash,
                     Icon = BuildIcon(tx),
                     Amount = Utils.AmountToString(tx.Amount / TezosDecimals, null),
-                    TargetName = tx.Target.DisplayName(),
-                    TargetAddress = tx.Target.address,
+                    AddressName = tx.Target.DisplayName(),
+                    Address = tx.Target.address,
                     Timestamp = tx.Timestamp.ToLocaleString(user.Language),
-                    Explorer = Explorer.FromId(user.Explorer)
+                    Explorer = Explorer.FromId(user.Explorer),
+                    IsReceive = isReceive,
                 };
 
                 if (tx.Parameter?.entrypoint == "transfer")
@@ -98,8 +101,8 @@ namespace TezosNotifyBot.Commands.Addresses
 
                         if (token != null && amount != null && target != null)
                         {
-                            data.TargetName = target.ShortAddr();
-                            data.TargetAddress = target;
+                            data.AddressName = target.ShortAddr();
+                            data.Address = target;
                             data.Amount = Utils.AmountToString((decimal)amount, token);
                         }
                     }
@@ -191,8 +194,9 @@ namespace TezosNotifyBot.Commands.Addresses
         public string Hash { get; set; }
         public string Icon { get; set; }
         public string Amount { get; set; }
-        public string TargetName { get; set; }
-        public string TargetAddress { get; set; }
+        public string AddressName { get; set; }
+        public string Address { get; set; }
         public string Timestamp { get; set; }
+        public bool IsReceive { get; set; }
     }
 }
