@@ -67,24 +67,24 @@ Donate XTZ to support us: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 Full description & manual: http://tzsnt.fr/
 #WelcomeBack;ru;💚 С возвращением, {(u.Firstname + " " + u.Lastname).Trim()}!
 #WelcomeBack;en;💚 Welcome back {(u.Firstname + " " + u.Lastname).Trim()}!
-#HashTags;ru;#️⃣ Хэштеги {(u.HideHashTags ? "Выкл" : "Вкл️")}
-#HashTags;en;#️⃣ Hashtags {(u.HideHashTags ? "Off" : "On")}
+#HashTags;ru;#️⃣ Хэштеги: {(u.HideHashTags ? "Выкл" : "Вкл️")}
+#HashTags;en;#️⃣ Hashtags: {(u.HideHashTags ? "Off" : "On")}
 #HashTagsOn;ru;#️⃣ Хештеги включены и будут появляться в сообщениях
 #HashTagsOn;en;#️⃣ Hashtags are now turned On and will be displayed in the notifications
 #HashTagsOff;ru;#️⃣ Хештеги выключены и не будут появляться в сообщениях
 #HashTagsOff;en;#️⃣ Hashtags are now turned Off and will not be displayed in the notifications
 #Search;ru;🔎 Поиск
 #Search;en;🔎 Search
-#VotingNotify;ru;🔈 Голосования {(u.VotingNotify ? "Вкл" : "Выкл")} 
-#VotingNotify;en;🔈 Voting {(u.VotingNotify ? "On" : "Off")}
+#VotingNotify;ru;🔈 Голосования: {(u.VotingNotify ? "Вкл" : "Выкл")} 
+#VotingNotify;en;🔈 Voting: {(u.VotingNotify ? "On" : "Off")}
 #VotingNotifyChanged;ru;🔈 Уведомления о процессе голосования в Tezos теперь {(u.VotingNotify ? "включены" : "выключены")}
-#VotingNotifyChanged;en;🔈 Notifications on the Tezos voting process are now turned {(u.VotingNotify ? "on" : "off")}
+#VotingNotifyChanged;en;🔈 Notifications on the Tezos voting process are now turned {(u.VotingNotify ? "On" : "Off")}
 #PayoutNotify;en;{(u.PayoutNotify ? "🔈" : "🔇")} Payouts
 #PayoutNotify;ru;{(u.PayoutNotify ? "🔈" : "🔇")} Выплаты
-#ReleaseNotify;ru;🦊 Обновления софта {(u.ReleaseNotify ? "Вкл" : "Выкл")}
-#ReleaseNotify;en;🦊 Software releases {(u.ReleaseNotify ? "On" : "Off")}
+#ReleaseNotify;ru;🦊 Обновления софта: {(u.ReleaseNotify ? "Вкл" : "Выкл")}
+#ReleaseNotify;en;🦊 Software releases: {(u.ReleaseNotify ? "On" : "Off")}
 #ReleaseNotifyChanged;ru;🦊 Уведомления о новых выпусках программного обеспечения Tezos bakers теперь {(u.ReleaseNotify ? "включены" : "выключены")}
-#ReleaseNotifyChanged;en;🦊 Notifications on the new Tezos bakers software releases are now turned {(u.ReleaseNotify ? "on" : "off")}
+#ReleaseNotifyChanged;en;🦊 Notifications on the new Tezos bakers software releases are now turned {(u.ReleaseNotify ? "On" : "Off")}
 #DelegatorsBalanceNotify;en;{(u.DelegatorsBalanceNotify ? "🔈" : "🔇")} Delegators balance
 #DelegatorsBalanceNotify;ru;{(u.DelegatorsBalanceNotify ? "🔈" : "🔇")} Изменения баланса делегатора
 % Главное меню
@@ -144,7 +144,7 @@ Full description & manual: http://tzsnt.fr/
 #WhaleAlerts;en;🐋 Whale alerts
 #Explorer;ru;🌐 Эксплорер
 #Explorer;en;🌐 Explorer
-#ExplorerChanged;ru;🌐 Ваш эксплорер по умолчанию уставновлен {t.name}
+#ExplorerChanged;ru;🌐 Ваш эксплорер по умолчанию теперь {t.name}
 #ExplorerChanged;en;🌐 Your default explorer is now set to {t.name}
 #Language;en;Language: {flag} {name}
 #Language;ru;Язык: {flag} {name}

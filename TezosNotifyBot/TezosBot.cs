@@ -2331,14 +2331,14 @@ namespace TezosNotifyBot
                 }
                 else if (callbackData.StartsWith("set_explorer_"))
                 {
-                    int exp = int.Parse(callbackData.Substring("set_explorer_".Length));
+                    var exp = int.Parse(callbackData.Substring("set_explorer_".Length));
                     if (user.Explorer != exp)
                     {
                         user.Explorer = exp;
                         repo.UpdateUser(user);
-                        SendTextMessage(user.Id, resMgr.Get(Res.ExplorerChanged, user), null,
-                            ev.CallbackQuery.Message.MessageId);
                     }
+                    SendTextMessage(user.Id, resMgr.Get(Res.ExplorerChanged, user), null,
+                        ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_whalealert"))
                 {
@@ -2381,9 +2381,9 @@ namespace TezosNotifyBot
                 {
                     user.Language = callbackData.Substring("set_".Length);
                     repo.UpdateUser(user);
-                    // SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                     SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
+                    SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
                 if (callbackData.StartsWith("bakingon"))
