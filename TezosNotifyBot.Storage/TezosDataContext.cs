@@ -16,7 +16,6 @@ namespace TezosNotifyBot.Storage
         public DbSet<UserAddress> UserAddresses { get; set; }
         public DbSet<LastBlock> LastBlock { get; set; }
         public DbSet<Delegate> Delegates { get; set; }
-        public DbSet<DelegateRewards> DelegateRewards { get; set; }
         public DbSet<Proposal> Proposals { get; set; }
         public DbSet<KnownAddress> KnownAddresses { get; set; }
         public DbSet<ProposalVote> ProposalVotes { get; set; }
