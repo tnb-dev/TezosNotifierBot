@@ -88,25 +88,33 @@ namespace TezosNotifyBot.Commands.Addresses
                     IsReceive = isReceive,
                 };
 
-                if (tx.Parameter?.entrypoint == "transfer")
+                if (tx.Parameter?.entrypoint != null)
                 {
-                    if (tx.Parameter.value is JArray param)
+                    if (tx.Parameter.entrypoint == "transfer")
                     {
-                        var tokenId = param[0]["txs"]?[0]?["token_id"]?.Value<int>();
-                        if (tokenId is null)
-                            continue;
-                        var token = await TokenService.GetToken(tx.Target.address, (int)tokenId);
-                        var amount = param[0]["txs"]?[0]?["amount"]?.Value<decimal>();
-                        var target = param[0]["txs"]?[0]?["to_"]?.Value<string>();
-
-                        if (token != null && amount != null && target != null)
+                        if (tx.Parameter.value is JArray param)
                         {
-                            data.AddressName = target.ShortAddr();
-                            data.Address = target;
-                            data.Amount = Utils.AmountToString((decimal)amount, token);
+                            var tokenId = param[0]["txs"]?[0]?["token_id"]?.Value<int>();
+                            if (tokenId is null)
+                                continue;
+                            var token = await TokenService.GetToken(tx.Target.address, (int)tokenId);
+                            var amount = param[0]["txs"]?[0]?["amount"]?.Value<decimal>();
+                            var target = param[0]["txs"]?[0]?["to_"]?.Value<string>();
+
+                            if (token != null && amount != null && target != null)
+                            {
+                                data.AddressName = target.ShortAddr();
+                                data.Address = target;
+                                data.Amount = Utils.AmountToString((decimal)amount, token);
+                            }
                         }
                     }
+                    else
+                    {
+                        continue;
+                    }
                 }
+                
 
                 message.AddLine(lang.Get(Res.AddressTransactionListItem, user.Language, data));
             }
