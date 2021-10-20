@@ -402,57 +402,57 @@ namespace TezosNotifyBot
 
             ProcessBlockMetadata(block, tzKt);
 
-            var periods = tzKt.GetVotingPeriods();
-            var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
-            var prevPeriod = periods.Single(p => p.index == currentPeriod.index - 1);
+            // var periods = tzKt.GetVotingPeriods();
+            // var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+            // var prevPeriod = periods.Single(p => p.index == currentPeriod.index - 1);
             
-            if (currentPeriod.lastLevel == block.Level && currentPeriod.kind == "exploration")
-            {
-                var hash = _nodeManager.Client.GetCurrentProposal(prevBlock.Hash);
-                var p = repo.GetProposal(hash);
-                foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
-                {
-                    var result = resMgr.Get(Res.TestingVoteSuccess,
-                        new ContextObject {p = p, u = u, Block = block.Level, Period = currentPeriod.index});
-                    if (!u.HideHashTags)
-                        result += "\n\n#proposal" + p.HashTag();
-                    SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                }
-
-                // Делегат не проголосовал
-                var listings = _nodeManager.Client.GetVoteListings(prevBlock.Hash);
-                var votes = _nodeManager.Client.GetBallotList(prevBlock.Hash);
-                foreach (var listing in listings)
-                {
-                    if (!votes.Any(o => o.pkh == listing.pkh))
-                    {
-                        foreach (var ua in repo.GetUserAddresses(listing.pkh))
-                        {
-                            if (ua.User.VotingNotify)
-                            {
-                                var result = resMgr.Get(Res.DelegateDidNotVoted, (ua, p));
-                                if (!ua.User.HideHashTags)
-                                    result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                                SendTextMessage(ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (currentPeriod.firstLevel == block.Level && currentPeriod.kind == "proposal" && prevPeriod.kind == "exploration")
-            {
-                var hash = _nodeManager.Client.GetCurrentProposal(prevBlock.Hash);
-                var p = repo.GetProposal(hash);
-                foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
-                {
-                    var result = resMgr.Get(Res.TestingVoteFailed,
-                        new ContextObject {p = p, u = u, Block = block.Level, Period = prevPeriod.index });
-                    if (!u.HideHashTags)
-                        result += "\n\n#proposal" + p.HashTag();
-                    SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                }
-            }
+            // if (currentPeriod.lastLevel == block.Level && currentPeriod.kind == "exploration")
+            // {
+            //     var hash = _nodeManager.Client.GetCurrentProposal(prevBlock.Hash);
+            //     var p = repo.GetProposal(hash);
+            //     foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+            //     {
+            //         var result = resMgr.Get(Res.TestingVoteSuccess,
+            //             new ContextObject {p = p, u = u, Block = block.Level, Period = currentPeriod.index});
+            //         if (!u.HideHashTags)
+            //             result += "\n\n#proposal" + p.HashTag();
+            //         SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+            //     }
+            //
+            //     // Делегат не проголосовал
+            //     var listings = _nodeManager.Client.GetVoteListings(prevBlock.Hash);
+            //     var votes = _nodeManager.Client.GetBallotList(prevBlock.Hash);
+            //     foreach (var listing in listings)
+            //     {
+            //         if (!votes.Any(o => o.pkh == listing.pkh))
+            //         {
+            //             foreach (var ua in repo.GetUserAddresses(listing.pkh))
+            //             {
+            //                 if (ua.User.VotingNotify)
+            //                 {
+            //                     var result = resMgr.Get(Res.DelegateDidNotVoted, (ua, p));
+            //                     if (!ua.User.HideHashTags)
+            //                         result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
+            //                     SendTextMessage(ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
+            //
+            // if (currentPeriod.firstLevel == block.Level && currentPeriod.kind == "proposal" && prevPeriod.kind == "exploration")
+            // {
+            //     var hash = _nodeManager.Client.GetCurrentProposal(prevBlock.Hash);
+            //     var p = repo.GetProposal(hash);
+            //     foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+            //     {
+            //         var result = resMgr.Get(Res.TestingVoteFailed,
+            //             new ContextObject {p = p, u = u, Block = block.Level, Period = prevPeriod.index });
+            //         if (!u.HideHashTags)
+            //             result += "\n\n#proposal" + p.HashTag();
+            //         SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+            //     }
+            // }
  
             //if (currentPeriod.lastLevel == block.Level && currentPeriod.kind == "proposal" &&
             //    prevMD.voting_period_kind == "promotion_vote")
@@ -4248,6 +4248,17 @@ namespace TezosNotifyBot
                 u.Inactive = true;
                 repo.UpdateUser(u);
                 NotifyDev("😕 User " + UserLink(u) + " not started chat with bot", userId);
+            }
+            catch (BadRequestException bre)
+			{
+                if(bre.Message.Contains("no rights to send"))
+				{
+                    u.Inactive = true;
+                    repo.UpdateUser(u);
+                    NotifyDev("😕 Bot have no rights to send a message for " + UserLink(u), userId);
+                }
+                else
+                    LogError(bre);
             }
             catch (ApiRequestException are)
             {
