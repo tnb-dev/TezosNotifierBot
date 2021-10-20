@@ -1129,7 +1129,7 @@ namespace TezosNotifyBot
                         return;
                     
                     var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
-                        .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount);
+                        .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
                         
                     foreach (var delegateAddress in delegatesAddr)
                     {
