@@ -4061,7 +4061,7 @@ namespace TezosNotifyBot
                     if (ua.NotifyMisses)
                         result += "🤷🏻‍♂️";
 
-                    if (ua.NotifyDelegatorsBalance)
+                    if (ua.NotifyDelegatorsBalance && ua.User.Type == 0)
                     {
                         result += "🔺";
                         if (ua.DelegatorsBalanceThreshold > 0)
