@@ -71,8 +71,8 @@ namespace TezosNotifyBot.Commands.Addresses
                 query.From.Id,
                 message.Build(!user.HideHashTags),
                 ParseMode.Html,
-                disableWebPagePreview: true,
-                replyMarkup: buttons
+                disableWebPagePreview: true
+                // replyMarkup: buttons
             );
         }
     }
