@@ -16,6 +16,8 @@ namespace TezosNotifyBot.Tzkt
 		List<Transaction> GetTransactions(string filter);
 		List<VotingPeriod> GetVotingPeriods();
 		List<Proposal> GetProposals(int epoch);
+		List<ProposalUpvote> GetUpvotes(int epoch);
+		List<Ballot> GetBallots(int period);
 		DateTime? GetAccountLastSeen(string address);
 		DateTime? GetAccountLastActive(string address);
 		Rewards GetDelegatorRewards(string address, int cycle);

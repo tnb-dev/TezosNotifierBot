@@ -88,4 +88,13 @@ namespace TezosNotifyBot.Tzkt
         public string Status { get; set; }
         public Baker PrevDelegate { get; set; }
     }
+
+    public class Ballot : Operation
+    {        
+        public Period Period { get; set; }
+        public ProposalMetadata Proposal { get; set; }
+        public Delegate @Delegate { get; set; }
+        public int Rolls { get; set; }
+        public string Vote { get; set; }
+    }
 }

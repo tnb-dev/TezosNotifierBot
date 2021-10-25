@@ -116,6 +116,16 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/protocols/current");
 			return JsonConvert.DeserializeObject<Protocol>(str);
 		}
+		List<ProposalUpvote> ITzKtClient.GetUpvotes(int epoch)
+		{
+			var str = Download($"v1/operations/proposals?epoch={epoch}&limit=1000&duplicated=false");
+			return JsonConvert.DeserializeObject<List<ProposalUpvote>>(str);
+		}
+		List<Ballot> ITzKtClient.GetBallots(int period)
+		{
+			var str = Download($"v1/operations/ballots?period={period}&limit=1000&duplicated=false");
+			return JsonConvert.DeserializeObject<List<Ballot>>(str);
+		}
 		decimal ITzKtClient.GetBalance(string address, int level)
 		{
 			var str = Download($"v1/accounts/{address}/balance_history/{level}");

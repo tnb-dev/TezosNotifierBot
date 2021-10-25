@@ -139,7 +139,7 @@ namespace TezosNotifyBot.Workers
                     foreach (var p in proposals)
                         post.AppendLine($"<li>{p.DisplayLink} - {p.rolls} rolls</li>");
                     post.AppendLine("</ul>");
-                    if (current.upvotesQuorum <= (100D * current.topRolls / current.totalRolls))
+                    if (current.upvotesQuorum <= (100M * current.topRolls / current.totalRolls))
                         post.AppendLine($"<p>Quorum of {current.upvotesQuorum:##.0}% reached.</p>");
                     else
                         post.AppendLine($"<p>Quorum of {current.upvotesQuorum:##.0}% is not reached.</p>");
@@ -220,7 +220,7 @@ namespace TezosNotifyBot.Workers
 
         void BallotQuorum(StringBuilder post, VotingPeriod vp)
 		{
-            if (vp.ballotsQuorum < (100D * (vp.yayRolls + vp.nayRolls + vp.passRolls) / vp.totalRolls))
+            if (vp.ballotsQuorum < (100M * (vp.yayRolls + vp.nayRolls + vp.passRolls) / vp.totalRolls))
                 post.AppendLine($"<p>Quorum of {vp.ballotsQuorum:#0.0}% reached</p>");
             else
                 post.AppendLine($"<p>Quorum of {vp.ballotsQuorum:#0.0}% not reached</p>");

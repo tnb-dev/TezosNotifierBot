@@ -18,8 +18,8 @@ namespace TezosNotifyBot.Tzkt
         public bool NonceRevealed { get; set; }
         public Baker Baker { get; set; }
         public List<Endorsement> Endorsements { get; set; }
-        //public List<object> proposals { get; set; }
-        //public List<object> ballots { get; set; }
+        public List<ProposalUpvote> Proposals { get; set; }
+        public List<Ballot> Ballots { get; set; }
         //public List<object> activations { get; set; }
         //public List<object> doubleBaking { get; set; }
         //public List<object> doubleEndorsing { get; set; }

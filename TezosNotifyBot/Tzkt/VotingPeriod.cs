@@ -16,7 +16,7 @@ namespace TezosNotifyBot.Tzkt
         public string status { get; set; }
         public int? totalBakers { get; set; }
         public int? totalRolls { get; set; }
-        public double? ballotsQuorum { get; set; }
+        public decimal? ballotsQuorum { get; set; }
         public int? supermajority { get; set; }
         public int? yayBallots { get; set; }
         public int? yayRolls { get; set; }
@@ -24,7 +24,7 @@ namespace TezosNotifyBot.Tzkt
         public int? nayRolls { get; set; }
         public int? passBallots { get; set; }
         public int? passRolls { get; set; }
-        public double? upvotesQuorum { get; set; }
+        public decimal? upvotesQuorum { get; set; }
         public int? proposalsCount { get; set; }
         public int? topUpvotes { get; set; }
         public int? topRolls { get; set; }

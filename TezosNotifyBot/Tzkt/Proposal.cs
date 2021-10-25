@@ -22,6 +22,28 @@ namespace TezosNotifyBot.Tzkt
     {
         public string agora { get; set; }
         public string alias { get; set; }
+        public string Hash { get; set; }
         public int invoice { get; set; }
+    }
+
+    public class ProposalUpvote : Operation
+	{        
+        public Period Period { get; set; }
+        public ProposalMetadata Proposal { get; set; }
+        public Delegate @Delegate { get; set; }
+        public int Rolls { get; set; }
+        public bool Duplicated { get; set; }
+    }
+
+    public class Period
+    {
+        public int Index { get; set; }
+        public int Epoch { get; set; }
+        public string Kind { get; set; }
+        public int FirstLevel { get; set; }
+        public int LastLevel { get; set; }
+        public int Id { get; set; }
+        public int StartLevel { get; set; }
+        public int EndLevel { get; set; }
     }
 }

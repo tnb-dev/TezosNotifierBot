@@ -279,10 +279,10 @@ namespace TezosNotifyBot.Model
                 return _db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addressId);
         }
 
-        public List<UserAddress> GetUserDelegates()
+        public List<UserAddress> GetUserDelegates(bool all = false)
         {
             lock (_dbLock)
-                return _db.UserAddresses.Where(o => !o.IsDeleted && (o.NotifyCycleCompletion || o.NotifyBakingRewards || o.NotifyOutOfFreeSpace) && !o.User.Inactive)
+                return _db.UserAddresses.Where(o => !o.IsDeleted && (o.NotifyCycleCompletion || o.NotifyBakingRewards || o.NotifyOutOfFreeSpace || all) && !o.User.Inactive)
                     .Join(_db.Delegates, o => o.Address, o => o.Address, (o, d) => o).Include(x => x.User).ToList();
         }
 
@@ -604,7 +604,7 @@ namespace TezosNotifyBot.Model
             });
 		}
 
-        internal void AddProposalVote(Proposal p, string from, int votingPeriod, int level, int ballot)
+        /*internal void AddProposalVote(Proposal p, string from, int votingPeriod, int level, int ballot)
         {
             var d = GetOrCreateDelegate(from);
             RunIsolatedDb(db =>
@@ -620,7 +620,7 @@ namespace TezosNotifyBot.Model
                 db.ProposalVotes.Add(pv);
                 db.SaveChanges();
             });
-        }
+        }*/
                 
         public Proposal GetProposal(string hash)
         {
@@ -650,7 +650,7 @@ namespace TezosNotifyBot.Model
                 return p;
             });
         }
-
+        /*
         internal List<string> GetProposalVotes(string hash, int period)
         {
             return RunIsolatedDb(db =>
@@ -658,7 +658,7 @@ namespace TezosNotifyBot.Model
                 return db.ProposalVotes.Where(o => o.Proposal.Hash == hash && o.VotingPeriod == period)
                     .Select(o => o.Delegate.Address).ToList();
             });
-        }
+        }*/
 
         public void SaveMessage(Message message)
         {

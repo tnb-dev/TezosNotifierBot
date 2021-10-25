@@ -57,7 +57,8 @@ namespace NornPool.Model
 	    public string BotSecret { get; set; }
 	    public List<string> DevUsers { get; set; }
 	    public long[] ActivityChat { get; set; }
-    }
+		public long VotingChat { get; set; }
+	}
 
     public class TwitterOptions
     {

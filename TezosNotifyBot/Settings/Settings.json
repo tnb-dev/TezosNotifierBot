@@ -19,7 +19,8 @@
     "Telegram": {
         "BotSecret": "",
         "DevUsers": [],
-        "ActivityChat": [ -1001482752306 ]
+        "ActivityChat": [ -1001482752306 ],
+        "VotingChat": -1001546962198
     },
     "ReleasesWorker": {
         "ProjectId": 3836952,

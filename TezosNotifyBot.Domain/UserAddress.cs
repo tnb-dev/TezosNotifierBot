@@ -67,7 +67,7 @@ namespace TezosNotifyBot.Domain
 
         public decimal FullBalance;
         public decimal StakingBalance;
-        public int Rolls => (int)StakingBalance / 8000;
+        public int Rolls => (int)StakingBalance / TezosConstants.TokensPerRoll;
         public decimal FreeSpace;
         public int Delegators;
         public decimal AveragePerformance;
