@@ -47,23 +47,6 @@ namespace TezosNotifyBot
                         SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
 
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        var ua = new UserAddress { Address = from, Name = repo.GetDelegateName(from) };
-                        ua.StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll;
-                        var result = resMgr.Get(Res.NewProposal,
-                            new ContextObject
-                            {
-                                ua = ua,
-                                p = p,
-                                OpHash = proposal.Hash,
-                                Block = block.Level,
-                                Period = proposal.Period.Index
-                            });
-                        
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
-                    }
-
                     //Twitter
                     {
                         var twText = resMgr.Get(Res.TwitterNewProposal,
@@ -316,60 +299,6 @@ namespace TezosNotifyBot
                             }
                         }
                     }
-
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        if (proposals.Count == 1)
-                        {
-                            string propHash = proposals[0].hash;
-                            var p = repo.GetProposal(propHash);
-                            if (p == null)
-                                p = repo.AddProposal(propHash, null, prevPeriod.index);
-
-                            p.Delegates = new List<UserAddress>();
-                            p.VotedRolls = proposals.Single().rolls;
-                            string result = resMgr.Get(Res.ProposalSelectedForVotingOne,
-                                new ContextObject { p = p, Block = block.Level, Period = period.index });
-                            
-                            result += resMgr.Get(Res.ProposalSelectedForVoting,
-                                new ContextObject { p = p, Block = block.Level, Period = period.index });
-
-                            SendTextMessage(Config.Telegram.VotingChat, result, null);
-                        }
-                        else
-                        {
-                            string propItems = "";
-                            foreach (var prop in proposals)
-                            {
-                                string propHash = prop.hash;                                
-
-                                var p = repo.GetProposal(propHash);
-                                if (p == null)
-                                    p = repo.AddProposal(propHash, null, prevPeriod.index);
-                                p.VotedRolls = prop.rolls;
-                                p.Delegates = new List<UserAddress>();
-                                propItems +=
-                                    resMgr.Get(Res.ProposalSelectedItem,
-                                        new ContextObject { p = p, Block = block.Level, Period = period.index }) + "\n";
-                            }
-
-                            {
-                                var prop = proposals.OrderByDescending(o => o.rolls).First();
-                                string propHash = prop.hash;
-                                var p = repo.GetProposal(propHash);
-                                p.VotedRolls = prop.rolls;                                
-                                p.Delegates = new List<UserAddress>();
-                                string result =
-                                    resMgr.Get(Res.ProposalSelectedMany,
-                                        new ContextObject { p = p, Block = block.Level, Period = period.index }) + "\n" +
-                                    propItems + "\n\n" +
-                                    resMgr.Get(Res.ProposalSelectedForVoting,
-                                        new ContextObject { p = p, Block = block.Level, Period = period.index });
-                                
-                                SendTextMessage(Config.Telegram.VotingChat, result, null);
-                            }
-                        }
-                    }                        
                 }
 			
                 if (prevPeriod.kind == "exploration" && period.kind == "testing")
@@ -384,13 +313,6 @@ namespace TezosNotifyBot
 							result += "\n\n#proposal" + p.HashTag();
 						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
-
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        var result = resMgr.Get(Res.TestingVoteSuccess,
-                            new ContextObject { p = p, Block = block.Level, Period = period.index });
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
-                    }
                         
                     // Делегат не проголосовал
                     var ballots = tzKtClient.GetBallots(prevPeriod.index).Select(b => b.Delegate.Address).ToHashSet();
@@ -418,13 +340,6 @@ namespace TezosNotifyBot
 							result += "\n\n#proposal" + p.HashTag();
 						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
-
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        var result = resMgr.Get(Res.TestingVoteFailed,
-                            new ContextObject { p = p, Block = block.Level, Period = prevPeriod.index });
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
-                    }
                 }
 
                 if (prevPeriod.kind == "promotion")
@@ -442,16 +357,6 @@ namespace TezosNotifyBot
 							result += "\n\n#proposal" + p.HashTag();
 						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
-
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        var result = period.kind == "adoption"
-                            ? resMgr.Get(Res.PromotionVoteSuccess,
-                                new ContextObject { p = p, Block = block.Level, Period = prevPeriod.index })
-                            : resMgr.Get(Res.PromotionVoteFailed,
-                                new ContextObject { p = p, Block = prevPeriod.index });
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
-                    }
                 }
             }
         }
