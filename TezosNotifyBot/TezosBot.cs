@@ -2882,11 +2882,19 @@ namespace TezosNotifyBot
                             var (action, answer) = dialog.Intent(user.Id.ToString(), message.Text, user.Culture);
                             SendTextMessage(user.Id, answer,
                                 ReplyKeyboards.MainMenu(resMgr, user));
+
+                            var messageBuilder = new MessageBuilder();
+
+                            messageBuilder.AddLine("💌 Message from " + UserLink(user) + ":\n" + message.Text
+                                .Replace("_", "__")
+                                .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")"));
+                            messageBuilder.AddEmptyLine();
                             
-                            NotifyDev(
-                                "💌 Message from " + UserLink(user) + ":\n" + message.Text.Replace("_", "__")
-                                    .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")") +
-                                "\n\n#inbox", 0);
+                            messageBuilder.AddLine("Answer:");
+                            messageBuilder.AddLine(answer);
+                            messageBuilder.WithHashTag("inbox");
+                            
+                            NotifyDev(messageBuilder.Build(true), 0);
                         }
                         else if (user.UserState == UserState.SetAmountThreshold)
                         {
