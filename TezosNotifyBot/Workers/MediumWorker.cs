@@ -84,7 +84,7 @@ namespace TezosNotifyBot.Workers
             post.AppendLine($"<p>Cycle {prevCycle.index} is completed in {prevCycle.Length.Days} days, {prevCycle.Length.Hours} hours, {prevCycle.Length.Minutes} minutes!</p>");
             post.AppendLine($"<p>Next {currentCycle.index} cycle will end on {currentCycle.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
             post.AppendLine("<h1>Transaction stats</h1>");
-            post.AppendLine($"<p>In the {prevCycle.index} cycle was made {_tzKtClient.GetTransactionsCount(prevCycle.firstLevel, prevCycle.lastLevel).ToString("###,###,###,###")} transactions.</p>");
+            post.AppendLine($"<p>In the {prevCycle.index} cycle were made {_tzKtClient.GetTransactionsCount(prevCycle.firstLevel, prevCycle.lastLevel).ToString("###,###,###,###")} transactions.</p>");
 
             Tezos.MarketData md = FillRates(post, prevCycle, currentCycle);
 

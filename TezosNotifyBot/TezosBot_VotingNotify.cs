@@ -188,13 +188,6 @@ namespace TezosNotifyBot
                         SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
 
-                    if (Config.Telegram.VotingChat != 0)
-					{
-                        var result = resMgr.Get(Res.QuorumReached,
-                            new ContextObject { p = p, Block = block.Level, Period = ballot.Period.Index });
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
-                    }
-
                     {
                         var twText = resMgr.Get(Res.TwitterQuorumReached,
                             new ContextObject { p = p, Block = block.Level, Period = ballot.Period.Index });
