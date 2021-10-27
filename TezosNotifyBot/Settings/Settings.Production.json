@@ -16,7 +16,8 @@
         }
     },
     "Telegram": {
-        "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
+        "DevUsers": [ "mksmfd", "tonoff", "emerido" ],
+        "VotingChat": -1001722615936
     },
     "TzKtUrl": "https://api.tzkt.io/"
 }
