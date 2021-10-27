@@ -80,6 +80,7 @@ namespace TezosNotifyBot
                     });
 
                     services.AddScoped<TokenService>();
+                    services.AddScoped<AddressService>();
                     services.AddSingleton<AddressTransactionsRepository>();
 
                     services.AddHttpClient<ReleasesClient>();

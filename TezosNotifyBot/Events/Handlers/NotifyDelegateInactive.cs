@@ -12,6 +12,7 @@ using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Commands;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.Services;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
 using Delegate = TezosNotifyBot.Domain.Delegate;
@@ -24,14 +25,16 @@ namespace TezosNotifyBot.Events.Handlers
         private readonly ITzKtClient _tzkt;
         private readonly IOptions<BotConfig> _config;
         private readonly ResourceManager _lang;
+        private readonly AddressService _addressService;
 
         public NotifyDelegateInactive(ITzKtClient tzkt, IOptions<BotConfig> config, TezosDataContext db,
-            ResourceManager lang)
+            ResourceManager lang, AddressService addressService)
         {
             _db = db;
             _tzkt = tzkt;
             _lang = lang;
             _config = config;
+            _addressService = addressService;
         }
 
         public async Task Process(CycleCompletedEvent subject)
@@ -45,8 +48,7 @@ namespace TezosNotifyBot.Events.Handlers
                 .Where(x => !x.IsDeleted)
                 .Where(x => x.NotifyDelegateStatus && !delegateAddressList.Contains(x.Address))
                 .ToArrayAsync();
-
-
+            
             var inactiveBound = _config.Value.DelegateInactiveTime;
 
             foreach (var delegator in delegators)
@@ -58,7 +60,7 @@ namespace TezosNotifyBot.Events.Handlers
                 var delegateAddress = account.Delegate.Address;
                 if (delegates.ContainsKey(delegateAddress) is false)
                 {
-                    delegates.Add(delegateAddress, _tzkt.GetAccountLastActive(delegateAddress));
+                    delegates.Add(delegateAddress, await _addressService.GetDelegateLastActive(delegateAddress));
                 }
 
                 var delegateLastActive = delegates[delegateAddress];

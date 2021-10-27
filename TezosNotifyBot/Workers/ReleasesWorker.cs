@@ -55,7 +55,7 @@ namespace TezosNotifyBot.Workers
                             await db.AddAsync(release);
 
                             await PublishTwitter(release);
-                            await BroadcastRelease(release);
+                            await BroadcastRelease(db, release);
                         }
                     }
 
@@ -83,7 +83,7 @@ namespace TezosNotifyBot.Workers
                     await _twitter.TweetAsync(text.TrimEnd());
                 }
 
-                async Task BroadcastRelease(TezosRelease release)
+                async Task BroadcastRelease(TezosDataContext db, TezosRelease release)
                 {
                     var subscribers = await db.Set<User>().AsNoTracking()
                         .Where(x => x.ReleaseNotify)
