@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -165,6 +166,9 @@ namespace TezosNotifyBot.Commands.Addresses
 
         public async Task HandleException(Exception exception, object sender, CallbackQuery query)
         {
+            if (exception is MessageIsNotModifiedException)
+                return;
+            
             await Bot.NotifyAdmins(exception.Message);
         }
     }
