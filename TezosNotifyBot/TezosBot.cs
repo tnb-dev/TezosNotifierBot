@@ -2880,6 +2880,7 @@ namespace TezosNotifyBot
 
                             var dialog = _serviceProvider.GetRequiredService<DialogService>();
                             var (action, answer) = dialog.Intent(user.Id.ToString(), message.Text, user.Culture);
+                            // TODO: Add `action == input.unknown` handling
                             SendTextMessage(user.Id, answer,
                                 ReplyKeyboards.MainMenu(resMgr, user));
 
@@ -2888,13 +2889,19 @@ namespace TezosNotifyBot
                             messageBuilder.AddLine("💌 Message from " + UserLink(user) + ":\n" + message.Text
                                 .Replace("_", "__")
                                 .Replace("`", "'").Replace("*", "**").Replace("[", "(").Replace("]", ")"));
+
                             messageBuilder.AddEmptyLine();
+                            messageBuilder.AddLine($"The answer: {answer}");
+
+                            if (action == "input.unknown")
+                            {
+                                messageBuilder.AddEmptyLine();
+                                messageBuilder.AddLine(Config.Telegram.DevUsers.Select(x => '@' + x).Join(" "));
+                            }
                             
-                            messageBuilder.AddLine("Answer:");
-                            messageBuilder.AddLine(answer);
                             messageBuilder.WithHashTag("inbox");
                             
-                            NotifyDev(messageBuilder.Build(true), 0);
+                            NotifyDev(messageBuilder.Build(), 0);
                         }
                         else if (user.UserState == UserState.SetAmountThreshold)
                         {

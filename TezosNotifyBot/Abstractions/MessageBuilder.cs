@@ -35,7 +35,7 @@ namespace TezosNotifyBot.Abstractions
             return this;
         }
         
-        public string Build(bool includeTags)
+        public string Build(bool includeTags = true)
         {
             if (includeTags)
             {
