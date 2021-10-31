@@ -76,14 +76,14 @@ namespace TezosNotifyBot.Commands.Addresses
             foreach (var tx in pager.Items)
             {
                 var isReceive = tx.Target.address == address;
-                
+                var txAddress = isReceive ? tx.Sender : tx.Target;
                 var data = new TemplateData
                 {
                     Hash = tx.Hash,
                     Icon = BuildIcon(tx),
                     Amount = Utils.AmountToString(tx.Amount / TezosDecimals, null),
-                    AddressName = tx.Target.DisplayName(),
-                    Address = tx.Target.address,
+                    AddressName = txAddress.DisplayName(),
+                    Address = txAddress.address,
                     Timestamp = tx.Timestamp.ToLocaleString(user.Language),
                     Explorer = Explorer.FromId(user.Explorer),
                     IsReceive = isReceive,
