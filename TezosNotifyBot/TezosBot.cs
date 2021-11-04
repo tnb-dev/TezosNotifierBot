@@ -2494,7 +2494,7 @@ namespace TezosNotifyBot
                         {
                             var result = mw.CreatePost(repo, prevCycle, currentCycle);
                             NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
-                            var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blochain";
+                            var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blockchain";
                             twitter.TweetAsync(tweet);
                         }
                         catch (Exception e)

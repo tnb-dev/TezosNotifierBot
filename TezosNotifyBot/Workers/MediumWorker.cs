@@ -60,7 +60,7 @@ namespace TezosNotifyBot.Workers
                         var prevCycle = cycles.Single(c => c.index == currentCycle.index - 1);
                         var result = CreatePost(repo, prevCycle, currentCycle);
                         bot.NotifyUserActivity($"🧐 New Medium post: [{result.data.title}]({result.data.url})");
-                        var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blochain";
+                        var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blockchain";
                         lastCycle = currentCycle.index;
                         bot.Tweet(tweet);
                     }
