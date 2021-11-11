@@ -16,7 +16,7 @@
         }
     },
     "Telegram": {
-        "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
+        "DevUsers": [ "mksmfd", "tonoff", "emerido", "maurotalevi" ]
     },
     "TzKtUrl": "https://api.tzkt.io/", 
     "BetterCallDevUrl": "https://api.better-call.dev/",
