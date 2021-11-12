@@ -3736,6 +3736,11 @@ namespace TezosNotifyBot
                     u.Inactive = true;
                     repo.UpdateUser(u);
                 }
+                else if (are.Message.Contains("group chat was upgraded to a supergroup chat"))
+				{
+                    u.Inactive = true;
+                    repo.UpdateUser(u);
+                }
                 else
                     LogError(are);
             }
