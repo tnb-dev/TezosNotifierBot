@@ -2280,7 +2280,7 @@ namespace TezosNotifyBot
                     .Replace("с", "s").Replace("т", "t").Replace("у", "u").Replace("ф", "f").Replace("х", "h")
                     .Replace("ц", "c").Replace("ч", "ch").Replace("ш", "sh").Replace("щ", "sh").Replace("э", "e")
                     .Replace("ю", "u").Replace("я", "ya");
-                if (q.Length < 3)
+                if (q.Length < 3 || q == "info" || q == "inf")
                 {
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", "info",
                               new InputTextMessageContent($"<b>info</b>")
@@ -2744,7 +2744,7 @@ namespace TezosNotifyBot
                         }
                     }
                     */
-                    else if (message.Text == "/info")
+                    else if (message.Text == "/info" || message.Text == "info")
                     {
                         Info(update);
                     }
@@ -2865,11 +2865,11 @@ namespace TezosNotifyBot
                         commandsManager.ProcessUpdateHandler(su, evu)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                     }
-                    if (message.Text.StartsWith("/add") && !Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
+                    else if (message.Text.StartsWith("/add") && !Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
 					{
                         OnNewAddress(user);
 					}
-                    if (message.Text.StartsWith("/trnthreshold"))
+                    else if (message.Text.StartsWith("/trnthreshold"))
 					{
                         if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
                         {
@@ -2891,7 +2891,7 @@ namespace TezosNotifyBot
 
                         SendTextMessage(user.Id, $"Use <b>trnthreshold</b> command with Tezos address and the transaction amount (XTZ) threshold for this address. For example::\n/trnthreshold <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf 1000</i>");
                     }
-                    if (message.Text.StartsWith("/dlgthreshold"))
+                    else if (message.Text.StartsWith("/dlgthreshold"))
                     {
                         if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
                         {
