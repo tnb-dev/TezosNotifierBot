@@ -2265,6 +2265,11 @@ namespace TezosNotifyBot
         {
             if (evu.Update.ChosenInlineResult != null)
             {
+                if (evu.Update.ChosenInlineResult.ResultId == "info")
+				{
+                    Info(evu.Update);
+                    return;
+				}
                 OnNewAddressEntered(repo.GetUser(evu.Update.ChosenInlineResult.From.Id),
                     evu.Update.ChosenInlineResult.ResultId);
                 return;
