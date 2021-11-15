@@ -1369,7 +1369,7 @@ namespace TezosNotifyBot
                 foreach (var addr in addrs)
 				{
                     var ua_rewards = tzKtClient.GetDelegatorRewards(addr, cycle1);
-                    if (ua_rewards != null)
+                    if (ua_rewards != null && ua_rewards.TotalRewards > 0)
 					{
                         foreach(var ua in userAddressDelegators.Where(o => o.Address == addr))
 						{
@@ -2281,7 +2281,14 @@ namespace TezosNotifyBot
                     .Replace("ц", "c").Replace("ч", "ch").Replace("ш", "sh").Replace("щ", "sh").Replace("э", "e")
                     .Replace("ю", "u").Replace("я", "ya");
                 if (q.Length < 3)
+                {
+                    var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", "info",
+                              new InputTextMessageContent($"<b>info</b>")
+                              { ParseMode = ParseMode.Html })
+                          { Description = "Display information" } };
+                    Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info);
                     return;
+                }
                 var ka = repo.GetKnownAddresses()
                     .Where(o => o.Name.Replace("'", "").Replace("`", "").Replace(" ", "").ToLower().Contains(q))
                     .Select(o => new {o.Address, o.Name});
@@ -2565,7 +2572,8 @@ namespace TezosNotifyBot
 
                         SendTextMessage(user.Id, $"Deleted tweets: {cnt}", ReplyKeyboards.MainMenu(resMgr, user));
                     }
-                    else if (message.Text == ReplyKeyboards.CmdMyAddresses(resMgr, user))
+                    else if (message.Text == ReplyKeyboards.CmdMyAddresses(resMgr, user) ||
+                        message.Text.StartsWith("/list"))
                     {
                         OnMyAddresses(message.From.Id, user);
                     }
@@ -2857,11 +2865,59 @@ namespace TezosNotifyBot
                         commandsManager.ProcessUpdateHandler(su, evu)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                     }
+                    if (message.Text.StartsWith("/add") && !Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
+					{
+                        OnNewAddress(user);
+					}
+                    if (message.Text.StartsWith("/trnthreshold"))
+					{
+                        if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
+                        {
+                            var msg = message.Text.Substring($"/trnthreshold ".Length);
+                            string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
+                            string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
+                            if (long.TryParse(threshold, out long t))
+                            {
+                                var ua = repo.GetUserTezosAddress(user.Id, addr);
+                                if (ua.Id != 0)
+                                {
+                                    ua.AmountThreshold = t;
+                                    repo.UpdateUserAddress(ua);
+                                    SendTextMessage(user.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
+                                    return;
+                                }
+                            }
+                        }
+
+                        SendTextMessage(user.Id, $"Use <b>trnthreshold</b> command with Tezos address and the transaction amount (XTZ) threshold for this address. For example::\n/trnthreshold <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf 1000</i>");
+                    }
+                    if (message.Text.StartsWith("/dlgthreshold"))
+                    {
+                        if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
+                        {
+                            var msg = message.Text.Substring($"/dlgthreshold ".Length);
+                            string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
+                            string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
+                            if (long.TryParse(threshold, out long t))
+                            {
+                                var ua = repo.GetUserTezosAddress(user.Id, addr);
+                                if (ua.Id != 0)
+                                {
+                                    ua.DelegationAmountThreshold = t;
+                                    repo.UpdateUserAddress(ua);
+                                    SendTextMessage(user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
+                                    return;
+                                }
+                            }
+                        }
+
+                        SendTextMessage(user.Id, $"Use <b>dlgthreshold</b> command with Tezos address and the delegation amount (XTZ) threshold for this address. For example::\n/dlgthreshold <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf 1000</i>");
+                    }
                     else if (Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}") &&
                              user.UserState != UserState.Broadcast && user.UserState != UserState.Support &&
                              user.UserState != UserState.NotifyFollowers)
                     {
-                        OnNewAddressEntered(user, message.Text);
+                        OnNewAddressEntered(user, message.Text.Replace("/add", ""));
                     }
                     else if (message.Text == ReplyKeyboards.CmdGoBack(resMgr, user))
                     {
@@ -2874,7 +2930,8 @@ namespace TezosNotifyBot
                             ReplyKeyboards.BackMenu(resMgr, user));
                         return;
                     }
-                    else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, user))
+                    else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, user) ||
+                        message.Text.StartsWith("/settings"))
                     {
                         SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
