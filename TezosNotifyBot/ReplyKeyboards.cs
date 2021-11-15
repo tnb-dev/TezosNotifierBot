@@ -44,7 +44,7 @@ namespace TezosNotifyBot
             {
                 new InlineKeyboardButton
                 {
-                    SwitchInlineQueryCurrentChat = "info",
+                    SwitchInlineQueryCurrentChat = "",
                     Text = resMgr.Get(Res.Search, u)
                 }
             });
