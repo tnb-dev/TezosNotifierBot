@@ -2286,11 +2286,10 @@ namespace TezosNotifyBot
                     .Replace("ю", "u").Replace("я", "ya");
                 if (q.Length < 3)
                 {
-                    string result = $"1 ꜩ = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")} UTC)\n";
+                    string result = $"<b>1 ꜩ = ${1M.TezToUsd(md)}</b> ({mdReceived.ToString("dd.MM.yyyy HH:mm")} UTC)";
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", "info",
-                              new InputTextMessageContent($"<b>info</b>")
-                              { ParseMode = ParseMode.Html })
-                          { Description = result + periodStatus + votingStatus } };
+                              new InputTextMessageContent(result + periodStatus + votingStatus)
+                              { ParseMode = ParseMode.Html })};
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
                 }

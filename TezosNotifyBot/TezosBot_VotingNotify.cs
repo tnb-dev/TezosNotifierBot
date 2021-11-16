@@ -181,8 +181,8 @@ namespace TezosNotifyBot
                 var quorum = period.ballotsQuorum;
 
                 var curQuorum = participation.Value * 100M / allrolls;
-                votingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}%/{quorum.Value.ToString("0.00")}%";
-                votingStatus += $"\nSupermajority: {curQuorum.ToString("0.00")}%/{period.supermajority}%";
+                votingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}% / {quorum.Value.ToString("0.00")}%";
+                votingStatus += $"\nSupermajority: {curQuorum.ToString("0.00")}% / {period.supermajority}%";
                 
                 if (participation * 100M / allrolls >= quorum &&
                     (participation - ballot.Rolls) * 100M / allrolls < quorum)
