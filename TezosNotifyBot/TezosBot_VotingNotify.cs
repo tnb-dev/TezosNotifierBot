@@ -10,13 +10,15 @@ namespace TezosNotifyBot
 {
 	partial class TezosBot
 	{
+        string periodStatus;
         string votingStatus;
 		void VotingNotify(Block block, Cycle cycle, ITzKtClient tzKtClient)
         {
             var periods = tzKtClient.GetVotingPeriods();
             var period = periods.Single(p => p.firstLevel <= block.Level && block.Level <= p.lastLevel);
-            votingStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
-
+            periodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
+            if (period.kind != "promotion" || period.kind != "exploration")
+                votingStatus = "";
             // Proposals
             foreach (var proposal in block.Proposals)
             {
@@ -179,7 +181,7 @@ namespace TezosNotifyBot
                 var quorum = period.ballotsQuorum;
 
                 var curQuorum = participation.Value * 100M / allrolls;
-                votingStatus += $"\nQuorum: {curQuorum.ToString("0.00")}%/{quorum.Value.ToString("0.00")}%";
+                votingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}%/{quorum.Value.ToString("0.00")}%";
                 votingStatus += $"\nSupermajority: {curQuorum.ToString("0.00")}%/{period.supermajority}%";
                 
                 if (participation * 100M / allrolls >= quorum &&
