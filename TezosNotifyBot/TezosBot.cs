@@ -2290,8 +2290,8 @@ namespace TezosNotifyBot
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", "info",
                               new InputTextMessageContent($"<b>info</b>")
                               { ParseMode = ParseMode.Html })
-                          { Description = result } };
-                    Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info);
+                          { Description = result + votingStatus } };
+                    Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
                 }
                 var ka = repo.GetKnownAddresses()
@@ -3266,7 +3266,7 @@ namespace TezosNotifyBot
         void Info(Update update)
         {
             var chatId = update.Message.Chat?.Id ?? update.Message.From.Id;
-            string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")})\n";
+            string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")})" + votingStatus;
             //var bh = _nodeManager.Client.GetBlockHeader(lastHash);
             //var bm = _nodeManager.Client.GetBlockMetadata(lastHash);
             //result += $"#{bh.level} ({bh.timestamp.ToString("dd.MM.yyyy HH:mm:ss")})\n";
