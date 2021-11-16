@@ -2289,7 +2289,7 @@ namespace TezosNotifyBot
                     string result = $"1 ꜩ = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")} UTC)";
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", result,
                               new InputTextMessageContent("<b>Tezos blockchain info</b>\n\n" + result + periodStatus + votingStatus +
-                              "\n\n@TezosNotifierBot notifies users about transactions and other events in the Tezos blockchain. <a href='https://tzkt.io/buy-tezos?utm_source=tezosnotifierbot'>Buy Tezos</a> with credit card.")
+                              "\n\n@TezosNotifierBot notifies users about transactions and other events in the Tezos blockchain")
                               { ParseMode = ParseMode.Html }){  Description = (periodStatus + votingStatus).Trim(), HideUrl = true} };
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
