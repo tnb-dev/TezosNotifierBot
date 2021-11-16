@@ -16,8 +16,8 @@ namespace TezosNotifyBot
         {
             var periods = tzKtClient.GetVotingPeriods();
             var period = periods.Single(p => p.firstLevel <= block.Level && block.Level <= p.lastLevel);
-            periodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
-            if (period.kind != "promotion" || period.kind != "exploration")
+            periodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" period ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
+            if (period.kind != "promotion" && period.kind != "exploration")
                 votingStatus = "";
             // Proposals
             foreach (var proposal in block.Proposals)
