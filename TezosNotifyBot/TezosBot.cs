@@ -2267,7 +2267,6 @@ namespace TezosNotifyBot
             {
                 if (evu.Update.ChosenInlineResult.ResultId == "info")
 				{
-                    Info(evu.Update);
                     return;
 				}
                 OnNewAddressEntered(repo.GetUser(evu.Update.ChosenInlineResult.From.Id),
@@ -2285,12 +2284,13 @@ namespace TezosNotifyBot
                     .Replace("с", "s").Replace("т", "t").Replace("у", "u").Replace("ф", "f").Replace("х", "h")
                     .Replace("ц", "c").Replace("ч", "ch").Replace("ш", "sh").Replace("щ", "sh").Replace("э", "e")
                     .Replace("ю", "u").Replace("я", "ya");
-                if (q.Length < 3 || q == "info" || q == "inf")
+                if (q.Length < 3)
                 {
+                    string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")} UTC)\n";
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", "info",
                               new InputTextMessageContent($"<b>info</b>")
                               { ParseMode = ParseMode.Html })
-                          { Description = "Display information" } };
+                          { Description = result } };
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info);
                     return;
                 }
