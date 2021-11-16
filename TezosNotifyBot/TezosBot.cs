@@ -2288,7 +2288,8 @@ namespace TezosNotifyBot
                 {
                     string result = $"1 ꜩ = ${1M.TezToUsd(md)} ({mdReceived.ToString("dd.MM.yyyy HH:mm")} UTC)";
                     var results_info = new InlineQueryResultArticle[]{new InlineQueryResultArticle("info", result,
-                              new InputTextMessageContent("/info@" + botUserName)
+                              new InputTextMessageContent("<b>Tezos blockchain info</b>\n\n" + result + periodStatus + votingStatus +
+                              "\n\n@TezosNotifierBot notifies users about transactions and other events in the Tezos blockchain. <a href='https://tzkt.io/buy-tezos'>Buy Tezos</a> with credit card.")
                               { ParseMode = ParseMode.Html }){  Description = (periodStatus + votingStatus).Trim()} };
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
@@ -2447,6 +2448,10 @@ namespace TezosNotifyBot
                             SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                     }
+                    else if (message.Text.Contains("Tezos blockchain info"))
+					{
+                        return;
+					}
                     else if (Config.Telegram.DevUsers.Contains(message.From.Username) &&
                              message.ReplyToMessage != null &&
                              message.ReplyToMessage.Entities.Length > 0 &&
