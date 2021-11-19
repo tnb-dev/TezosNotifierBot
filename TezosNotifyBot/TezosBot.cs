@@ -1125,7 +1125,8 @@ namespace TezosNotifyBot
 
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_baking" + ua.HashTag();
-                        SendTextMessageUA(ua, result);
+                        PushTextMessage(ua, result);
+                        //SendTextMessageUA(ua, result);
                     }
                 }
                 else
@@ -1143,7 +1144,8 @@ namespace TezosNotifyBot
                                 });
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#stole_baking" + ua.HashTag();
-                            SendTextMessageUA(ua, result);
+                            PushTextMessage(ua, result);
+                            //SendTextMessageUA(ua, result);
                         }
                     }
 
@@ -1186,7 +1188,8 @@ namespace TezosNotifyBot
                         });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#missed_endorsing" + ua.HashTag();
-                    SendTextMessageUA(ua, result);
+                    PushTextMessage(ua, result);
+                    //SendTextMessageUA(ua, result);
                 }
             }
 
@@ -1265,10 +1268,14 @@ namespace TezosNotifyBot
 
                 foreach (var msg in msgList)
                 {
-                    SendTextMessageUA(msg.UserAddress,
-                        resMgr.Get(Res.RewardDelivered,
+                    string result = resMgr.Get(Res.RewardDelivered,
                             new ContextObject { u = msg.User, Cycle = cycle.index - 5 }) + "\n\n" +
-                        msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
+                        msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : "");
+                    //SendTextMessageUA(msg.UserAddress,
+                    //    resMgr.Get(Res.RewardDelivered,
+                    //        new ContextObject { u = msg.User, Cycle = cycle.index - 5 }) + "\n\n" +
+                    //    msg.Message + (msg.Tags != "" ? "#reward" + msg.Tags : ""));
+                    PushTextMessage(msg.UserAddress, result);
                 }
                 Logger.LogDebug($"Calc delegates rewards finished on {block.Level}");
             }
@@ -1291,7 +1298,8 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_revelation" + ua.HashTag();
-                        SendTextMessageUA(ua, result);
+                        //SendTextMessageUA(ua, result);
+                        PushTextMessage(ua, result);
                     }
                 }
 
@@ -1350,7 +1358,8 @@ namespace TezosNotifyBot
 
                     if (!usr.First().User.HideHashTags)
                         perf += "\n\n#cycle" + String.Join("", usr.Select(o => o.HashTag()));
-                    SendTextMessageUA(usr.First(), perf);
+                    //SendTextMessageUA(usr.First(), perf);
+                    PushTextMessage(usr.First(), perf);
                 }
                 Logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
                 // TODO: TNB-22
@@ -1385,7 +1394,8 @@ namespace TezosNotifyBot
                             if (!ua.User.HideHashTags)
                                 message += "\n\n#award " + ua.HashTag() + context.ua_to.HashTag();
 
-                            SendTextMessageUA(ua, message);
+                            //SendTextMessageUA(ua, message);
+                            PushTextMessage(ua, message);
                         }
 					}
                 }
@@ -1429,7 +1439,8 @@ namespace TezosNotifyBot
                 }
                 if (!u.Key.HideHashTags)
                     message += "#rights_assigned" + tags;
-                SendTextMessage(u.Key.Id, message, ReplyKeyboards.MainMenu(resMgr, u.Key));
+                //SendTextMessage(u.Key.Id, message, ReplyKeyboards.MainMenu(resMgr, u.Key));
+                PushTextMessage(u.Key.Id, message);
             }
 		}
         void NotifyOutOfFreeSpace(Block block, ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle, List<Cycle> cycles)
@@ -1473,7 +1484,8 @@ namespace TezosNotifyBot
 
                 if (!ua.User.HideHashTags)
                     message += "#nofreespace" + tags;
-                SendTextMessage(ua.User.Id, message, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                //SendTextMessage(ua.User.Id, message, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                PushTextMessage(ua, message);
             }
         }
         private void LoadAddressList()
@@ -3739,6 +3751,14 @@ namespace TezosNotifyBot
             }
         }
 
+        void PushTextMessage(UserAddress ua, string text)
+        {
+            repo.SaveMessage(Domain.Message.Push(ua.UserId, text));
+        }
+        void PushTextMessage(long userId, string text)
+        {
+            repo.SaveMessage(Domain.Message.Push(userId, text));
+        }
         void SendTextMessageUA(UserAddress ua, string text)
         {
             if (ua.ChatId == 0)
