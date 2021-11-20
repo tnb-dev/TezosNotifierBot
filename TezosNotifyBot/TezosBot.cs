@@ -702,8 +702,9 @@ namespace TezosNotifyBot
                             text.AppendLine(tags.Select(x => x.Trim()).Join(" "));
                         }
 
+                        PushTextMessage(delegateAddress, text.ToString());
                         // TODO: Using ChatId instead of UserId?
-                        SendTextMessage(delegateAddress.UserId, text.ToString());
+                        //SendTextMessage(delegateAddress.UserId, text.ToString());
                     }
                 }
                 
