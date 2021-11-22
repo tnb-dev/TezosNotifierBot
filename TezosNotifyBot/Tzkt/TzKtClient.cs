@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Abstractions;
+using Microsoft.Extensions.Caching.InMemory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -13,23 +17,25 @@ namespace TezosNotifyBot.Tzkt
 	public class TzKtClient : ITzKtClient
 	{
 		ILogger<TzKtClient> _logger;
-		WebClient _client;
-
+		HttpClient _client;
+		IMemoryCache _cache;
 
 		private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
 		{
 			ContractResolver = new CamelCasePropertyNamesContractResolver()
 		};
-		
-		public TzKtClient(ILogger<TzKtClient> logger, string url)
+
+		public TzKtClient(HttpClient http, ILogger<TzKtClient> logger, IConfiguration config, IMemoryCache cache)
 		{
-			_client = new WebClient { BaseAddress = url };
+			_client = http;
+			_client.BaseAddress = new Uri(config.GetValue<string>("TzKtUrl"));
 			_logger = logger;
+			_cache = cache;
 		}
 
 		Head ITzKtClient.GetHead()
 		{
-			string head = Download("v1/head");
+			string head = Download("v1/head", false);
 			return JsonConvert.DeserializeObject<Head>(head);
 		}
 
@@ -50,6 +56,16 @@ namespace TezosNotifyBot.Tzkt
 		{
 			var str = Download($"v1/cycles");
 			return JsonConvert.DeserializeObject<List<Cycle>>(str);
+		}
+		Account ITzKtClient.GetAccount(string addr)
+		{
+			var str = Download($"v1/accounts/{addr}");
+			return JsonConvert.DeserializeObject<Account>(str);
+		}
+		List<Delegator> ITzKtClient.GetDelegators(string addr)
+		{
+			var str = Download($"v1/accounts/{addr}/delegators");
+			return JsonConvert.DeserializeObject<List<Delegator>>(str);
 		}
 
 		int ITzKtClient.GetTransactionsCount(int beginLevel, int endLevel)
@@ -75,7 +91,7 @@ namespace TezosNotifyBot.Tzkt
 			var operation = GetAccountOperations(address, "limit=1&sort.desc=timestamp").FirstOrDefault();
 			return operation?.Timestamp;
 		}
-		
+
 		Rewards ITzKtClient.GetDelegatorRewards(string address, int cycle)
 		{
 			var str = Download($"v1/rewards/delegators/{address}/{cycle}");
@@ -87,7 +103,7 @@ namespace TezosNotifyBot.Tzkt
 			return JsonConvert.DeserializeObject<Rewards>(str);
 		}
 		List<Rewards> ITzKtClient.GetBakerFutureRewards(string address)
-		{			
+		{
 			var str = Download($"v1/rewards/bakers/{address}?limit=12");
 			return JsonConvert.DeserializeObject<List<Rewards>>(str);
 		}
@@ -113,7 +129,7 @@ namespace TezosNotifyBot.Tzkt
 		}
 		Protocol ITzKtClient.GetCurrentProtocol()
 		{
-			var str = Download($"v1/protocols/current");
+			var str = Download($"v1/protocols/current", false);
 			return JsonConvert.DeserializeObject<Protocol>(str);
 		}
 		List<ProposalUpvote> ITzKtClient.GetUpvotes(int epoch)
@@ -143,21 +159,29 @@ namespace TezosNotifyBot.Tzkt
 				return null;
 			}
 		}
-		string Download(string addr)
+		string Download(string addr, bool caching = true)
 		{
 			try
 			{
+				object result;
+				if (caching && _cache.TryGetValue(addr, out result))
+				{
+					_logger.LogDebug($"return from cache {_client.BaseAddress}{addr}");
+					return (string)result;
+				}
 				_logger.LogDebug($"download {_client.BaseAddress}{addr}");
-				var result = _client.DownloadString(addr);
+				result = _client.GetStringAsync(addr).ConfigureAwait(false).GetAwaiter().GetResult();
 				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
-				return result;
+				if (caching)
+					_cache.Set(addr, result, new TimeSpan(0, 1, 0));
+				return (string)result;
 			}
 			catch (Exception e)
 			{
 				_logger.LogError(e, $"Error downloading from {_client.BaseAddress}{addr}");
 				throw;
 			}
-		}		
+		}
 		public T Download<T>(string path)
 		{
 			var result = Download(path);
