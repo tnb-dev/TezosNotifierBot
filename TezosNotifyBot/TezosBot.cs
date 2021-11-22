@@ -92,6 +92,7 @@ namespace TezosNotifyBot
         bool twitterNetworkIssueNotified = false;
         bool paused = false;
         string botUserName;
+        Queue<DateTime> blockProcessings = new Queue<DateTime>();
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
             TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient,
@@ -826,10 +827,13 @@ namespace TezosNotifyBot
 			
             if (!lastBlockChanged)
                 repo.SetLastBlockLevel(block.Level, block.Priority, block.Hash);
-            Logger.LogInformation($"Block {block.Level} operations processed");
+            Logger.LogInformation($"Block {block.Level} processed");
             //lastHeader = header;
             //lastHash = header.hash;
             prevBlock = block;
+            blockProcessings.Enqueue(DateTime.Now);
+            if (blockProcessings.Count > 21)
+                blockProcessings.Dequeue();
             if (lastBlockChanged)
             {
                 lastBlockChanged = false;
@@ -2790,7 +2794,9 @@ namespace TezosNotifyBot
                         int l = repo.GetLastBlockLevel().Item1;
                         int c = (l - 1) / 4096;
                         int p = l - c * 4096 - 1;
-                        SendTextMessage(user.Id, $"Last block processed: {l}, cycle {c}, position {p}",
+                        var dtlist = blockProcessings.ToList();
+                        var avg = (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
+                        SendTextMessage(user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}",
                             ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/setblock") &&

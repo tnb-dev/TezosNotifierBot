@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using Gelf.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.InMemory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -82,11 +83,15 @@ namespace TezosNotifyBot
                     services.AddScoped<TokenService>();
                     services.AddScoped<AddressService>();
                     services.AddSingleton<AddressTransactionsRepository>();
-
+                    services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
                     services.AddHttpClient<ReleasesClient>();
-                    services.AddTransient<ITzKtClient>(sp =>
-                        new TzKtClient(sp.GetService<ILogger<TzKtClient>>(),
-                            context.Configuration.GetValue<string>("TzKtUrl")));
+                    services.AddHttpClient<TzKtClient>(client => { client.Timeout = TimeSpan.FromMinutes(2);})
+                        .SetHandlerLifetime(TimeSpan.FromMinutes(1))
+                        .AddPolicyHandler(GetRetryPolicy());
+
+                    //services.AddTransient<ITzKtClient>(sp =>
+                    //    new TzKtClient(sp.GetService<ILogger<TzKtClient>>(),
+                    //        context.Configuration.GetValue<string>("TzKtUrl")));
                     services.AddTransient<IBetterCallDevClient>(sp =>
                         new BetterCallDevClient(
                             sp.GetService<ILogger<BetterCallDevClient>>(),

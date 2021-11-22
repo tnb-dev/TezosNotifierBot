@@ -8,6 +8,7 @@
   
   <ItemGroup>
     <PackageReference Include="Gelf.Extensions.Logging" Version="2.0.1" />
+    <PackageReference Include="HttpClient.Caching" Version="1.2.6" />
     <PackageReference Include="HttpToSocks5Proxy" Version="1.2.1" />
     <PackageReference Include="Humanizer.Core.ru" Version="2.8.26" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.0" />
