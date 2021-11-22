@@ -30,7 +30,7 @@ namespace TezosNotifyBot
 				return new ContractInfo
 				{
 					balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
-					@delegate = contract.Delegate.Address,
+					@delegate = contract.Delegate?.Address,
 					//manager = contract.manager?.address,
 					Hash = hash
 				};
