@@ -97,7 +97,7 @@ namespace TezosNotifyBot
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddTransient<TezosBotFacade>();
-                    services.AddSingleton(new AddressManager(context.Configuration.GetValue<string>("TzKtUrl")));
+                    services.AddTransient<AddressManager>();
 
                     services.AddSingleton(provider =>
                     {

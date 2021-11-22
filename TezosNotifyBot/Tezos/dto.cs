@@ -198,7 +198,7 @@ namespace TezosNotifyBot.Tezos
 	public class ContractInfo_alfa
 	{
 		public string manager { get; set; }
-		public long balance { get; set; }
+		public ulong balance { get; set; }
 		public bool spendable { get; set; }
 		public Delegate @delegate { get; set; }
 		public string counter { get; set; }
