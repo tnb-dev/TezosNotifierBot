@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Abstractions;
 using Microsoft.Extensions.Caching.InMemory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -34,7 +35,7 @@ namespace TezosNotifyBot.Tzkt
 
 		Head ITzKtClient.GetHead()
 		{
-			string head = Download("v1/head");
+			string head = Download("v1/head", false);
 			return JsonConvert.DeserializeObject<Head>(head);
 		}
 
@@ -118,7 +119,7 @@ namespace TezosNotifyBot.Tzkt
 		}
 		Protocol ITzKtClient.GetCurrentProtocol()
 		{
-			var str = Download($"v1/protocols/current");
+			var str = Download($"v1/protocols/current", false);
 			return JsonConvert.DeserializeObject<Protocol>(str);
 		}
 		List<ProposalUpvote> ITzKtClient.GetUpvotes(int epoch)
@@ -148,12 +149,12 @@ namespace TezosNotifyBot.Tzkt
 				return null;
 			}
 		}
-		string Download(string addr)
+		string Download(string addr, bool caching = true)
 		{
 			try
 			{
 				object result;
-				if (_cache.TryGetValue(addr, out result))
+				if (caching && _cache.TryGetValue(addr, out result))
 				{
 					_logger.LogDebug($"return from cache {_client.BaseAddress}{addr}");
 					return (string)result;
@@ -161,7 +162,8 @@ namespace TezosNotifyBot.Tzkt
 				_logger.LogDebug($"download {_client.BaseAddress}{addr}");
 				result = _client.GetStringAsync(addr).ConfigureAwait(false).GetAwaiter().GetResult();
 				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
-				_cache.CreateEntry(addr).SetValue(result).SetAbsoluteExpiration(new TimeSpan(1, 0, 0));
+				if (caching)
+					_cache.Set(addr, result, new TimeSpan(1, 0, 0));
 				return (string)result;
 			}
 			catch (Exception e)

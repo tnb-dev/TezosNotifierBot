@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Humanizer;
+using Microsoft.Extensions.Caching.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -2796,7 +2797,8 @@ namespace TezosNotifyBot
                         int p = l - c * 4096 - 1;
                         var dtlist = blockProcessings.ToList();
                         var avg = (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
-                        SendTextMessage(user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}",
+                        var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
+                        SendTextMessage(user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}\nCache size: {cs}",
                             ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/setblock") &&
