@@ -5,33 +5,33 @@ using System.Text;
 using TezosNotifyBot.Tezos;
 using System.Net;
 using Newtonsoft.Json;
+using TezosNotifyBot.Tzkt;
 
 namespace TezosNotifyBot
 {
 	public class AddressManager
 	{
-		string _tzKtUrl;
-		public AddressManager(string tzKtUrl)
+		ITzKtClient _tzKt;
+		public AddressManager(ITzKtClient tzKt)
 		{
-			_tzKtUrl = tzKtUrl;
+			_tzKt = tzKt;
 		}
 
 		public ContractInfo GetContract(NodeClient client, string hash, string addr, bool enqueue = false)
 		{
 			try
 			{
-				if (_tzKtUrl == null)
+				if (_tzKt == null)
 					return client.GetContractInfo(hash, addr);
 
-				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
-				if (str == "")
+				var contract = _tzKt.GetAccount(addr);
+				if (contract == null)
 					return new ContractInfo();
-				var contract = JsonConvert.DeserializeObject<TzKt.Account>(str);
 				return new ContractInfo
 				{
 					balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
-					@delegate = contract.@delegate?.address,
-					manager = contract.manager?.address,
+					@delegate = contract.Delegate.Address,
+					//manager = contract.manager?.address,
 					Hash = hash
 				};
 			}
@@ -53,23 +53,22 @@ namespace TezosNotifyBot
 		{
 			try
 			{
-				if (_tzKtUrl == null)
+				if (_tzKt == null)
 					return client.GetDelegateInfo(addr, hash);
-				var str = client.Download(_tzKtUrl + "v1/accounts/" + addr);
-				if (str == "")
+				var @delegate = _tzKt.GetAccount(addr);
+				if (@delegate == null)
 					return null;
-				var @delegate = JsonConvert.DeserializeObject<TzKt.Account>(str);
 				if (@delegate.type != "delegate")
 					return null;
-				var str_d = client.Download(_tzKtUrl + "v1/accounts/" + addr + "/delegators");
+				var d = _tzKt.GetDelegators(addr);
 				return new DelegateInfo
 				{
 					balance = @delegate.balance - @delegate.frozenDeposits - @delegate.frozenRewards - @delegate.frozenFees,
 					deactivated = !@delegate.active,
 					staking_balance = @delegate.stakingBalance,
-					bond = @delegate.balance,//@delegate.balance ,
+					bond = @delegate.balance,
 					Hash = hash,
-					delegated_contracts = JsonConvert.DeserializeObject<TzKt.Delegator[]>(str_d).Select(d => d.address).ToList(),
+					delegated_contracts = d.Select(d => d.address).ToList(),
 					NumDelegators = @delegate.numDelegators
 				};
 			}
@@ -102,25 +101,25 @@ namespace TezosNotifyBot
 		//	return avgPerf[(cycle, addr)];
 		//}
 
-		internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
-		{
-			try
-			{
-				var str = client.Download(_tzKtUrl + $"v1/rewards/bakers/{d}/{cycle}");
-				if (str == "")
-					return 0;
-				var rew = JsonConvert.DeserializeObject<TzKt.DelegateReward>(str);
-				return rew.TotalRewards;
-			}
-			catch (Exception e)
-			{
-				return di.frozen_balance_by_cycle.Where(o => o.cycle == cycle).Sum(o => o.rewards + o.fees);
-			}
-		}
+		//internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
+		//{
+		//	try
+		//	{
+		//		var str = client.Download(_tzKtUrl + $"v1/rewards/bakers/{d}/{cycle}");
+		//		if (str == "")
+		//			return 0;
+		//		var rew = JsonConvert.DeserializeObject<TzKt.DelegateReward>(str);
+		//		return rew.TotalRewards;
+		//	}
+		//	catch (Exception e)
+		//	{
+		//		return di.frozen_balance_by_cycle.Where(o => o.cycle == cycle).Sum(o => o.rewards + o.fees);
+		//	}
+		//}
 	}
 }
 
-namespace TzKt
+namespace TzKt_
 {
 	public class DelegateReward
 	{
@@ -187,14 +186,7 @@ namespace TzKt
 			revelationRewards;
 	}
 
-	public class Delegator
-	{
-		public string type { get; set; }
-		public string address { get; set; }
-		public long balance { get; set; }
-		public int delegationLevel { get; set; }
-		public DateTime delegationTime { get; set; }
-	}
+	
 
 	public class Delegate
 	{

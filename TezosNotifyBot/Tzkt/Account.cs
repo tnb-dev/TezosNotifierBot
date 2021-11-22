@@ -11,7 +11,7 @@ namespace TezosNotifyBot.Tzkt
 		public string address { get; set; }
 		public string publicKey { get; set; }
 		public bool revealed { get; set; }
-		public long balance { get; set; }
+		public ulong balance { get; set; }
 		public ulong frozenDeposits { get; set; }
 		public ulong frozenRewards { get; set; }
 		public ulong frozenFees { get; set; }
@@ -20,7 +20,7 @@ namespace TezosNotifyBot.Tzkt
 		[JsonProperty("delegate")]
 		public Delegate Delegate { get; set; }
 		public DateTime activationTime { get; set; }
-		public object stakingBalance { get; set; }
+		public ulong stakingBalance { get; set; }
 		public int numContracts { get; set; }
 		public int numDelegators { get; set; }
 		public int numBlocks { get; set; }

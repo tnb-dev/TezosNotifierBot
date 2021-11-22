@@ -57,6 +57,16 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/cycles");
 			return JsonConvert.DeserializeObject<List<Cycle>>(str);
 		}
+		Account ITzKtClient.GetAccount(string addr)
+		{
+			var str = Download($"v1/accounts/{addr}");
+			return JsonConvert.DeserializeObject<Account>(str);
+		}
+		List<Delegator> ITzKtClient.GetDelegators(string addr)
+		{
+			var str = Download($"v1/accounts/{addr}/delegators");
+			return JsonConvert.DeserializeObject<List<Delegator>>(str);
+		}
 
 		int ITzKtClient.GetTransactionsCount(int beginLevel, int endLevel)
 		{
@@ -163,7 +173,7 @@ namespace TezosNotifyBot.Tzkt
 				result = _client.GetStringAsync(addr).ConfigureAwait(false).GetAwaiter().GetResult();
 				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
 				if (caching)
-					_cache.Set(addr, result, new TimeSpan(1, 0, 0));
+					_cache.Set(addr, result, new TimeSpan(0, 1, 0));
 				return (string)result;
 			}
 			catch (Exception e)
