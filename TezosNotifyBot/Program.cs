@@ -84,14 +84,12 @@ namespace TezosNotifyBot
                     services.AddScoped<AddressService>();
                     services.AddSingleton<AddressTransactionsRepository>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
-                    services.AddHttpClient<ReleasesClient>();
-                    services.AddHttpClient<TzKtClient>(client => { client.Timeout = TimeSpan.FromMinutes(2);})
-                        .SetHandlerLifetime(TimeSpan.FromMinutes(1))
-                        .AddPolicyHandler(GetRetryPolicy());
+                    services.AddHttpClient<ReleasesClient>();                   
+                    
 
-                    //services.AddTransient<ITzKtClient>(sp =>
-                    //    new TzKtClient(sp.GetService<ILogger<TzKtClient>>(),
-                    //        context.Configuration.GetValue<string>("TzKtUrl")));
+                    services.AddTransient<ITzKtClient>(sp =>
+                        new TzKtClient(new HttpClient(), sp.GetService<ILogger<TzKtClient>>(),
+                        context.Configuration, sp.GetService<IMemoryCache>()));
                     services.AddTransient<IBetterCallDevClient>(sp =>
                         new BetterCallDevClient(
                             sp.GetService<ILogger<BetterCallDevClient>>(),
