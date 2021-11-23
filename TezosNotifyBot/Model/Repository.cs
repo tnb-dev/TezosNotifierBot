@@ -662,11 +662,9 @@ namespace TezosNotifyBot.Model
 
         public void SaveMessage(Message message)
         {
-            lock (_dbLock)
-            {
-                _db.Add(message);
-                _db.SaveChanges();
-            }
+            using var db = new TezosDataContext(_dbOptions);
+            db.Add(message);
+            db.SaveChanges();
         }
 
         public AddressConfig GetAddressConfig(string address)
