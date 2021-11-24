@@ -53,6 +53,7 @@ namespace TezosNotifyBot.Workers
                         .ToArrayAsync(stoppingToken);
                     Counter.AddTimeSpan("Select 10000 unsent messages", DateTime.Now.Subtract(begin));
                     int count = 0;
+                    DateTime startBatch = DateTime.Now;
                     foreach (var message in messages)
                     {
                         count++;
@@ -84,7 +85,9 @@ namespace TezosNotifyBot.Workers
                             await db.SaveChangesAsync();
                             Counter.AddTimeSpan("Save 30 message statuses", DateTime.Now.Subtract(begin));
                             count = 0;
-                            await Task.Delay(1000, stoppingToken);
+                            var ms = (int)DateTime.Now.Subtract(startBatch).TotalMilliseconds;
+                            if (ms < 1000)
+                                await Task.Delay(1000 - ms, stoppingToken);
                         }
                     }
                     await db.SaveChangesAsync();
