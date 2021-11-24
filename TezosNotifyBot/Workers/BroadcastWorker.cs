@@ -78,15 +78,16 @@ namespace TezosNotifyBot.Workers
                             _logger.LogError(e, "Failed to send push message");
                             Counter.Count("Message send failure");
                         }
-                        begin = DateTime.Now;
-                        await db.SaveChangesAsync();
-                        Counter.AddTimeSpan("Save message statuses", DateTime.Now.Subtract(begin));
                         if (count == 30)
-						{
+                        {
+                            begin = DateTime.Now;
+                            await db.SaveChangesAsync();
+                            Counter.AddTimeSpan("Save 30 message statuses", DateTime.Now.Subtract(begin));
                             count = 0;
                             await Task.Delay(1000, stoppingToken);
                         }
                     }
+                    await db.SaveChangesAsync();
                 }
                 catch (Exception e)
                 {
