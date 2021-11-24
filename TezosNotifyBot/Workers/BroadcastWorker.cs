@@ -49,11 +49,13 @@ namespace TezosNotifyBot.Workers
                         .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
                         .Where(x => !x.User.Inactive)
                         .OrderBy(x => x.CreateDate)
-                        .Take(30)
+                        .Take(50000)
                         .ToArrayAsync(stoppingToken);
-                    Counter.AddTimeSpan("Select 30 unsent messages", DateTime.Now.Subtract(begin));
+                    Counter.AddTimeSpan("Select 50000 unsent messages", DateTime.Now.Subtract(begin));
+                    int count = 0;
                     foreach (var message in messages)
                     {
+                        count++;
                         try
                         {
                             var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text,
@@ -79,6 +81,11 @@ namespace TezosNotifyBot.Workers
                         begin = DateTime.Now;
                         await db.SaveChangesAsync();
                         Counter.AddTimeSpan("Save message statuses", DateTime.Now.Subtract(begin));
+                        if (count == 30)
+						{
+                            count = 0;
+                            await Task.Delay(1000, stoppingToken);
+                        }
                     }
                 }
                 catch (Exception e)
