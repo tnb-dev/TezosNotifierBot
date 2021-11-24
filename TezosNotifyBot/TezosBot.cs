@@ -2584,6 +2584,13 @@ namespace TezosNotifyBot
                     {
                         OnSql(user, message.Text.Substring("/sql".Length));
                     }
+                    else if (message.Text.StartsWith("/devstat") && Config.DevUserNames.Contains(message.From.Username))
+					{                        
+                        Stream s = GenerateStreamFromString(_serviceProvider.GetService<StatCounter>().ToString());
+                        string fileName = "stat.txt";
+                        var f = new InputOnlineFile(s, fileName);
+                        Bot.SendDocumentAsync(user.Id, f).ConfigureAwait(true).GetAwaiter().GetResult();
+                    }
                     else if (message.Text == "/twclean")
                     {
                         int cnt = 0;

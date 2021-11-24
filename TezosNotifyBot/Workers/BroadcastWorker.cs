@@ -22,6 +22,7 @@ namespace TezosNotifyBot.Workers
         private readonly ILogger<BroadcastWorker> _logger;
         private readonly IServiceProvider _provider;
         private TelegramBotClient Bot { get; }
+        private StatCounter Counter { get; }
 
         public BroadcastWorker(TelegramBotClient bot, ILogger<BroadcastWorker> logger, IServiceProvider provider)
         {
@@ -29,17 +30,20 @@ namespace TezosNotifyBot.Workers
 
             _logger = logger;
             _provider = provider;
+            Counter = provider.GetService<StatCounter>();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (stoppingToken.IsCancellationRequested is false)
             {
+                var start = DateTime.Now;
                 using var scope = _provider.CreateScope();
                 using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
 
                 try
                 {
+                    DateTime begin = DateTime.Now;
                     // Выбираем сообщения которые были созданы для отложенной отправки
                     var messages = await db.Set<Message>()
                         .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
@@ -47,7 +51,7 @@ namespace TezosNotifyBot.Workers
                         .OrderBy(x => x.CreateDate)
                         .Take(30)
                         .ToArrayAsync(stoppingToken);
-
+                    Counter.AddTimeSpan("Select 30 unsent messages", DateTime.Now.Subtract(begin));
                     foreach (var message in messages)
                     {
                         try
@@ -56,7 +60,7 @@ namespace TezosNotifyBot.Workers
                                 ParseMode.Html, true);
 
                             message.Sent(id.MessageId);
-
+                            Counter.Count("Message delivered");
                         }
                         catch (ApiRequestException e)
                         {
@@ -64,22 +68,28 @@ namespace TezosNotifyBot.Workers
                                 .SingleOrDefaultAsync(x => x.Id == message.UserId);
                             
                             user.Inactive = true;
+                            Counter.Count("Deactivate user");
                         }
                         catch (Exception e)
                         {
                             message.SentFailed();
                             _logger.LogError(e, "Failed to send push message");
+                            Counter.Count("Message send failure");
                         }
+                        begin = DateTime.Now;
                         await db.SaveChangesAsync();
+                        Counter.AddTimeSpan("Save message statuses", DateTime.Now.Subtract(begin));
                     }
                 }
                 catch (Exception e)
                 {
                     _logger.LogError(e, "Failed to read push message stack from database");
+                    Counter.Count("Failed to read push message stack");
                 }
 
                 // Wait one second
-                await Task.Delay(1000, stoppingToken);
+                if (DateTime.Now.Subtract(start).TotalSeconds < 1)
+                    await Task.Delay(1000, stoppingToken);
             }
         }
     }

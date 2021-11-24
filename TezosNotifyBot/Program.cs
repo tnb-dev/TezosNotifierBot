@@ -59,6 +59,7 @@ namespace TezosNotifyBot
                 })
                 .ConfigureServices((context, services) =>
                 {
+                    services.AddSingleton<StatCounter>();
                     services.AddDbContext<TezosDataContext>(builder => builder
                         .UseNpgsql(context.Configuration.GetConnectionString("Default"), opt => opt.CommandTimeout(600))
                     );
