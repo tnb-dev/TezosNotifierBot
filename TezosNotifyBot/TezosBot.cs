@@ -1336,14 +1336,13 @@ namespace TezosNotifyBot
                 Logger.LogDebug($"Calc delegates performance on {block.Level - 1}");
 
                 var cyclePast = cycles.Single(o => o.index == cycle.index - 1);
-                var cycleNext = cycles.Single(o => o.index == cycle.index + 1);
                 Dictionary<string, Rewards> rewards = new Dictionary<string, Rewards>();
                 foreach (var d in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => o.Address))
                     rewards.Add(d.Key, tzKtClient.GetBakerRewards(d.Key, cyclePast.index));
                 foreach (var usr in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => new {o.UserId, o.ChatId}))
                 {
                     string perf = resMgr.Get(Res.CycleCompleted,
-                        new ContextObject {u = usr.First().User, Cycle = cycle.index - 1, CycleLength = cyclePast.Length, NextEnd = cycleNext.endTime});
+                        new ContextObject {u = usr.First().User, Cycle = cycle.index - 1, CycleLength = cyclePast.Length, NextEnd = cycle.endTime});
                     foreach (var dr in usr)
                     {
                         var r = rewards[dr.Address];
