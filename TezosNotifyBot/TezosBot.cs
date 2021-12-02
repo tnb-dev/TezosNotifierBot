@@ -3757,7 +3757,7 @@ namespace TezosNotifyBot
             try
             {
                 Logger.LogInformation($"->{chatId}: {text}");
-                Bot.SendTextMessageAsync(chatId, text, ParseMode.Html, true).ConfigureAwait(true).GetAwaiter()
+                Bot.SendTextMessageAsync(chatId, text, ParseMode.Html, disableWebPagePreview: true).ConfigureAwait(true).GetAwaiter()
                     .GetResult();
                 Thread.Sleep(50);
             }
@@ -3795,7 +3795,7 @@ namespace TezosNotifyBot
                 if (replaceId == 0)
                 {
                     Message msg = Bot
-                            .SendTextMessageAsync(userId, text, parseMode, true, disableNotification, replyMarkup: keyboard)
+                            .SendTextMessageAsync(userId, text, parseMode, disableWebPagePreview: true, disableNotification: disableNotification, replyMarkup: keyboard)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                         repo.LogOutMessage(userId, msg.MessageId, text);
                         Thread.Sleep(50);
@@ -3804,7 +3804,7 @@ namespace TezosNotifyBot
                 else
                 {
                     var msg = Bot
-                        .EditMessageTextAsync(userId, replaceId, text, parseMode, true,
+                        .EditMessageTextAsync(userId, replaceId, text, parseMode, disableWebPagePreview: true,
                             replyMarkup: (InlineKeyboardMarkup) keyboard).ConfigureAwait(true).GetAwaiter().GetResult();
                     repo.LogOutMessage(userId, msg.MessageId, text);
                     return msg.MessageId;
@@ -3870,12 +3870,12 @@ namespace TezosNotifyBot
                     if (userId > 0)
                     {
                         var u = repo.GetUser((int) userId);
-                        Bot.SendTextMessageAsync(userId, text, ParseMode.Markdown, true,
+                        Bot.SendTextMessageAsync(userId, text, ParseMode.Markdown, disableWebPagePreview: true,
                                 replyMarkup: ReplyKeyboards.MainMenu(resMgr, u)).ConfigureAwait(true).GetAwaiter()
                             .GetResult();
                     }
                     else
-                        Bot.SendTextMessageAsync(userId, text, ParseMode.Markdown, true).ConfigureAwait(true)
+                        Bot.SendTextMessageAsync(userId, text, ParseMode.Markdown, disableWebPagePreview: true).ConfigureAwait(true)
                             .GetAwaiter().GetResult();
 
                     Thread.Sleep(50);
