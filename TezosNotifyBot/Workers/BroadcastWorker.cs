@@ -60,7 +60,7 @@ namespace TezosNotifyBot.Workers
                         try
                         {
                             var id = await Bot.SendTextMessageAsync(new ChatId(message.UserId), message.Text,
-                                ParseMode.Html, true);
+                                ParseMode.Html, disableWebPagePreview: true);
 
                             message.Sent(id.MessageId);
                             Counter.Count("Message delivered");

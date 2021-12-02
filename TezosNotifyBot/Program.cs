@@ -116,7 +116,7 @@ namespace TezosNotifyBot
                                     new NetworkCredential(config.Value.ProxyLogin, config.Value.ProxyPassword);
                         }
 
-                        return new TelegramBotClient(config.Value.Telegram.BotSecret, proxy);
+                        return new TelegramBotClient(config.Value.Telegram.BotSecret/*, proxy*/);
                     });
 
                     services.AddSingleton(_ =>
