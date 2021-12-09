@@ -1467,7 +1467,9 @@ namespace TezosNotifyBot
                     freeBalance += fr[c - 6].TotalBakerRewards;
                     if (freeBalance < 0)
 					{
-                        delegateUncoveredCycle[addr] = cycles.Single(o => o.index == fr[c].cycle);
+                        var c1 = cycles.SingleOrDefault(o => o.index == fr[c].cycle);
+                        if (c1 != null)
+                            delegateUncoveredCycle[addr] = c1;
                         break;
 					}
                 }
