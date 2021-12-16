@@ -76,7 +76,7 @@ namespace TezosNotifyBot
         // List<Node> Nodes;
         // Node CurrentNode;
         int NetworkIssueMinutes = 2;
-        Worker worker;
+        //Worker worker;
         //RewardsManager rewardsManager;
         AddressManager addrMgr;
         private readonly ResourceManager resMgr;
@@ -117,8 +117,8 @@ namespace TezosNotifyBot
         {
             var version = GetType().Assembly.GetName().Version?.ToString(3);
 
-            worker = new Worker();
-            worker.OnError += Worker_OnError;
+            //worker = new Worker();
+            //worker.OnError += Worker_OnError;
             try
             {
                 Commands = JsonConvert.DeserializeObject<List<Command>>(

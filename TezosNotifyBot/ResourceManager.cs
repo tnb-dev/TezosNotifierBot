@@ -322,5 +322,6 @@ namespace TezosNotifyBot
 		AddressTransactionListOlder,
 		AddressTransactionListLatest,
 		AddressTransactionListRefresh,
+		AdoptionFinished
 	}
 }

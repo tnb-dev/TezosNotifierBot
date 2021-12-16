@@ -360,6 +360,19 @@ namespace TezosNotifyBot
 						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
                 }
+                if (prevPeriod.kind == "adoption")
+                {
+                    var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
+                    var p = repo.GetProposal(proposal.hash);
+                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    {
+                        var result = resMgr.Get(Res.AdoptionFinished,
+                                new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
+                        if (!u.HideHashTags)
+                            result += "\n\n#proposal" + p.HashTag();
+                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                    }
+                }
             }
         }
 	}

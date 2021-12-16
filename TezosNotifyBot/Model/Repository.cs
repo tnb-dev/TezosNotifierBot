@@ -532,28 +532,6 @@ namespace TezosNotifyBot.Model
             });
         }
 
-        internal void UpdateDelegate(Delegate d)
-        {
-            lock (_dbLock)
-                _db.SaveChanges();
-        }
-
-        public Delegate GetOrCreateDelegate(string addr)
-        {
-            lock (_dbLock)
-            {
-                var d = _db.Delegates.FirstOrDefault(o => o.Address == addr);
-                if (d == null)
-                {
-                    d = new Delegate {Address = addr};
-                    _db.Delegates.Add(d);
-                    _db.SaveChanges();
-                }
-
-                return d;
-            }
-        }
-
         internal void SetDelegateName(string addr, string name)
         {
             lock (_dbLock)
@@ -603,25 +581,7 @@ namespace TezosNotifyBot.Model
                 return db.WhaleTransactions.Include(o => o.Notifications).ToList();
             });
 		}
-
-        /*internal void AddProposalVote(Proposal p, string from, int votingPeriod, int level, int ballot)
-        {
-            var d = GetOrCreateDelegate(from);
-            RunIsolatedDb(db =>
-            {
-                var pv = new ProposalVote
-                {
-                    ProposalID = p.Id,
-                    DelegateId = d.Id,
-                    Level = level,
-                    Ballot = ballot,
-                    VotingPeriod = votingPeriod
-                };
-                db.ProposalVotes.Add(pv);
-                db.SaveChanges();
-            });
-        }*/
-                
+                        
         public Proposal GetProposal(string hash)
         {
             return RunIsolatedDb(db => { return db.Proposals.FirstOrDefault(o => o.Hash == hash); });
@@ -650,16 +610,7 @@ namespace TezosNotifyBot.Model
                 return p;
             });
         }
-        /*
-        internal List<string> GetProposalVotes(string hash, int period)
-        {
-            return RunIsolatedDb(db =>
-            {
-                return db.ProposalVotes.Where(o => o.Proposal.Hash == hash && o.VotingPeriod == period)
-                    .Select(o => o.Delegate.Address).ToList();
-            });
-        }*/
-
+        
         public void SaveMessage(Message message)
         {
             using var db = new TezosDataContext(_dbOptions);

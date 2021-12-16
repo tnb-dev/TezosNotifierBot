@@ -494,3 +494,5 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #AddressTransactionListLatest;ru;В начало ⏺
 #AddressTransactionListRefresh;en;Refresh ⏺
 #AddressTransactionListRefresh;ru;Обновить ⏺
+#AdoptionFinished;en;🚀 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> implemented. The proposal period begins.
+#AdoptionFinished;ru;🚀 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> внедрено. Начинается период подачи предложений.
