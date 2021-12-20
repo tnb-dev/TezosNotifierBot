@@ -3040,7 +3040,7 @@ namespace TezosNotifyBot
                             var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             if (ua != null)
                             {
-                                ua.Name = message.Text.Trim();
+                                ua.Name = Regex.Replace(message.Text.Trim(), "<.*?>", "");
                                 repo.UpdateUserAddress(ua);
                                 string result = resMgr.Get(Res.AddressRenamed, ua);
                                 if (!ua.User.HideHashTags)
@@ -3353,7 +3353,7 @@ namespace TezosNotifyBot
         {
             Bot.SendChatActionAsync(chat?.Id ?? user.Id, ChatAction.Typing);
             string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
-            var nameMatch = Regex.Match(msg, "([^ ]* )?.*(tz|KT)[a-zA-Z0-9]{34}[^a-zA-Z0-9а-яА-Я]*(.*)");
+            var nameMatch = Regex.Match(msg, "([^ ]* )?.*(tz|KT)[a-zA-Z0-9]{34}[^a-zA-Z0-9а-яА-Я<]*(.*)");
             var name = nameMatch.Success
                 ? (nameMatch.Groups[3].Value.Trim() != ""
                     ? nameMatch.Groups[3].Value.Trim()
