@@ -126,15 +126,7 @@ namespace TezosNotifyBot
                 // Nodes = JsonConvert.DeserializeObject<List<Node>>(
                 //     File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "nodes.json")));
                 // CurrentNode = Nodes[0];
-
-                //rewardsManager = new RewardsManager(repo);
-
-                //{
-                //    var block = repo.GetLastBlockLevel();
-                //    lastHash = block.Item3;
-                //    if (lastHash == null)
-                //        lastHash = _nodeManager.Client.GetBlockHeader(block.Item1).hash;
-                //}
+                                
                 twitter.OnTwit += Twitter_OnTwit;
                 twitter.OnTwitResponse += Twitter_OnTwitResponse;
 
@@ -374,12 +366,6 @@ namespace TezosNotifyBot
 
         private bool Client_BlockReceived(int blockLevel)
         {
-            //if (lastWebExceptionNotify != DateTime.MinValue)
-            //{
-            //    NotifyDev($"✅ Node {_nodeManager.Active.Name} continue working", 0);
-            //    lastWebExceptionNotify = DateTime.MinValue;
-            //}
-
             lastReceived = DateTime.Now;
             var tzKt = _serviceProvider.GetService<ITzKtClient>();
             if (_currentConstants == null)
@@ -3375,6 +3361,7 @@ namespace TezosNotifyBot
                 : "";
             if (name == addr)
                 name = addr.ShortAddr().Replace("…", "");
+            name = Regex.Replace(name, "<.*?>", "");
             if (String.IsNullOrEmpty(name))
                 name = repo.GetKnownAddressName(addr);
             if (String.IsNullOrEmpty(name))
