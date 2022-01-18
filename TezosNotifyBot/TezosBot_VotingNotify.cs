@@ -66,6 +66,7 @@ namespace TezosNotifyBot
                                 OpHash = proposal.Hash,
                                 Period = proposal.Period.Index
                             });
+                        twText += "\n#Tezos #XTZ #blockchain";
                         twitter.TweetAsync(twText);
                     }
                 }
@@ -200,6 +201,7 @@ namespace TezosNotifyBot
                     {
                         var twText = resMgr.Get(Res.TwitterQuorumReached,
                             new ContextObject { p = p, Block = block.Level, Period = ballot.Period.Index });
+                        twText += "\n#Tezos #XTZ #blockchain";
                         twitter.TweetAsync(twText);
                     }
                 }
