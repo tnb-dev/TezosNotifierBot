@@ -775,7 +775,7 @@ namespace TezosNotifyBot
                     token = repo.GetToken(to);
                     if (token != null && op.Parameter.value is JObject)
                     {
-                        if (token.MetadataBigmap.HasValue)
+                        if (token.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton")
                             HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
                         else
                         {
