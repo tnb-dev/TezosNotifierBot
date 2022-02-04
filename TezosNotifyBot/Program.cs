@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
+using Minio;
 using NornPool.Model;
 using Polly;
 using Polly.Extensions.Http;
@@ -19,7 +20,9 @@ using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Commands.Addresses;
+using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Dialog.Extensions;
+using TezosNotifyBot.Ipfs;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Services;
@@ -91,6 +94,10 @@ namespace TezosNotifyBot
                     services.AddTransient<ITzKtClient>(sp =>
                         new TzKtClient(new HttpClient(), sp.GetService<ILogger<TzKtClient>>(),
                         context.Configuration, sp.GetService<IMemoryCache>()));
+                    services.AddTransient<IMarketDataProvider>(sp => {
+                        var config = sp.GetService<IOptions<BotConfig>>();
+                        return new CryptoCompareClient(config.Value.CryptoCompareToken, new HttpClient(), sp.GetService<ILogger<CryptoCompareClient>>());
+                    });
                     services.AddTransient<IBetterCallDevClient>(sp =>
                         new BetterCallDevClient(
                             sp.GetService<ILogger<BetterCallDevClient>>(),
@@ -128,10 +135,13 @@ namespace TezosNotifyBot
                     });
 
                     services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
-
-                    services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
-                        .SetHandlerLifetime(TimeSpan.FromMinutes(1))
-                        .AddPolicyHandler(GetRetryPolicy());
+                    services.AddTransient(provider => new MinioClient(context.Configuration.GetSection("Minio").GetValue<string>("Endpoint"),
+                        context.Configuration.GetSection("Minio").GetValue<string>("AccessKey"),
+                        context.Configuration.GetSection("Minio").GetValue<string>("SecretKey")));
+                    services.AddTransient(provider => new IpfsClient(new HttpClient(), provider.GetService<ILogger<IpfsClient>>()));
+                    //services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
+                    //    .SetHandlerLifetime(TimeSpan.FromMinutes(1))
+                    //    .AddPolicyHandler(GetRetryPolicy());
 
                     services.AddSingleton<TwitterClient>();
 

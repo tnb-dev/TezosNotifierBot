@@ -29,7 +29,7 @@ namespace TezosNotifyBot.Tzkt
 		List<Right> GetRights(string baker, int cycle);
 		List<Endorsement> GetEndorsements(int level);
 		Block GetBlock(int level);
-		BigmapItem GetBigmapItem(string contract, string address);
+		BigmapItem GetBigmapItem(string contract, string bigmap, string key);
 		T Download<T>(string path);
 		decimal GetBalance(string address, int level);
 		IEnumerable<T> GetAccountOperations<T>(string address, string filter = "")
@@ -42,5 +42,6 @@ namespace TezosNotifyBot.Tzkt
 			where T : Operation;
 
 		Protocol GetCurrentProtocol();
+		List<Account> GetAccounts(string type, int offset);
 	}
 }

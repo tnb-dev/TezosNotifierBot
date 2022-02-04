@@ -70,5 +70,10 @@
       "AuthToken": "",
       "UserId": "",
       "PublishStatus": "public"
+    },
+    "Minio": {
+      "Endpoint": "localhost:9000",
+      "AccessKey": "minioadmin",
+      "SecretKey": "minioadmin"
     }
 }

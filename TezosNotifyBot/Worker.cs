@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-
+/*
 namespace TezosNotifyBot
 {
 	public class Worker
@@ -50,4 +50,4 @@ namespace TezosNotifyBot
 			t.Start();
 		}
 	}
-}
+}*/

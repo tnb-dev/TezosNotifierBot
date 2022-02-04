@@ -7,9 +7,7 @@ using TezosNotifyBot.Domain;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Storage.Extensions;
-using BakingRights = TezosNotifyBot.Tezos.BakingRights;
 using Delegate = TezosNotifyBot.Domain.Delegate;
-using EndorsingRights = TezosNotifyBot.Tezos.EndorsingRights;
 
 namespace TezosNotifyBot.Model
 {

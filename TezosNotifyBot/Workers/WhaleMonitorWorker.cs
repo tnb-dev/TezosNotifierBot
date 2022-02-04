@@ -26,14 +26,13 @@ namespace TezosNotifyBot.Workers
 		private readonly IServiceProvider _provider;
         private readonly ResourceManager resMgr;
         private readonly BotConfig _config;
-        private readonly NodeManager _nodeManager;
+
         int lastBlock = 0;
-        public WhaleMonitorWorker(IOptions<BotConfig> config, ILogger<WhaleMonitorWorker> logger, ResourceManager resourceManager, IServiceProvider provider, NodeManager nodeManager)
+        public WhaleMonitorWorker(IOptions<BotConfig> config, ILogger<WhaleMonitorWorker> logger, ResourceManager resourceManager, IServiceProvider provider)
 		{
 			_logger = logger;
 			_provider = provider;
             _config = config.Value;
-            _nodeManager = nodeManager;
             resMgr = resourceManager;
 		}
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -75,7 +74,7 @@ namespace TezosNotifyBot.Workers
                 {
                     try
                     {
-                        md = _nodeManager.Client.GetMarketData();
+                        md = _provider.GetRequiredService<TezosNotifyBot.CryptoCompare.IMarketDataProvider>().GetMarketData();
                     }
                     catch
                     {

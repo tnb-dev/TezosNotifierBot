@@ -13,5 +13,6 @@ namespace TezosNotifyBot.Domain
 		public int Decimals { get; set; }
 		public int Token_id { get; set; }
 		public int Level { get; set; }
+		public int? MetadataBigmap { get; set; }
 	}
 }

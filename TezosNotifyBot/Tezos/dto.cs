@@ -53,7 +53,7 @@ namespace TezosNotifyBot.Tezos
 		public string proposal { get; set; }
 		public string ballot { get; set; }
 	}
-
+    /*
     public class BlockMetadata
     {
         public string baker { get; set; }
@@ -63,7 +63,7 @@ namespace TezosNotifyBot.Tezos
 		public string next_protocol { get; set; }
 		public string voting_period_kind { get; set; }
 	}
-
+    */
     public class Metadata
     {
         public List<BalanceUpdate> balance_updates { get; set; }
@@ -112,7 +112,7 @@ namespace TezosNotifyBot.Tezos
         public int? level { get; set; }
 		public int? cycle { get; set; }
 	}
-
+/*
     public class Snapshot
     {
         public int snapshot_cycle { get; set; }
@@ -120,7 +120,7 @@ namespace TezosNotifyBot.Tezos
         public int snapshot_level { get; set; }
         public int snapshot_rolls { get; set; }
     }
-
+    
     public class RewardsSplit
     {
         public string delegate_staking_balance { get; set; }
@@ -132,7 +132,7 @@ namespace TezosNotifyBot.Tezos
         public int future_blocks_rewards { get; set; }
         public int future_endorsements_rewards { get; set; }
     }
-
+    */
     public class MarketData
     {
         public decimal price_usd { get; set; }
@@ -194,7 +194,7 @@ namespace TezosNotifyBot.Tezos
 		//public readonly DateTime Received = DateTime.Now;
 		public string Hash;
     }
-
+    /*
 	public class ContractInfo_alfa
 	{
 		public string manager { get; set; }
@@ -203,7 +203,7 @@ namespace TezosNotifyBot.Tezos
 		public Delegate @delegate { get; set; }
 		public string counter { get; set; }
 	}
-
+    */
 	public class CryptoComparePrice
     {
         public decimal BTC { get; set; }
@@ -211,7 +211,7 @@ namespace TezosNotifyBot.Tezos
         public decimal USD { get; set; }
         public decimal EUR { get; set; }
     }
-
+/*
     public class BakingRights
     {
         public int level { get; set; }
@@ -227,7 +227,7 @@ namespace TezosNotifyBot.Tezos
         public List<int> slots { get; set; }
         public DateTime estimated_time { get; set; }
     }
-
+    
     public class TzScanDelegates
     {
         public string kind { get; set; }
@@ -239,53 +239,24 @@ namespace TezosNotifyBot.Tezos
         public DateTime sponsored { get; set; }
         public string logo2 { get; set; }
     }
-
+    */
 	public class VoteListing
 	{
 		public string pkh { get; set; }
 		public int rolls { get; set; }
 	}
-
+    /*
 	public class Ballots
 	{
 		public int yay { get; set; }
 		public int nay { get; set; }
 		public int pass { get; set; }
 	}
-
+    */
 	public class Ballot
 	{
 		public string pkh { get; set; }
 		public string ballot { get; set; }
 	}
-    /*
-	public class Constants
-	{
-		public int proof_of_work_nonce_size { get; set; }
-		public int nonce_length { get; set; }
-		public int max_revelations_per_block { get; set; }
-		public int max_operation_data_length { get; set; }
-		public int max_proposals_per_delegate { get; set; }
-		public int preserved_cycles { get; set; }
-		public int blocks_per_cycle { get; set; }
-		public int blocks_per_commitment { get; set; }
-		public int blocks_per_roll_snapshot { get; set; }
-		public int blocks_per_voting_period { get; set; }
-		public List<string> time_between_blocks { get; set; }
-		public int endorsers_per_block { get; set; }
-		public string hard_gas_limit_per_operation { get; set; }
-		public string hard_gas_limit_per_block { get; set; }
-		public string proof_of_work_threshold { get; set; }
-		public decimal tokens_per_roll { get; set; }
-		public int michelson_maximum_type_size { get; set; }
-		public string seed_nonce_revelation_tip { get; set; }
-		public int origination_size { get; set; }
-		public long block_security_deposit { get; set; }
-		public long endorsement_security_deposit { get; set; }
-		//public long block_reward { get; set; }
-		//public long endorsement_reward { get; set; }
-		public long cost_per_byte { get; set; }
-		public long hard_storage_limit_per_operation { get; set; }
-		public string test_chain_duration { get; set; }
-	}*/
+    
 }

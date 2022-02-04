@@ -17,105 +17,42 @@ namespace TezosNotifyBot
 			_tzKt = tzKt;
 		}
 
-		public ContractInfo GetContract(NodeClient client, string hash, string addr, bool enqueue = false)
+		public ContractInfo GetContract(string hash, string addr)
 		{
-			try
-			{
-				if (_tzKt == null)
-					return client.GetContractInfo(hash, addr);
-
-				var contract = _tzKt.GetAccount(addr);
-				if (contract == null)
-					return new ContractInfo();
-				return new ContractInfo
-				{
-					balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
-					@delegate = contract.Delegate?.Address,
-					//manager = contract.manager?.address,
-					Hash = hash
-				};
-			}
-			catch
-			{
-				var ci = client.GetContractInfo(hash, addr);
-				ci.Hash = hash;
-
-				return ci ?? new ContractInfo();
-			}
+			var contract = _tzKt.GetAccount(addr);
+			if (contract == null)
+				return new ContractInfo();
+			return new ContractInfo {
+				balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
+				@delegate = contract.Delegate?.Address,
+				//manager = contract.manager?.address,
+				Hash = hash
+			};
 		}
 
-		public decimal GetBalance(NodeClient client, string hash, string addr)
+		public decimal GetBalance(string hash, string addr)
 		{
-			return GetContract(client, hash, addr).balance / 1000000M;
+			return GetContract(hash, addr).balance / 1000000M;
 		}
 
-		public DelegateInfo GetDelegate(NodeClient client, string hash, string addr, bool forceUpdate = false, bool enqueue = false)
+		public DelegateInfo GetDelegate(string hash, string addr)
 		{
-			try
-			{
-				if (_tzKt == null)
-					return client.GetDelegateInfo(addr, hash);
-				var @delegate = _tzKt.GetAccount(addr);
-				if (@delegate == null)
-					return null;
-				if (@delegate.type != "delegate")
-					return null;
-				var d = _tzKt.GetDelegators(addr);
-				return new DelegateInfo
-				{
-					balance = @delegate.balance - @delegate.frozenDeposits - @delegate.frozenRewards - @delegate.frozenFees,
-					deactivated = !@delegate.active,
-					staking_balance = @delegate.stakingBalance,
-					bond = @delegate.balance,
-					Hash = hash,
-					delegated_contracts = d.Select(d => d.address).ToList(),
-					NumDelegators = @delegate.numDelegators
-				};
-			}
-			catch
-			{
-				var di = client.GetDelegateInfo(addr, hash);
-				di.Hash = hash;
-				di.NumDelegators = di.delegated_contracts.Count;
-				return di ?? new DelegateInfo();
-			}
+			var @delegate = _tzKt.GetAccount(addr);
+			if (@delegate == null)
+				return null;
+			if (@delegate.type != "delegate")
+				return null;
+			var d = _tzKt.GetDelegators(addr);
+			return new DelegateInfo {
+				balance = @delegate.balance - @delegate.frozenDeposits - @delegate.frozenRewards - @delegate.frozenFees,
+				deactivated = !@delegate.active,
+				staking_balance = @delegate.stakingBalance,
+				bond = @delegate.balance,
+				Hash = hash,
+				delegated_contracts = d.Select(d => d.address).ToList(),
+				NumDelegators = @delegate.numDelegators
+			};
 		}
-
-		//Dictionary<(int, string), decimal?> avgPerf = new Dictionary<(int, string), decimal?>();
-		//public decimal? GetAvgPerformance(Model.Repository repo, string addr)
-		//{
-		//	int cycle = new Level(repo.GetLastBlockLevel().Item1).Cycle;
-		//	if (avgPerf.ContainsKey((cycle, addr)))
-		//		return avgPerf[(cycle, addr)];
-		//	decimal rew = 0;
-		//	decimal max = 0;
-		//	for (int i = 0; i < 10; i++)
-		//	{
-		//		rew += repo.GetRewards(addr, cycle - i, false);
-		//		max += repo.GetRewards(addr, cycle - i, true);
-		//	}
-		//	if (max > 0)
-		//		avgPerf[(cycle, addr)] = 100M * rew / max;
-		//	else
-		//		avgPerf[(cycle, addr)] = null;
-		//	return avgPerf[(cycle, addr)];
-		//}
-
-		//internal decimal GetRewardsForCycle(NodeClient client, string d, DelegateInfo di, int cycle)
-		//{
-		//	try
-		//	{
-		//		var str = client.Download(_tzKtUrl + $"v1/rewards/bakers/{d}/{cycle}");
-		//		if (str == "")
-		//			return 0;
-		//		var rew = JsonConvert.DeserializeObject<TzKt.DelegateReward>(str);
-		//		return rew.TotalRewards;
-		//	}
-		//	catch (Exception e)
-		//	{
-		//		return di.frozen_balance_by_cycle.Where(o => o.cycle == cycle).Sum(o => o.rewards + o.fees);
-		//	}
-		//}
 	}
 }
 

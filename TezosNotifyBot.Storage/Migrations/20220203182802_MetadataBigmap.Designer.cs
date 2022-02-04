@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using TezosNotifyBot.Storage;
@@ -9,9 +10,10 @@ using TezosNotifyBot.Storage;
 namespace TezosNotifyBot.Storage.Migrations
 {
     [DbContext(typeof(TezosDataContext))]
-    partial class TezosDataContextModelSnapshot : ModelSnapshot
+    [Migration("20220203182802_MetadataBigmap")]
+    partial class MetadataBigmap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -142,10 +144,6 @@ namespace TezosNotifyBot.Storage.Migrations
                     b.Property<bool>("FromUser")
                         .HasColumnType("boolean")
                         .HasColumnName("from_user");
-
-                    b.Property<string>("Image")
-                        .HasColumnType("text")
-                        .HasColumnName("image");
 
                     b.Property<int>("Kind")
                         .HasColumnType("integer")

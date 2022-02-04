@@ -53,7 +53,6 @@ namespace TezosNotifyBot
         private ILogger<TezosBot> Logger { get; }
         private Repository repo;
 
-
         /// <summary>
         /// Try to use and extend `botClient`
         /// </summary>
@@ -68,7 +67,7 @@ namespace TezosNotifyBot
 
         //DateTime bakersReceived;
         public static List<Command> Commands;
-        public static string LogsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+        //public static string LogsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
 
         bool lastBlockChanged = false;
 
@@ -86,7 +85,7 @@ namespace TezosNotifyBot
 		DateTime lastReceived = DateTime.Now; //Дата и время получения последнего блока
         DateTime lastWebExceptionNotify = DateTime.MinValue;
         TwitterClient twitter;
-        private readonly NodeManager _nodeManager;
+        //private readonly NodeManager _nodeManager;
         private readonly CommandsManager commandsManager;
         private readonly TezosBotFacade botClient;
         string twitterAccountName;
@@ -97,14 +96,14 @@ namespace TezosNotifyBot
 
         public TezosBot(IServiceProvider serviceProvider, ILogger<TezosBot> logger, IOptions<BotConfig> config,
             TelegramBotClient bot, ResourceManager resourceManager, TwitterClient twitterClient,
-            NodeManager nodeManager, CommandsManager commandsManager, TezosBotFacade botClient)
+            /*NodeManager nodeManager, */CommandsManager commandsManager, TezosBotFacade botClient)
         {
             _serviceProvider = serviceProvider;
             Logger = logger;
             Config = config.Value;
             Bot = bot;
             twitter = twitterClient;
-            _nodeManager = nodeManager;
+            //_nodeManager = nodeManager;
             this.commandsManager = commandsManager;
             this.botClient = botClient;
 
@@ -151,7 +150,8 @@ namespace TezosNotifyBot
                 NotifyDev(message.ToString(), 0);
 
                 var lbl = repo.GetLastBlockLevel();
-                var cycles = _serviceProvider.GetRequiredService<ITzKtClient>().GetCycles();
+                var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
+                var cycles = tzkt.GetCycles();
                 var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);                    
                 // TODO: Check why `snapshot_cycle` is null
                 NotifyDev($"Current cycle: {cycle.index}, rolls: {cycle.totalRolls}", 0);
@@ -173,7 +173,7 @@ namespace TezosNotifyBot
                 }
 
                 //NotifyDev("🐦 Twitter response: " + twresult, 0, Telegram.Bot.Types.Enums.ParseMode.Default);
-                LoadAddressList();
+                LoadAddressList(tzkt);
                 DateTime lastBlock;
                 DateTime lastWarn = DateTime.Now;
                 do
@@ -189,7 +189,7 @@ namespace TezosNotifyBot
                         {
                             try
                             {
-                                md = _nodeManager.Client.GetMarketData();
+                                md = _serviceProvider.GetRequiredService<TezosNotifyBot.CryptoCompare.IMarketDataProvider>().GetMarketData();
                             }
                             catch
                             {
@@ -226,7 +226,7 @@ namespace TezosNotifyBot
                         if (DateTime.Now.Subtract(lastWebExceptionNotify).TotalMinutes > 5)
                         {
                             LogError(ex);
-                            NotifyDev($"‼️ Node {_nodeManager.Active.Name} issue: " + ex.Message, 0);
+                            NotifyDev($"‼️ WebException: " + ex.Message, 0);
                             lastWebExceptionNotify = DateTime.Now;
                         }
 
@@ -237,79 +237,7 @@ namespace TezosNotifyBot
                         LogError(ex);
                         NotifyDev($"‼️{ex.Message}\n🧱{prevBlock.Level + 1}", 0);
                     }
-
-                    if (DateTime.Now.Subtract(lastReceived).TotalMinutes > NetworkIssueMinutes)
-                    {
-                        List<BlockHeader> blockHeaders = new List<BlockHeader>();
-                        string checkNodeResults =
-                            $"Last block {repo.GetLastBlockLevel().Item1} received {(int) DateTime.Now.Subtract(lastReceived).TotalMinutes} minutes ago. Network issue? Checking nodes...\n";
-                        foreach (var node in _nodeManager.Nodes)
-                        {
-                            try
-                            {
-                                var bh = _nodeManager.GetNodeHeader(node);
-                                if (bh != null)
-                                {
-                                    blockHeaders.Add(bh);
-                                    checkNodeResults += $"{node.Name}: {bh.level} ({bh.timestamp})\n";
-                                }
-                                else
-                                {
-                                    checkNodeResults += $"{node.Name}: block not received\n";
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                checkNodeResults += $"{node.Name}: {ex.Message}\n";
-                            }
-                        }
-
-                        if (blockHeaders.Count == 0 ||
-                            blockHeaders.Max(o => o.level) < repo.GetLastBlockLevel().Item1 + 4)
-                        {
-                            checkNodeResults += "Network issue!";
-                            Logger.LogWarning(checkNodeResults);
-                            /*
-                            var lastBH = blockHeaders.OrderByDescending(o => o.level).FirstOrDefault();
-                            foreach (var user1 in repo.GetUsers()
-                                .Where(o => o.NetworkIssueNotify > 0 && !o.NetworkIssueNotified))
-                            {
-                                if (DateTime.Now.Subtract(lastReceived).TotalMinutes < user1.NetworkIssueNotify)
-                                    continue;
-                                string result = resMgr.Get(Res.NetworkIssue,
-                                    new ContextObject
-                                    {
-                                        u = user1, Block = lastBH?.level ?? repo.GetLastBlockLevel().Item1,
-                                        Minutes = (int) DateTime.Now.Subtract(lastReceived).TotalMinutes
-                                    });
-                                if (!user1.HideHashTags)
-                                    result += "\n\n#network_issue";
-                                SendTextMessage(user1.Id, result, ReplyKeyboards.MainMenu(resMgr, user1));
-                                user1.NetworkIssueNotified = true;
-                            }
-
-                            // Twitter
-                            {
-                                if (!twitterNetworkIssueNotified && DateTime.Now.Subtract(lastReceived).TotalMinutes >
-                                    Config.TwitterNetworkIssueNotify)
-                                {
-                                    string twText = resMgr.Get(Res.NetworkIssue,
-                                        new ContextObject
-                                        {
-                                            Block = lastBH?.level ?? repo.GetLastBlockLevel().Item1,
-                                            Minutes = (int) DateTime.Now.Subtract(lastReceived).TotalMinutes
-                                        });
-                                    twitter.TweetAsync(twText);
-                                    twitterNetworkIssueNotified = true;
-                                }
-                            }*/
-                        }
-                        else
-                        {
-                            checkNodeResults += "Not now. 🤨";
-                        }
-                    }
-
+                    
                     //int wait = 60000 - (int) DateTime.Now.Subtract(lastReceived).TotalMilliseconds;
                     //if (wait > 10)
                     //{
@@ -478,7 +406,7 @@ namespace TezosNotifyBot
                     //    o.contract == from.Key.token.ContractAddress && o.token_id == from.Key.token.Token_id);
                     //if (token != null)
                     //    tokenBalance = token.Balance;
-                    var item = tzKt.GetBigmapItem(from.Key.token.ContractAddress, from.Key.from);
+                    var item = tzKt.GetBigmapItem(from.Key.token.ContractAddress, "ledger", from.Key.from);
                     if (item != null)
 					{
                         JObject p = item.value as JObject;
@@ -495,16 +423,16 @@ namespace TezosNotifyBot
                     if (repo.IsDelegate(from.Key.from))
                     {
                         fromDelegate = true;
-                        var di = addrMgr.GetDelegate(_nodeManager.Client, block.Hash, from.Key.from, true);
+                        var di = addrMgr.GetDelegate(block.Hash, from.Key.from);
                         if (di != null)
                             fromBalance = di.Bond / 1000000;
                         else
-                            fromBalance = addrMgr.GetContract(_nodeManager.Client, block.Hash, from.Key.from).balance /
+                            fromBalance = addrMgr.GetContract(block.Hash, from.Key.from).balance /
                                           1000000M;
                     }
                     else
                     {
-                        fromBalance = addrMgr.GetContract(_nodeManager.Client, block.Hash, from.Key.from).balance /
+                        fromBalance = addrMgr.GetContract(block.Hash, from.Key.from).balance /
                                       1000000M;
                     }
                 }
@@ -602,7 +530,7 @@ namespace TezosNotifyBot
                     //    o.contract == to.Key.token.ContractAddress && o.token_id == to.Key.token.Token_id);
                     //if (token != null)
                     //    tokenBalance = token.Balance;
-                    var item = tzKt.GetBigmapItem(to.Key.token.ContractAddress, to.Key.to);
+                    var item = tzKt.GetBigmapItem(to.Key.token.ContractAddress, "ledger", to.Key.to);
                     if (item != null)
                     {
                         JObject p = item.value as JObject;
@@ -619,22 +547,22 @@ namespace TezosNotifyBot
                     if (repo.IsDelegate(to.Key.to))
                     {
                         toDelegate = true;
-                        var di = addrMgr.GetDelegate(_nodeManager.Client, block.Hash, to.Key.to, true);
+                        var di = addrMgr.GetDelegate(block.Hash, to.Key.to);
                         if (di != null)
                             toBalance = (di?.Bond ?? 0) / 1000000;
                         else
-                            toBalance = addrMgr.GetContract(_nodeManager.Client, block.Hash, to.Key.to).balance /
+                            toBalance = addrMgr.GetContract(block.Hash, to.Key.to).balance /
                                         1000000M;
                     }
                     else
                     {
-                        toBalance = addrMgr.GetContract(_nodeManager.Client, block.Hash, to.Key.to).balance / 1000000M;
+                        toBalance = addrMgr.GetContract(block.Hash, to.Key.to).balance / 1000000M;
                     }
                 }
 
                 var amount = to.Sum(o => o.Item3);
                 
-                var contract = addrMgr.GetContract(_nodeManager.Client, block.Hash, to.Key.to, true);
+                var contract = addrMgr.GetContract(block.Hash, to.Key.to);
                 if (contract.@delegate != null && to.Key.token == null)
                 {
                     HandleDelegatorsBalance();
@@ -651,7 +579,7 @@ namespace TezosNotifyBot
                     var receiver = new UserAddress
                     {
                         Address = receiverAddr, 
-                        Balance = addrMgr.GetBalance(_nodeManager.Client, block.Hash, receiverAddr)
+                        Balance = addrMgr.GetBalance(block.Hash, receiverAddr)
                     };
                     
                     if (amount < receiver.InflationValue)
@@ -847,12 +775,17 @@ namespace TezosNotifyBot
                     token = repo.GetToken(to);
                     if (token != null && op.Parameter.value is JObject)
                     {
-                        JObject p = op.Parameter.value as JObject;
-                        if (p["from"] == null || p["to"] == null || p["value"] == null)
-                            continue;
-                        from = (string)((JValue)p["from"]).Value;
-                        to = (string)((JValue)p["to"]).Value;
-                        amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
+                        if (token.MetadataBigmap.HasValue)
+                            HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
+                        else
+                        {
+                            JObject p = op.Parameter.value as JObject;
+                            if (p["from"] == null || p["to"] == null || p["value"] == null)
+                                continue;
+                            from = (string)((JValue)p["from"]).Value;
+                            to = (string)((JValue)p["to"]).Value;
+                            amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
+                        }
                     }
                 }
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
@@ -1096,7 +1029,7 @@ namespace TezosNotifyBot
                     var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                     ContractInfo info = null;
                     if (uaddrs.Count > 0)
-                        info = addrMgr.GetContract(_nodeManager.Client, block.Hash, baking_right.baker.address);
+                        info = addrMgr.GetContract(block.Hash, baking_right.baker.address);
 
                     //long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
                     //if (baking_right.level >= Config.CarthageStart)
@@ -1163,7 +1096,7 @@ namespace TezosNotifyBot
                 var uaddrs = repo.GetUserAddresses(d.baker.address);
                 ContractInfo info = null;
                 if (uaddrs.Count > 0)
-                    info = addrMgr.GetContract(_nodeManager.Client, block.Hash, d.baker.address);
+                    info = addrMgr.GetContract(block.Hash, d.baker.address);
                 foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                 {
                     ua.Balance = info.balance / 1000000M;
@@ -1227,7 +1160,7 @@ namespace TezosNotifyBot
                             DelegateInfo di;
                             try
                             {
-                                di = addrMgr.GetDelegate(_nodeManager.Client, block.Hash, d.Key, true);
+                                di = addrMgr.GetDelegate(block.Hash, d.Key);
                             }
                             catch
                             {
@@ -1359,7 +1292,7 @@ namespace TezosNotifyBot
 
                 NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
 
-                LoadAddressList();
+                LoadAddressList(tzKtClient);
 
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
                 // Notification of the availability of the award to the delegator
@@ -1444,7 +1377,7 @@ namespace TezosNotifyBot
                 if (fr == null || fr.Count < 12)
                     continue;
                 fr.Reverse();
-                long freeBalance = (long)addrMgr.GetDelegate(_nodeManager.Client, block.Hash, addr, true).balance
+                long freeBalance = (long)addrMgr.GetDelegate(block.Hash, addr).balance
                     - fr[6].futureBlockDeposits - fr[6].futureEndorsementDeposits;
                 for (int c = 7; c < 12; c++)
                 {
@@ -1481,7 +1414,7 @@ namespace TezosNotifyBot
                 PushTextMessage(ua, message);
             }
         }
-        private void LoadAddressList()
+        private void LoadAddressList(ITzKtClient tzKt)
         {
             try
             {
@@ -1490,11 +1423,9 @@ namespace TezosNotifyBot
                 var knownNames = repo.GetKnownAddresses();
                 string result = "";
                 int cnt = 0;
-                string url = "https://api.tzkt.io/v1/accounts?type=delegate&limit=10000";
-                string txt = _nodeManager.Client.Download(url);
                 List<string> updated = new List<string>();
 
-                foreach (var a in JsonConvert.DeserializeObject<Account[]>(txt))
+                foreach (var a in tzKt.GetAccounts("delegate", 0))
                 {
                     var addr = a.address;
                     var name = a.alias;
@@ -1532,10 +1463,7 @@ namespace TezosNotifyBot
 
                 for (int i = 0; i < 10; i++)
                 {
-                    url =
-                        $"https://api.tzkt.io/v1/accounts?sort.desc=lastActivity&type=user&limit=10000&offset={i * 10000}";
-                    txt = _nodeManager.Client.Download(url);
-                    foreach (var a in JsonConvert.DeserializeObject<Account[]>(txt))
+                    foreach (var a in tzKt.GetAccounts("user", i * 10000))
                     {
                         var addr = a.address;
                         var name = a.alias;
@@ -2253,7 +2181,7 @@ namespace TezosNotifyBot
 
         List<User> GetFollowers(string addr)
         {
-            var di = _nodeManager.Client.GetDelegateInfo(addr);
+            var di = addrMgr.GetDelegate("", addr);
             var results = repo.GetUserAddresses(addr).Select(o => o.User).ToList();
             foreach (var d in di.delegated_contracts)
             {
@@ -2489,11 +2417,6 @@ namespace TezosNotifyBot
                     else if (message.Text == ReplyKeyboards.CmdNewAddress(resMgr, user))
                     {
                         OnNewAddress(user);
-                    }
-                    else if (message.Text.StartsWith("/tzkt ") && user.IsAdmin(Config.Telegram))
-                    {
-                        var str = _nodeManager.Client.Download(message.Text.Substring("/tzkt ".Length));
-                        NotifyDev(str, user.Id, ParseMode.Default, true);
                     }
                     else if (message.Text == "/outflow_off")
                     {
@@ -2800,11 +2723,11 @@ namespace TezosNotifyBot
                     {
                         if (int.TryParse(message.Text.Substring("/setblock ".Length), out int num))
                         {
-                            var h = _nodeManager.Client.GetBlockHeader(num);
-                            repo.SetLastBlockLevel(num, h.priority, h.hash);
+                            var tzKt = _serviceProvider.GetService<ITzKtClient>();
+                            var b = tzKt.GetBlock(num);
+                            repo.SetLastBlockLevel(num, b.Priority, b.Hash);
                             lastBlockChanged = true;
-                            var c = _serviceProvider.GetService<ITzKtClient>()
-                                .GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
+                            var c = tzKt.GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
                             NotifyDev(
                                 $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, rolls: {c.totalRolls}",
                                 0);
@@ -2837,33 +2760,31 @@ namespace TezosNotifyBot
                     //    var md = _nodeManager.Client.GetBlockMetadata(message.Text.Substring("/processmd ".Length));
                     //    ProcessBlockMetadata(md, message.Text.Substring("/processmd ".Length));
                     //}
-                    else if (Config.DevUserNames.Contains(message.From.Username) && message.Text == "/defaultnode")
-                    {
-                        _nodeManager.SwitchTo(0);
-                        // client.SetNodeUrl(Nodes[0].Url);
-                        // client2.SetNodeUrl(Nodes[0].Url);
-                        NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
-                    }
-                    else if (Config.DevUserNames.Contains(message.From.Username) && message.Text.StartsWith("/node"))
-                    {
-                        var n = message.Text.Substring(5);
-                        if (int.TryParse(n, out int n_i) && n_i < _nodeManager.Nodes.Length)
-                        {
-                            _nodeManager.SwitchTo(n_i);
-                            NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
-                        }
-                        else
-                        {
-                            var result = $"Current node: {_nodeManager.Active.Name}\n\n";
-                            for (var i = 0; i < _nodeManager.Nodes.Length; i++)
-                            {
-                                var node = _nodeManager.Nodes[i];
-                                result += $"/node{i} = {node.Name}\n<b>Status:</b> {_nodeManager.GetStatus(node)}\n\n";
-                            }
+                    //else if (Config.DevUserNames.Contains(message.From.Username) && message.Text == "/defaultnode")
+                    //{
+                    //    _nodeManager.SwitchTo(0);
+                    //    NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
+                    //}
+                    //else if (Config.DevUserNames.Contains(message.From.Username) && message.Text.StartsWith("/node"))
+                    //{
+                    //    var n = message.Text.Substring(5);
+                    //    if (int.TryParse(n, out int n_i) && n_i < _nodeManager.Nodes.Length)
+                    //    {
+                    //        _nodeManager.SwitchTo(n_i);
+                    //        NotifyDev("Switched to " + _nodeManager.Active.Name, 0);
+                    //    }
+                    //    else
+                    //    {
+                    //        var result = $"Current node: {_nodeManager.Active.Name}\n\n";
+                    //        for (var i = 0; i < _nodeManager.Nodes.Length; i++)
+                    //        {
+                    //            var node = _nodeManager.Nodes[i];
+                    //            result += $"/node{i} = {node.Name}\n<b>Status:</b> {_nodeManager.GetStatus(node)}\n\n";
+                    //        }
 
-                            SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
-                        }
-                    }
+                    //        SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
+                    //    }
+                    //}
                     else if (Config.DevUserNames.Contains(message.From.Username) &&
                              message.Text.StartsWith("/loaddelegatelist"))
                     {
@@ -3368,7 +3289,7 @@ namespace TezosNotifyBot
                 name = repo.GetDelegateName(addr).Replace("…", "");
             try
             {
-                var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock.Hash, addr, true);
+                var ci = addrMgr.GetContract(prevBlock.Hash, addr);
                 var t = Explorer.FromId(user.Explorer);
                 if (ci != null)
                 {
@@ -3483,7 +3404,7 @@ namespace TezosNotifyBot
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
             result += $"<a href='{t.account(ua.Address)}'>" + ua.Address + "</a>\n";
-            var ci = addrMgr.GetContract(_nodeManager.Client, prevBlock?.Hash, ua.Address, true);
+            var ci = addrMgr.GetContract(prevBlock?.Hash, ua.Address);
             if (ci != null)
                 ua.Balance = ci.balance / 1000000M;
 
@@ -3509,7 +3430,7 @@ namespace TezosNotifyBot
             {
                 try
                 {
-                    var di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock?.Hash, ua.Address, enqueue: true);
+                    var di = addrMgr.GetDelegate(prevBlock?.Hash, ua.Address);
                     ua.FullBalance = di.Bond / 1000000;
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
@@ -3694,7 +3615,7 @@ namespace TezosNotifyBot
                 {
                     try
                     {
-                        di = addrMgr.GetDelegate(_nodeManager.Client, prevBlock.Hash, addr, enqueue: true);
+                        di = addrMgr.GetDelegate(prevBlock.Hash, addr);
                         if (di != null)
                         {
                             if (!repo.IsDelegate(addr))

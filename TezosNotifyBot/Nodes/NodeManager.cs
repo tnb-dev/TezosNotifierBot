@@ -8,7 +8,7 @@ using TezosNotifyBot.Model;
 using TezosNotifyBot.Tezos;
 
 namespace TezosNotifyBot.Nodes
-{
+{/*
     public class NodeManager
     {
         private readonly HttpClient _http;
@@ -37,7 +37,7 @@ namespace TezosNotifyBot.Nodes
             Active = Nodes[0];
             Client = CreateNodeClient(Active);
         }
-
+        
         public void SwitchTo(int index)
         {
             var changeTo = Nodes.ElementAtOrDefault(index);
@@ -75,10 +75,10 @@ namespace TezosNotifyBot.Nodes
                 return null;
             }
         }
-
+        
         private NodeClient CreateNodeClient(Node node)
         {
             return new NodeClient(node.Url, _http, _config.Value.CryptoCompareToken, _logger);
-        }
-    }
+        
+    }}*/
 }

@@ -17,7 +17,7 @@ namespace TezosNotifyBot.Domain
         public string CallbackQueryData { get; set; }
         public bool FromUser { get; set; }
         public int? TelegramMessageId { get; set; }
-
+        public string Image { get; set; }
 
         public static Message Push(long userId, string text)
         {

@@ -32,7 +32,11 @@ namespace TezosNotifyBot.Tzkt
 			_logger = logger;
 			_cache = cache;
 		}
-
+		List<Account> ITzKtClient.GetAccounts(string type, int offset)
+		{
+			string result = Download($"v1/accounts?sort.desc=lastActivity&type={type}&limit=10000&offset={offset}");
+			return JsonConvert.DeserializeObject<List<Account>>(result);
+		}
 		Head ITzKtClient.GetHead()
 		{
 			string head = Download("v1/head", false);
@@ -147,9 +151,9 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/accounts/{address}/balance_history/{level}");
 			return ulong.Parse(str) / 1000000M;
 		}
-		BigmapItem ITzKtClient.GetBigmapItem(string contract, string address)
+		BigmapItem ITzKtClient.GetBigmapItem(string contract, string bigmap, string key)
 		{
-			var str = Download($"v1/contracts/{contract}/bigmaps/ledger/keys/{address}");
+			var str = Download($"v1/contracts/{contract}/bigmaps/{bigmap}/keys/{key}");
 			try
 			{
 				return JsonConvert.DeserializeObject<BigmapItem>(str);
