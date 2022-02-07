@@ -71,11 +71,13 @@ namespace TezosNotifyBot
 
 			foreach (var ua in toAddresses)
 			{
+				string artifactUri = (token_meta.displayUri ?? token_meta.artifactUri).Replace("ipfs://", "https://ipfs.io/ipfs/");
+				Logger.LogDebug("Incoming NFT transfer to {ua.DisplayName()}\nArtifact name: {token_meta.name}, " + artifactUri);
 				string result = $"🟩 Incoming NFT transfer to {ua.DisplayName()}\nArtifact name: {token_meta.name}";
 				if (token_meta.formats.Any(o => o.mimeType.Contains("video")))
-					await Bot.SendVideoAsync(ua.UserId, new Telegram.Bot.Types.InputFiles.InputOnlineFile(token_meta.displayUri ?? token_meta.artifactUri), caption: result);
+					await Bot.SendVideoAsync(ua.UserId, new Telegram.Bot.Types.InputFiles.InputOnlineFile(artifactUri), caption: result);
 				else
-					await Bot.SendPhotoAsync(ua.UserId, new Telegram.Bot.Types.InputFiles.InputOnlineFile(token_meta.displayUri ?? token_meta.artifactUri), caption: result);
+					await Bot.SendPhotoAsync(ua.UserId, new Telegram.Bot.Types.InputFiles.InputOnlineFile(artifactUri), caption: result);
 			}
 				//Bot.send(chatId, text, ParseMode.Html, disableWebPagePreview: true).ConfigureAwait(true).GetAwaiter()
 				//		.GetResult();
