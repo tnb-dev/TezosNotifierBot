@@ -74,6 +74,7 @@ namespace TezosNotifyBot
 				string artifactUri = (token_meta.displayUri ?? token_meta.artifactUri).Replace("ipfs://", "https://ipfs.io/ipfs/");
 				Logger.LogDebug("Incoming NFT transfer to {ua.DisplayName()}\nArtifact name: {token_meta.name}, " + artifactUri);
 				string result = $"🟩 Incoming NFT transfer to {ua.DisplayName()}\nArtifact name: {token_meta.name}";
+				System.Threading.Thread.Sleep(1000);
 				if (token_meta.formats.Any(o => o.mimeType.Contains("video")))
 					await Bot.SendVideoAsync(ua.UserId, new Telegram.Bot.Types.InputFiles.InputOnlineFile(artifactUri), caption: result);
 				else
