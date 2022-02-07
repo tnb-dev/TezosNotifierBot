@@ -772,9 +772,11 @@ namespace TezosNotifyBot
                 Token token = null;
                 if (op.Parameter?.entrypoint == "transfer")
                 {
+                    Logger.LogDebug("transfer " + to);
                     token = repo.GetToken(to);
                     if (token != null && op.Parameter.value is JObject)
                     {
+                        Logger.LogDebug("token " + token.Name);
                         if (token.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton")
                             HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
                         else

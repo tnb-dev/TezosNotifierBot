@@ -26,6 +26,7 @@ namespace TezosNotifyBot
 			var amount = (int)txs["amount"];
 			var token_id = (int)txs["token_id"];
 
+			Logger.LogDebug($"from_ {from} to {to} amount {amount} id {token_id}");
 			//var minio = GetService<MinioClient>();
 			//var nftBucketExists = await minio.BucketExistsAsync(minioBucket);
 			//if (!nftBucketExists)
