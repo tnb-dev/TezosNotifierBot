@@ -33,14 +33,14 @@ namespace TezosNotifyBot
 			//	await minio.MakeBucketAsync(minioBucket);
 
 			string s_metadata = null;
-			try
-			{
-				Logger.LogInformation($"Get {token.MetadataBigmap}-{token_id}.json");
-				throw new Minio.Exceptions.ObjectNotFoundException("", "");
+			//try
+			//{
+			//	Logger.LogInformation($"Get {token.MetadataBigmap}-{token_id}.json");
+				//throw new Minio.Exceptions.ObjectNotFoundException("", "");
 				//await minio.GetObjectAsync(minioBucket, $"{token.MetadataBigmap}-{token_id}.json", s => s_metadata = new StreamReader(s).ReadToEnd());
-			}
-			catch (Minio.Exceptions.ObjectNotFoundException)
-			{
+			//}
+			//catch (Minio.Exceptions.ObjectNotFoundException)
+			//{
 				var bmk = GetService<ITzKtClient>().GetBigmapItem(tr.Target.address, "token_metadata", token_id.ToString());
 				var token_info = (string)(bmk.value as Newtonsoft.Json.Linq.JObject)["token_info"].First.First;
 				var bytes = Enumerable.Range(0, token_info.Length).Where(x => x % 2 == 0)
@@ -50,7 +50,7 @@ namespace TezosNotifyBot
 				bytes = Encoding.Default.GetBytes(s_metadata);
 				Logger.LogInformation($"Put {token.MetadataBigmap}-{token_id}.json");
 				//await minio.PutObjectAsync("nft", @$"{token.MetadataBigmap}-{token_id}.json", new MemoryStream(bytes), bytes.Length);
-			}
+			//}
 
 			var token_meta = JsonConvert.DeserializeObject<NftMetadata>(s_metadata);
 			//byte[] token_data = null;
