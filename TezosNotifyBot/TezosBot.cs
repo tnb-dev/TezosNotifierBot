@@ -772,7 +772,7 @@ namespace TezosNotifyBot
                 Token token = null;
                 if (op.Parameter?.entrypoint == "transfer")
                 {
-                    Logger.LogDebug("transfer " + to);
+                    Logger.LogDebug("transfer " + to + " " + (op.Parameter.value is JObject).ToString() + " " + op.Parameter?.value?.GetType()?.FullName);
                     token = repo.GetToken(to);
                     if (token != null && op.Parameter.value is JObject)
                     {
