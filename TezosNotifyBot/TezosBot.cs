@@ -772,22 +772,18 @@ namespace TezosNotifyBot
                 Token token = null;
                 if (op.Parameter?.entrypoint == "transfer")
                 {
-                    Logger.LogDebug("transfer " + to + " " + (op.Parameter.value is JObject).ToString() + " " + op.Parameter?.value?.GetType()?.FullName);
+                    //Logger.LogDebug("transfer " + to + " " + (op.Parameter.value is JObject).ToString() + " " + op.Parameter?.value?.GetType()?.FullName);
                     token = repo.GetToken(to);
+                    if (token?.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && op.Parameter?.value is JArray)
+                        HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (token != null && op.Parameter.value is JObject)
                     {
-                        Logger.LogDebug("token " + token.Name);
-                        if (token.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton")
-                            HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
-                        else
-                        {
-                            JObject p = op.Parameter.value as JObject;
-                            if (p["from"] == null || p["to"] == null || p["value"] == null)
-                                continue;
-                            from = (string)((JValue)p["from"]).Value;
-                            to = (string)((JValue)p["to"]).Value;
-                            amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
-                        }
+                        JObject p = op.Parameter.value as JObject;
+                        if (p["from"] == null || p["to"] == null || p["value"] == null)
+                            continue;
+                        from = (string)((JValue)p["from"]).Value;
+                        to = (string)((JValue)p["to"]).Value;
+                        amount = Utils.TokenAmountToDecimal((string)((JValue)p["value"]).Value, token.Decimals);
                     }
                 }
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
