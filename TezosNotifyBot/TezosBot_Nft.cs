@@ -27,6 +27,9 @@ namespace TezosNotifyBot
 			var token_id = (int)txs["token_id"];
 
 			Logger.LogDebug($"from_ {from} to {to} amount {amount} id {token_id}");
+			var toAddresses = repo.GetUserAddresses(to).Where(o => o.NotifyTransactions).ToList();
+			if (toAddresses.Count == 0)
+				return;
 			//var minio = GetService<MinioClient>();
 			//var nftBucketExists = await minio.BucketExistsAsync(minioBucket);
 			//if (!nftBucketExists)
@@ -66,7 +69,6 @@ namespace TezosNotifyBot
 			//	await minio.PutObjectAsync("nft", @$"{token.MetadataBigmap}-{token_id}.data", new MemoryStream(token_data), token_data.Length);
 			//}
 
-			var toAddresses = repo.GetUserAddresses(to).Where(o => o.NotifyTransactions).ToList();
 			foreach (var ua in toAddresses)
 			{
 				string result = $"🟩 Incoming NFT transfer to {ua.DisplayName()}\nArtifact name: {token_meta.name}";
