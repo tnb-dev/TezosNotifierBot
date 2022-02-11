@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NornPool.Model;
+using TezosNotifyBot.Model;
 using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Domain;
 

@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NornPool.Model;
+using TezosNotifyBot.Model;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
