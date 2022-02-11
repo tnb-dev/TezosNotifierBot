@@ -10,7 +10,6 @@ using TezosNotifyBot.Domain;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Model;
-using NornPool.Model;
 using Microsoft.Extensions.Options;
 
 namespace TezosNotifyBot.Commands.Admin

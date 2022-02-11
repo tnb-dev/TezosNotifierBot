@@ -7,7 +7,6 @@ using Humanizer;
 using Humanizer.Localisation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NornPool.Model;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Commands;
 using TezosNotifyBot.Domain;

@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using TezosNotifyBot.Model;
 
-namespace NornPool.Model
+namespace TezosNotifyBot.Model
 {
     public class BotConfig
     {

@@ -12,8 +12,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
-using Minio;
-using NornPool.Model;
 using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
@@ -135,9 +133,6 @@ namespace TezosNotifyBot
                     });
 
                     services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
-                    services.AddTransient(provider => new MinioClient(context.Configuration.GetSection("Minio").GetValue<string>("Endpoint"),
-                        context.Configuration.GetSection("Minio").GetValue<string>("AccessKey"),
-                        context.Configuration.GetSection("Minio").GetValue<string>("SecretKey")));
                     services.AddTransient(provider => new IpfsClient(new HttpClient(), provider.GetService<ILogger<IpfsClient>>()));
                     //services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
                     //    .SetHandlerLifetime(TimeSpan.FromMinutes(1))
