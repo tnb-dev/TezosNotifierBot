@@ -2475,7 +2475,6 @@ namespace TezosNotifyBot
 {addr2} {name2}
 ...etc - add public known addresses
 /defaultnode - switch to localnode
-/node - list and check nodes
 /setdelegatename {addr} {name} - set delegate name
 /addrlist {userid} - view user addresses
 /msglist {userid} - view user messages (last month)
