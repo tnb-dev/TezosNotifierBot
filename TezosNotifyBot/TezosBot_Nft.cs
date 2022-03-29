@@ -16,7 +16,6 @@ namespace TezosNotifyBot
 {
 	partial class TezosBot
 	{
-		const string minioBucket = "nft";
 		async Task HandleNftTransfer(Transaction tr, Token token)
 		{
 			var parms = (tr.Parameter.value as Newtonsoft.Json.Linq.JArray)[0];

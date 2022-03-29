@@ -11,6 +11,7 @@ namespace TezosNotifyBot.Tzkt
         public int? slots { get; set; }
         public Baker baker { get; set; }
         public string status { get; set; }
-        public int? priority { get; set; }
+        //public int? priority { get; set; }
+        public int? round { get; set; }
     }
 }

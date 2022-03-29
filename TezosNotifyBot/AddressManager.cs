@@ -23,9 +23,8 @@ namespace TezosNotifyBot
 			if (contract == null)
 				return new ContractInfo();
 			return new ContractInfo {
-				balance = contract.balance - contract.frozenDeposits - contract.frozenRewards - contract.frozenFees,
+				balance = contract.balance - contract.frozenDeposit,
 				@delegate = contract.Delegate?.Address,
-				//manager = contract.manager?.address,
 				Hash = hash
 			};
 		}
@@ -44,7 +43,7 @@ namespace TezosNotifyBot
 				return null;
 			var d = _tzKt.GetDelegators(addr);
 			return new DelegateInfo {
-				balance = @delegate.balance - @delegate.frozenDeposits - @delegate.frozenRewards - @delegate.frozenFees,
+				balance = @delegate.balance - @delegate.frozenDeposit,
 				deactivated = !@delegate.active,
 				staking_balance = @delegate.stakingBalance,
 				bond = @delegate.balance,

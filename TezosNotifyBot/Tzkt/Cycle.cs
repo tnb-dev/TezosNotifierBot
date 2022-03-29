@@ -11,7 +11,8 @@ namespace TezosNotifyBot.Tzkt
         public int snapshotLevel { get; set; }
         public string randomSeed { get; set; }
         public int totalBakers { get; set; }
-        public int totalRolls { get; set; }
+        //public int totalRolls { get; set; }
+        public ulong selectedStake { get; set; }
         public ulong totalStaking { get; set; }
         public int totalDelegators { get; set; }
         public ulong totalDelegated { get; set; }

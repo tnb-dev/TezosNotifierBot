@@ -10,13 +10,14 @@ namespace TezosNotifyBot.Tzkt
         public string Hash { get; set; }
         public DateTime Timestamp { get; set; }
         public int Proto { get; set; }
-        public int Priority { get; set; }
+        //public int Priority { get; set; }
+        public int blockRound { get; set; }
         public int Validations { get; set; }
         public ulong Deposit { get; set; }
         public ulong Reward { get; set; }
         public ulong Fees { get; set; }
         public bool NonceRevealed { get; set; }
-        public Baker Baker { get; set; }
+        public Baker producer { get; set; }
         public List<Endorsement> Endorsements { get; set; }
         public List<ProposalUpvote> Proposals { get; set; }
         public List<Ballot> Ballots { get; set; }

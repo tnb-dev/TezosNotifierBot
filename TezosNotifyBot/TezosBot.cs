@@ -153,7 +153,7 @@ namespace TezosNotifyBot
                 var cycles = tzkt.GetCycles();
                 var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);                    
                 // TODO: Check why `snapshot_cycle` is null
-                NotifyDev($"Current cycle: {cycle.index}, rolls: {cycle.totalRolls}", 0);
+                NotifyDev($"Current cycle: {cycle.index}, totalStaking: {cycle.totalStaking}", 0);
                 if (Config.TwitterConsumerKey != null)
                 {
                     try
@@ -740,7 +740,7 @@ namespace TezosNotifyBot
             }
 			
             if (!lastBlockChanged)
-                repo.SetLastBlockLevel(block.Level, block.Priority, block.Hash);
+                repo.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
             Logger.LogInformation($"Block {block.Level} processed");
             //lastHeader = header;
             //lastHash = header.hash;
@@ -773,8 +773,8 @@ namespace TezosNotifyBot
                 {
                     //Logger.LogDebug("transfer " + to + " " + (op.Parameter.value is JObject).ToString() + " " + op.Parameter?.value?.GetType()?.FullName);
                     token = repo.GetToken(to);
-                    if (token?.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && op.Parameter?.value is JArray)
-                        HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
+                    //if (token?.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && op.Parameter?.value is JArray)
+                    //    HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (token != null && op.Parameter.value is JObject)
                     {
                         JObject p = op.Parameter.value as JObject;
@@ -1053,7 +1053,7 @@ namespace TezosNotifyBot
                 }
                 else
                 {
-                    if (baking_right.priority > 0)
+                    if (baking_right.round > 0)
                     {
                         var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                         foreach (var ua in uaddrs)
@@ -1061,7 +1061,7 @@ namespace TezosNotifyBot
                             var result = resMgr.Get(Res.StoleBaking,
                                 new ContextObject
                                 {
-                                    u = ua.User, ua = ua, Block = block.Level, Priority = baking_right.priority.Value,
+                                    u = ua.User, ua = ua, Block = block.Level, Priority = baking_right.round.Value,
                                     Amount = block.Reward / 1000000M
                                 });
                             if (!ua.User.HideHashTags)
@@ -1287,7 +1287,7 @@ namespace TezosNotifyBot
 
                 NotifyAssignedRights(tzKtClient, uad, cycle.index);
 
-                NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
+                //NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
 
                 LoadAddressList(tzKtClient);
 
@@ -1364,6 +1364,7 @@ namespace TezosNotifyBot
                 PushTextMessage(u.Key.Id, message);
             }
 		}
+        /*
         void NotifyOutOfFreeSpace(Block block, ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle, List<Cycle> cycles)
         {
             var delegates = userAddresses.Where(ua => ua.NotifyOutOfFreeSpace).Select(ua => ua.Address).Distinct();
@@ -1410,7 +1411,7 @@ namespace TezosNotifyBot
                 //SendTextMessage(ua.User.Id, message, ReplyKeyboards.MainMenu(resMgr, ua.User));
                 PushTextMessage(ua, message);
             }
-        }
+        }*/
         private void LoadAddressList(ITzKtClient tzKt)
         {
             try
@@ -2722,11 +2723,11 @@ namespace TezosNotifyBot
                         {
                             var tzKt = _serviceProvider.GetService<ITzKtClient>();
                             var b = tzKt.GetBlock(num);
-                            repo.SetLastBlockLevel(num, b.Priority, b.Hash);
+                            repo.SetLastBlockLevel(num, b.blockRound, b.Hash);
                             lastBlockChanged = true;
                             var c = tzKt.GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
                             NotifyDev(
-                                $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, rolls: {c.totalRolls}",
+                                $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, totalStaking: {c.totalStaking}",
                                 0);
                             _currentConstants = null;
                         }
@@ -3302,7 +3303,7 @@ namespace TezosNotifyBot
                         ua.StakingBalance = di.staking_balance / 1000000;
                         ua.Delegators = di.NumDelegators;
                         result += resMgr.Get(Res.StakingInfo, ua) + "\n";
-                        result += FreeSpace(ua);
+                        //result += FreeSpace(ua);
                     }
 
                     if (ci.@delegate != null && di == null)
@@ -3358,7 +3359,7 @@ namespace TezosNotifyBot
         {
         }
 
-        string FreeSpace(UserAddress ua)
+        /*string FreeSpace(UserAddress ua)
         {
             var c = _currentConstants;
             if (c == null)
@@ -3386,7 +3387,7 @@ namespace TezosNotifyBot
                 $"FreeSpace calc for {ua.Address}. totalLocked:{totalLocked}; bakerBalance:{bakerBalance}, bakerShare:{bakerShare}, totalRolls:{totalRolls}, bakerStakingCapacity:{bakerStakingCapacity}, maxStakingBalance:{maxStakingBalance}, currentStakingBalance:{ua.StakingBalance}");
             ua.FreeSpace = freeSpace;
             return resMgr.Get(Res.FreeSpace, ua) + "\n";
-        }
+        }*/
 
         Action ViewAddress(long chatId, UserAddress ua, int msgid)
         {
@@ -3433,7 +3434,7 @@ namespace TezosNotifyBot
                     ua.StakingBalance = di.staking_balance / 1000000;
                     ua.Delegators = di.NumDelegators;
                     result += resMgr.Get(Res.StakingInfo, ua) + "\n";
-                    result += FreeSpace(ua);
+                    //result += FreeSpace(ua);
                     //decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
                     //if (perf.HasValue)
                     //{

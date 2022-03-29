@@ -16,7 +16,7 @@ namespace TezosNotifyBot.Tzkt
         public long totalActivated { get; set; }
         public long totalCreated { get; set; }
         public long totalBurned { get; set; }
-        public long totalVested { get; set; }
+        //public long totalVested { get; set; }
         public long totalFrozen { get; set; }
     }
 }

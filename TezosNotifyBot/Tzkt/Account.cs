@@ -12,9 +12,10 @@ namespace TezosNotifyBot.Tzkt
 		public string publicKey { get; set; }
 		public bool revealed { get; set; }
 		public ulong balance { get; set; }
-		public ulong frozenDeposits { get; set; }
-		public ulong frozenRewards { get; set; }
-		public ulong frozenFees { get; set; }
+		//public ulong frozenDeposits { get; set; }
+		//public ulong frozenRewards { get; set; }
+		//public ulong frozenFees { get; set; }
+		public ulong frozenDeposit { get; set; }
 		public int counter { get; set; }
 		public int activationLevel { get; set; }
 		[JsonProperty("delegate")]
