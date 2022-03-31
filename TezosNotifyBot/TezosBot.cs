@@ -1140,7 +1140,7 @@ namespace TezosNotifyBot
             Logger.LogDebug($"ProcessBlockMetadata {block.Level}");
             var cycles = tzKtClient.GetCycles();
             var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
-            if (cycle.lastLevel == block.Level)
+            /*if (cycle.lastLevel == block.Level)
             {
                 Logger.LogDebug($"Calc delegates rewards on {block.Level}");
                 //User,rewards,tags,lang
@@ -1200,7 +1200,7 @@ namespace TezosNotifyBot
                     PushTextMessage(msg.UserAddress, result);
                 }
                 Logger.LogDebug($"Calc delegates rewards finished on {block.Level}");
-            }
+            }*/
             if (cycle.firstLevel == block.Level)
             {
                 var uad = repo.GetUserDelegates();
@@ -1290,7 +1290,7 @@ namespace TezosNotifyBot
                 //NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
 
                 LoadAddressList(tzKtClient);
-
+                /*
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
                 // Notification of the availability of the award to the delegator
                 var userAddressDelegators = repo.GetDelegators();
@@ -1314,13 +1314,12 @@ namespace TezosNotifyBot
                             var message = resMgr.Get(Res.AwardAvailable, context);
                             if (!ua.User.HideHashTags)
                                 message += "\n\n#award " + ua.HashTag() + context.ua_to.HashTag();
-
-                            //SendTextMessageUA(ua, message);
+                                                        
                             PushTextMessage(ua, message);
                         }
 					}
                 }
-                Logger.LogDebug($"Calc delegators awards on {block.Level - 1} finished");
+                Logger.LogDebug($"Calc delegators awards on {block.Level - 1} finished");*/
             }
 
             VotingNotify(block, cycle, tzKtClient);
@@ -3491,8 +3490,8 @@ namespace TezosNotifyBot
 
                 if (ua.NotifyPayout && !isDelegate)
                     result += "🤑";
-                if (ua.NotifyAwardAvailable && !isDelegate)
-                    result += "🧊";
+                //if (ua.NotifyAwardAvailable && !isDelegate)
+                //    result += "🧊";
                 if (ua.NotifyDelegateStatus && !isDelegate)
                     result += "🌚";
             }
@@ -3503,8 +3502,8 @@ namespace TezosNotifyBot
 
                 if (!isDelegate)
                     result += resMgr.Get(Res.PayoutNotifyStatus, ua) + "\n";
-                if (!isDelegate)
-                    result += resMgr.Get(Res.AwardAvailableNotifyStatus, ua) + "\n";
+                //if (!isDelegate)
+                //    result += resMgr.Get(Res.AwardAvailableNotifyStatus, ua) + "\n";
                 if (!isDelegate)
                     result += resMgr.Get(Res.NotifyDelegateInactive, ua) + "\n";
             }

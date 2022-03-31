@@ -227,11 +227,13 @@ namespace TezosNotifyBot
                         resMgr.Get(Res.SetThreshold, ua), "setthreshold " + id);
                     buttons.Add2(u,
                         resMgr.Get(Res.PayoutNotifyToggle, ua), $"toggle_payout_notify {id}",
-                        resMgr.Get(Res.AwardNotify, ua), (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id);
+                        //resMgr.Get(Res.AwardNotify, ua), (ua.NotifyAwardAvailable ? "awardoff" : "awardon") + " " + id
+                        resMgr.Get(Res.DelegateStatusToggle, ua), $"toggle-delegate-status {id}"
+                        );
                     buttons.Add2(u,
                         resMgr.Get(Res.RenameAddress, ua), "setname " + id,
-                        resMgr.Get(Res.DelegateStatusToggle, ua), $"toggle-delegate-status {id}");
-                    buttons.Add(u, resMgr.Get(Res.Delete, ua), $"deleteaddress {id}");
+                        resMgr.Get(Res.Delete, ua), $"deleteaddress {id}");
+                    //buttons.Add(u, );
                 }
                 else
 				{
