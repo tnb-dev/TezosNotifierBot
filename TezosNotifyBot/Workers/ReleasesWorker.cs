@@ -24,8 +24,13 @@ namespace TezosNotifyBot.Workers
         private readonly ResourceManager _resourceManager;
         private readonly TwitterClient _twitter;
 
-        public ReleasesWorker(IServiceProvider serviceProvider, ILogger<ReleasesWorker> logger,
-            IOptions<ReleasesWorkerOptions> options, ResourceManager resourceManager, TwitterClient twitter)
+        public ReleasesWorker(
+            IServiceProvider serviceProvider,
+            ILogger<ReleasesWorker> logger,
+            IOptions<ReleasesWorkerOptions> options,
+            ResourceManager resourceManager,
+            TwitterClient twitter
+        )
         {
             _logger = logger;
             _options = options;
@@ -53,6 +58,12 @@ namespace TezosNotifyBot.Workers
                         if (exists is false)
                         {
                             await db.AddAsync(release);
+
+                            if (IsFakeRelease(release.Tag))
+                            {
+                                // Skip release notifications
+                                continue;
+                            }
 
                             await PublishTwitter(release);
                             await BroadcastRelease(db, release);
@@ -100,6 +111,19 @@ namespace TezosNotifyBot.Workers
                     await db.SaveChangesAsync();
                 }
             }
+        }
+    
+        protected static bool IsFakeRelease(string tag) {
+            var parts = tag.Trim('v').Split('.', '~', '-').Select(str =>
+            {
+                if (int.TryParse(str, out var num))
+                {
+                    return num;
+                }
+                return int.MinValue;
+            }).ToArray<int>();
+
+            return parts[0] >= 100;
         }
     }
 
