@@ -93,11 +93,11 @@ namespace TezosNotifyBot
                 }
             });
 
-            add(resMgr.Get(Res.Language, user.Language, new
-            {
-                flag = Languages.Get(user.Language).Icon,
-                name = Languages.Get(user.Language).Name
-            }), "set_" + Languages.Next(user.Language).Code);
+            //add(resMgr.Get(Res.Language, user.Language, new
+            //{
+            //    flag = Languages.Get(user.Language).Icon,
+            //    name = Languages.Get(user.Language).Name
+            //}), "set_" + Languages.Next(user.Language).Code);
             
             add(resMgr.Get(Res.UserCurrency, user), "change_currency");
             add(resMgr.Get(Res.Explorer, user), "set_explorer");
