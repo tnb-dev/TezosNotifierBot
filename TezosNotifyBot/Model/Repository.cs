@@ -305,8 +305,7 @@ namespace TezosNotifyBot.Model
             }
             else
             {
-                user = User.New(u.Id, "", u.Username, u.FirstName, u.LastName,
-                    (u.LanguageCode ?? "").Length > 2 ? u.LanguageCode.Substring(0, 2) : "en", 0);
+                user = User.New(u.Id, "", u.Username, u.FirstName, u.LastName, "en", 0);
 
                 lock (_dbLock)
                 {
