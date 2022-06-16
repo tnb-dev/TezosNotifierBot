@@ -1220,7 +1220,7 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_revelation" + ua.HashTag();
-                        //SendTextMessageUA(ua, result);
+                        
                         PushTextMessage(ua, result);
                     }
                 }
