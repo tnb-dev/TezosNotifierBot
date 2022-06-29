@@ -126,7 +126,7 @@ namespace TezosNotifyBot.Workers
 
             if (prev.kind == "adoption" && current.kind == "proposal")
 			{
-                var proposals = _tzKtClient.GetProposals(prev.epoch);
+                var proposals = _tzKtClient.GetProposals(prev.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Adoption period finished. Blockchain switched to new protocol {proposals[0].DisplayLink}. New proposal period begins.</p>");
             }
             if (prev.kind == "proposal" && current.kind == "proposal")
@@ -150,12 +150,12 @@ namespace TezosNotifyBot.Workers
             }
             if (prev.kind == "proposal" && current.kind == "exploration")
             {
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Proposal period finished. New exploration period begins with proposal {proposals[0].DisplayLink}.</p>");
             }
             if (prev.kind == "exploration" && current.kind == "exploration")
 			{
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Now it is exploration period for proposal {proposals[0].DisplayLink}.</p>");
                 post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({(100D * (current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({(100D * (current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls) ?? 0:###.0}%) voted so far:</p>");
                 FillBallots(post, current);
@@ -164,7 +164,7 @@ namespace TezosNotifyBot.Workers
             }
             if (prev.kind == "exploration" && current.kind == "proposal")
 			{
-                var proposals = _tzKtClient.GetProposals(prev.epoch);
+                var proposals = _tzKtClient.GetProposals(prev.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Exploration period for proposal {proposals[0].DisplayLink} finished with results:</p>");
                 FillBallots(post, prev);
                 BallotQuorum(post, prev);
@@ -172,25 +172,25 @@ namespace TezosNotifyBot.Workers
             }
             if (prev.kind == "exploration" && current.kind == "testing")
             {
-                var proposals = _tzKtClient.GetProposals(prev.epoch);
+                var proposals = _tzKtClient.GetProposals(prev.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Exploration period for proposal {proposals[0].DisplayLink} finished with results:</p>");
                 FillBallots(post, prev);
                 post.AppendLine($"<p>Proposal {proposals[0].DisplayLink} accepted. Testing period begins.</p>");
             }
             if (prev.kind == "testing" && current.kind == "testing")
 			{
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Now it is testing period for proposal {proposals[0].DisplayLink}.</p>");
                 post.AppendLine($"<p>Testing period will end on {current.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
             }
             if (prev.kind == "testing" && current.kind == "promotion")
             {
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Testing period finished. Promotion period begins with proposal {proposals[0].DisplayLink}.</p>");
             }
             if (prev.kind == "promotion" && current.kind == "promotion")
             {
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Now it is promotion period for proposal {proposals[0].DisplayLink}.</p>");
                 post.AppendLine($"<p>{current.yayBallots + current.nayBallots + current.passBallots} delegates ({(100D * (current.yayBallots + current.nayBallots + current.passBallots) / current.totalBakers) ?? 0:###.0}%) with total of {current.totalRolls} rolls ({(100D * (current.yayRolls + current.nayRolls + current.passRolls) / current.totalRolls) ?? 0:###.0}%) voted so far:</p>");
                 FillBallots(post, current);
@@ -199,7 +199,7 @@ namespace TezosNotifyBot.Workers
             }
             if (prev.kind == "promotion" && current.kind == "proposal")
             {
-                var proposals = _tzKtClient.GetProposals(prev.epoch);
+                var proposals = _tzKtClient.GetProposals(prev.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Promotion period for proposal {proposals[0].DisplayLink} finished with results:</p>");
                 FillBallots(post, prev);
                 BallotQuorum(post, prev);
@@ -207,14 +207,14 @@ namespace TezosNotifyBot.Workers
             }
             if (prev.kind == "promotion" && current.kind == "adoption")
             {
-                var proposals = _tzKtClient.GetProposals(prev.epoch);
+                var proposals = _tzKtClient.GetProposals(prev.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Promotion period for proposal {proposals[0].DisplayLink} finished with results:</p>");
                 FillBallots(post, prev);
                 post.AppendLine($"<p>Proposal {proposals[0].DisplayLink} accepted. Adoption period begins.</p>");
             }
             if (prev.kind == "adoption" && current.kind == "adoption")
             {
-                var proposals = _tzKtClient.GetProposals(current.epoch);
+                var proposals = _tzKtClient.GetProposals(current.epoch).OrderByDescending(o => o.rolls).ToList();
                 post.AppendLine($"<p>Now it is adoption period for proposal {proposals[0].DisplayLink}.</p>");
                 post.AppendLine($"<p>Adoption period will end on {current.endTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.</p>");
             }

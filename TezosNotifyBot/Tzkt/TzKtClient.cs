@@ -223,7 +223,7 @@ namespace TezosNotifyBot.Tzkt
 		}
 		List<Proposal> ITzKtClient.GetProposals(int epoch)
 		{
-			var str = Download($"v1/voting/proposals?epoch={epoch}&sort.desc=rolls");
+			var str = Download($"v1/voting/proposals?epoch={epoch}");
 			return JsonConvert.DeserializeObject<List<Proposal>>(str);
 		}
 
