@@ -1053,7 +1053,7 @@ namespace TezosNotifyBot
                 }
                 else
                 {
-                    if (baking_right.round > 0)
+                    /*if (baking_right.round > 0)
                     {
                         var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                         foreach (var ua in uaddrs)
@@ -1069,7 +1069,7 @@ namespace TezosNotifyBot
                             PushTextMessage(ua, result);
                             //SendTextMessageUA(ua, result);
                         }
-                    }
+                    }*/
 
                     break;
                 }

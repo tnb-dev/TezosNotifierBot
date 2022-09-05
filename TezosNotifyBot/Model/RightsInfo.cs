@@ -19,7 +19,7 @@ namespace TezosNotifyBot.Model
 		{
 			foreach (var r in rights)
 			{
-				if (r.type == "baking" && r.round == 0)
+				if (r.type == "baking")
 					BakingCount++;
 				if (BakingCount == 1)
 				{
@@ -40,7 +40,7 @@ namespace TezosNotifyBot.Model
 		}
 		public RightsInfo(TezosNotifyBot.Tzkt.Right r)
 		{
-			if (r.type == "baking" && r.round == 0)
+			if (r.type == "baking")
 			{ 
 				BakingCount++;
 				FirstBakingLevel = r.level;
