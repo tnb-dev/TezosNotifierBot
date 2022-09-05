@@ -1053,7 +1053,7 @@ namespace TezosNotifyBot
                 }
                 else
                 {
-                    if (block.blockRound > 0)
+                    if (block.blockRound > 1)
                     {
                         var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
                         foreach (var ua in uaddrs)
@@ -1061,7 +1061,7 @@ namespace TezosNotifyBot
                             var result = resMgr.Get(Res.StoleBaking,
                                 new ContextObject
                                 {
-                                    u = ua.User, ua = ua, Block = block.Level, Priority = baking_right.round.Value,
+                                    u = ua.User, ua = ua, Block = block.Level, Priority = block.blockRound,
                                     Amount = block.Reward / 1000000M
                                 });
                             if (!ua.User.HideHashTags)
