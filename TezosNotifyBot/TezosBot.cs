@@ -1074,7 +1074,6 @@ namespace TezosNotifyBot
                     break;
                 }
             }
-
             //var priority = header.priority;
             Logger.LogDebug($"Endorsements processing {block.Level}");
 
