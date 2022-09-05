@@ -32,7 +32,7 @@ using TezosNotifyBot.Dialog;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Events;
 using TezosNotifyBot.Model;
-using TezosNotifyBot.Nodes;
+//using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;

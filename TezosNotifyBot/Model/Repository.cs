@@ -112,8 +112,7 @@ namespace TezosNotifyBot.Model
         }
         internal Message GetMessage(int messageId)
         {
-            lock (_dbLock)
-                return _db.Messages.FirstOrDefault(o => o.Id == messageId);
+            return RunIsolatedDb<Message>(db => db.Messages.FirstOrDefault(o => o.Id == messageId));
         }
 
         internal void LogOutMessage(long to, int messageId, string text)
@@ -135,36 +134,35 @@ namespace TezosNotifyBot.Model
 
         public (int, int, string) GetLastBlockLevel()
         {
-            lock (_dbLock)
+            return RunIsolatedDb<(int, int, string)>(db => 
             {
                 if (lastBlock == null)
-                    lastBlock = _db.LastBlock.SingleOrDefault();
+                    lastBlock = db.LastBlock.SingleOrDefault();
                 if (lastBlock == null)
                 {
-                    lastBlock = new LastBlock {Level = 0};
-                    _db.LastBlock.Add(lastBlock);
-                    _db.SaveChanges();
+                    lastBlock = new LastBlock { Level = 0 };
+                    db.LastBlock.Add(lastBlock);
+                    db.SaveChanges();
                 }
 
                 return (lastBlock.Level, lastBlock.Priority, lastBlock.Hash);
-            }
+            });
         }
 
         public void SetLastBlockLevel(int level, int priority, string hash)
         {
-            GetLastBlockLevel();
-            lastBlock.Level = level;
-            lastBlock.Priority = priority;
-            lastBlock.Hash = hash;
-
-            lock (_dbLock)
-                _db.SaveChanges();
+            RunIsolatedDb(db => {
+                lastBlock = db.LastBlock.SingleOrDefault() ?? new LastBlock();
+                lastBlock.Level = level;
+                lastBlock.Priority = priority;
+                lastBlock.Hash = hash;
+                db.SaveChanges();
+            });
         }
 
         public bool UserExists(long id)
         {
-            lock (_dbLock)
-                return _db.Set<User>().Any(x => x.Id == id);
+            return RunIsolatedDb<bool>(db => db.Users.Any(x => x.Id == id));
         }
 
         public User GetUser(long id)
