@@ -113,7 +113,7 @@ namespace TezosNotifyBot.Tzkt
 		}
 		List<Right> ITzKtClient.GetRights(int level)
 		{
-			var str = Download($"v1/rights?level={level}");
+			var str = Download($"v1/rights?level={level}&limit=10000");
 			return JsonConvert.DeserializeObject<List<Right>>(str);
 		}
 		List<Right> ITzKtClient.GetRights(string baker, int cycle)
