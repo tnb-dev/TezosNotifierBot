@@ -22,7 +22,7 @@ using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Dialog.Extensions;
 using TezosNotifyBot.Ipfs;
 using TezosNotifyBot.Model;
-using TezosNotifyBot.Nodes;
+//using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Services;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
@@ -132,7 +132,7 @@ namespace TezosNotifyBot
                         return manager;
                     });
 
-                    services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
+                    //services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
                     services.AddTransient(provider => new IpfsClient(new HttpClient(), provider.GetService<ILogger<IpfsClient>>()));
                     //services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
                     //    .SetHandlerLifetime(TimeSpan.FromMinutes(1))

@@ -13,7 +13,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using TezosNotifyBot.Domain;
-using TezosNotifyBot.Nodes;
+//using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
 

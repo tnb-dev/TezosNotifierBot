@@ -28,7 +28,7 @@ namespace TezosNotifyBot.Model
 
 		public string CryptoCompareToken { get; set; }
 
-		public Node[] Nodes { get; set; }
+		//public Node[] Nodes { get; set; }
 
 		public TimeSpan DelegateInactiveTime { get; set; }
 		
