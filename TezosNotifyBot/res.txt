@@ -249,8 +249,8 @@ Or use the search:
 #Delegate;en;Delegate
 #DelegateStatusToggle;ru;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Уведомления о делегате
 #DelegateStatusToggle;en;{(ua.NotifyDelegateStatus ? "☑️" : "🔲")} Delegate status
-#AveragePerformance;ru;Ср. эффективность за 10 циклов: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
-#AveragePerformance;en;Avg. 10-cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
+#AveragePerformance;ru;Ср. эффективность за циклы {Cycle}-{Cycle+Period}: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
+#AveragePerformance;en;Avg. {Cycle}-{Cycle+Period} cycles performance: <b>{ua.AveragePerformance.ToString("#0.0")}%</b>
 #NewProposal;ru;💡 <a href='{t.op(OpHash)}'>Поступило</a> новое предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> по модификации протокола от <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами
 #NewProposal;en;💡 <a href='{t.op(OpHash)}'>Injected</a> new proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> by <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> with {ua.Rolls} rolls
 #SupplyProposal;ru;👍 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> с {ua.Rolls} роллами <a href='{t.op(OpHash)}'>поддержал</a> предложение <a href='{t.url_vote(Period)}'>{p.Name}</a>
