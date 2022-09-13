@@ -1134,11 +1134,13 @@ namespace TezosNotifyBot
             public UserAddress UserAddress;
         }
 
+        Cycle currentCycle;
         void ProcessBlockMetadata(Block block, ITzKtClient tzKtClient)
         {
             Logger.LogDebug($"ProcessBlockMetadata {block.Level}");
             var cycles = tzKtClient.GetCycles();
             var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+            currentCycle = cycle;
             /*if (cycle.lastLevel == block.Level)
             {
                 Logger.LogDebug($"Calc delegates rewards on {block.Level}");
@@ -3431,6 +3433,24 @@ namespace TezosNotifyBot
                     ua.StakingBalance = di.staking_balance / 1000000;
                     ua.Delegators = di.NumDelegators;
                     result += resMgr.Get(Res.StakingInfo, ua) + "\n";
+                    var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
+                    if (currentCycle != null)
+					{
+                        long rew = 0;
+                        long rewMax = 0;
+                        for (int i = 0; i < 10; i++)
+                        {
+                            var r = tzKtClient.GetBakerRewards(ua.Address, currentCycle.index - i);
+                            rew += r?.TotalBakerRewards ?? 0;
+                            rewMax += (r?.TotalBakerRewardsPlan ?? 0) + (r?.TotalBakerLoss ?? 0);
+                        }
+                        if (rewMax > 0)
+						{
+                            ua.AveragePerformance = 100M * rew / rewMax;
+                            result += resMgr.Get(Res.AveragePerformance, new ContextObject { Cycle = currentCycle.index - 9, Period = 9, ua = ua, u = ua.User }) + "\n";
+                        }
+					}
+                    
                     //result += FreeSpace(ua);
                     //decimal? perf = addrMgr.GetAvgPerformance(repo, ua.Address);
                     //if (perf.HasValue)

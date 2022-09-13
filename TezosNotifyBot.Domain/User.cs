@@ -33,7 +33,7 @@ namespace TezosNotifyBot.Domain
         public bool ReleaseNotify { get; set; } = false;
 
         public int NetworkIssueNotify { get; set; }
-        public int Explorer { get; set; }
+        public int Explorer { get; set; } = 3;
         public bool SmartWhaleAlerts { get; set; }
 
         public CultureInfo Culture => new CultureInfo(Language);
