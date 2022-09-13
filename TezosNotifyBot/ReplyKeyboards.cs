@@ -167,11 +167,9 @@ namespace TezosNotifyBot
                     CallbackData = (u.Type != 0 ? $"_{u.Id}_" : "") + data
                 }
             });
-            add((u.Explorer == 4 ? "☑️" : "") + " mininax.io", "set_explorer_4");
-            add((u.Explorer == 0 ? "☑️" : "") + " tezblock.io", "set_explorer_0");
-            add((u.Explorer == 5 ? "☑️" : "") + " teztracker.com", "set_explorer_5");
             add((u.Explorer == 3 ? "☑️" : "") + " tzkt.io", "set_explorer_3");
             add((u.Explorer == 1 ? "☑️" : "") + " tzstats.com", "set_explorer_1");
+            add((u.Explorer == 4 ? "☑️" : "") + " mininax.io", "set_explorer_4");
 
             return new InlineKeyboardMarkup(buttons.ToArray());
         }

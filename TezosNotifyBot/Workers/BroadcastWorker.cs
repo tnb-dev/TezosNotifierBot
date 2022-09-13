@@ -44,14 +44,23 @@ namespace TezosNotifyBot.Workers
                 try
                 {
                     DateTime begin = DateTime.Now;
+                    var messagesInactive = await db.Set<Message>()
+                        .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
+                        .Where(x => x.User.Inactive)
+                        .OrderBy(x => x.CreateDate)
+                        .Take(1000)
+                        .ToArrayAsync(stoppingToken);
+                    foreach (var message in messagesInactive)
+                        message.Status = MessageStatus.SentFailed;
+                    await db.SaveChangesAsync();
                     // Выбираем сообщения которые были созданы для отложенной отправки
                     var messages = await db.Set<Message>()
-                        .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
-                        .Where(x => !x.User.Inactive)
-                        .OrderBy(x => x.CreateDate)
-                        .Take(10000)
-                        .ToArrayAsync(stoppingToken);
-                    Counter.AddTimeSpan("Select 10000 unsent messages", DateTime.Now.Subtract(begin));
+                    .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
+                    .Where(x => !x.User.Inactive)
+                    .OrderBy(x => x.CreateDate)
+                    .Take(3000)
+                    .ToArrayAsync(stoppingToken);
+                    Counter.AddTimeSpan("Select 3000 unsent messages", DateTime.Now.Subtract(begin));
                     int count = 0;
                     DateTime startBatch = DateTime.Now;
                     foreach (var message in messages)
