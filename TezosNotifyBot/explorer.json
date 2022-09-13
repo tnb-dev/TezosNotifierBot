@@ -1,11 +1,11 @@
 [
   {
-    "id": 0,
-    "name": "tezblock.io",
-    "buttonprefix": "tezblock",
-    "blockurl": "https://tezblock.io/block/{0}?utm_source=tezosnotifierbot",
-    "accounturl": "https://tezblock.io/account/{0}?utm_source=tezosnotifierbot",
-    "opurl": "https://tezblock.io/transaction/{0}?utm_source=tezosnotifierbot"
+    "id": 3,
+    "name": "tzkt.io",
+    "buttonprefix": "tzkt",
+    "blockurl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot",
+    "accounturl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot",
+    "opurl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot"
   },
   {
     "id": 1,
@@ -16,27 +16,11 @@
     "opurl": "https://tzstats.com/{0}?utm_source=tezosnotifierbot"
   },
   {
-    "id": 3,
-    "name": "tzkt.io",
-    "buttonprefix": "tzkt",
-    "blockurl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot",
-    "accounturl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot",
-    "opurl": "https://tzkt.io/{0}?utm_source=tezosnotifierbot"
-  },
-  {
     "id": 4,
     "name": "mininax.io",
     "buttonprefix": "mininax",
     "blockurl": "https://mininax.io/mainnet/blocks/{0}?utm_source=tezosnotifierbot",
     "accounturl": "https://mininax.io/mainnet/accounts/{0}?utm_source=tezosnotifierbot",
     "opurl": "https://mininax.io/mainnet/operations/{0}?utm_source=tezosnotifierbot"
-  },
-  {
-    "id": 5,
-    "name": "teztracker.com",
-    "buttonprefix": "teztracker",
-    "blockurl": "https://teztracker.com/en/mainnet/block/{0}?utm_source=tezosnotifierbot",
-    "accounturl": "https://teztracker.com/en/mainnet/account/{0}?utm_source=tezosnotifierbot",
-    "opurl": "https://teztracker.com/en/mainnet/tx/{0}?utm_source=tezosnotifierbot"
   }
 ]
