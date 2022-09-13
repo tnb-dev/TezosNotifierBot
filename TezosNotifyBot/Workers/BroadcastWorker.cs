@@ -58,9 +58,9 @@ namespace TezosNotifyBot.Workers
                     .Where(x => x.Kind == MessageKind.Push && x.TelegramMessageId == null && x.Status == MessageStatus.Sending)
                     .Where(x => !x.User.Inactive)
                     .OrderBy(x => x.CreateDate)
-                    .Take(10000)
+                    .Take(3000)
                     .ToArrayAsync(stoppingToken);
-                    Counter.AddTimeSpan("Select 10000 unsent messages", DateTime.Now.Subtract(begin));
+                    Counter.AddTimeSpan("Select 3000 unsent messages", DateTime.Now.Subtract(begin));
                     int count = 0;
                     DateTime startBatch = DateTime.Now;
                     foreach (var message in messages)
