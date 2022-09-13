@@ -30,6 +30,8 @@ namespace TezosNotifyBot.Model
 
 		public static Explorer FromId(int id)
 		{
+			if (!explorers.ContainsKey(id))
+				return explorers.First().Value;
 			return explorers[id];
 		}
 
