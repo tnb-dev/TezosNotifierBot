@@ -9,7 +9,8 @@ namespace TezosNotifyBot.Tzkt
     // https://gist.github.com/StevenLiekens/82ddcf1823ee91cf6d5edfcdb1f6a591
     public class Operation
     {
-        public int Id { get; set; }        
+        // Not used field
+        // public ulong Id { get; set; }        
         public string Type { get; set; }        
         public int Level { get; set; }        
         public DateTime Timestamp { get; set; }        

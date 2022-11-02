@@ -66,7 +66,7 @@ namespace TezosNotifyBot.Domain
                 Language = languageCode,
                 // Enable release notifications only for new users
                 ReleaseNotify = true,
-                WhaleAlertThreshold = type == 0 ? 500000 : 0,
+                WhaleAlertThreshold = type == 0 ? 1000000 : 0,
                 VotingNotify = true,
                 Type = type,
                 SmartWhaleAlerts = type == 0,
