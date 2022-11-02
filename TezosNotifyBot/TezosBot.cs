@@ -2111,7 +2111,7 @@ namespace TezosNotifyBot
                         ev.CallbackQuery.Message.MessageId);
                 }
 
-                if (Config.DevUserNames.Contains(user.Username))
+                if (Config.Telegram.DevUsers.Contains(user.Username))
                 {
                     if (callbackData.StartsWith("broadcast"))
                     {
@@ -2229,10 +2229,10 @@ namespace TezosNotifyBot
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
                 }
-                var ka = db.KnownAddresses
+                var ka = db.KnownAddresses.ToList()
                     .Where(o => o.Name.Replace("'", "").Replace("`", "").Replace(" ", "").ToLower().Contains(q))
                     .Select(o => new {o.Address, o.Name});
-                var da = db.Delegates
+                var da = db.Delegates.ToList()
                     .Where(o => o.Name != null &&
                                 o.Name.Replace("'", "").Replace("`", "").Replace(" ", "").ToLower().Contains(q))
                     .Select(o => new {o.Address, o.Name});
@@ -2453,7 +2453,7 @@ namespace TezosNotifyBot
                             ReplyKeyboards.MainMenu(resMgr, user), parseMode: ParseMode.Markdown);
                         Bot.ForwardMessageAsync(user.Id, msg.UserId, (int)msg.TelegramMessageId);
                     }
-                    else if (message.Text.StartsWith("/help") && Config.DevUserNames.Contains(message.From.Username))
+                    else if (message.Text.StartsWith("/help") && Config.Telegram.DevUsers.Contains(message.From.Username))
                     {
                         SendTextMessage(db, user.Id, @"Administrator commands:
 /sql {query} - run sql query
@@ -2476,11 +2476,11 @@ namespace TezosNotifyBot
 /resume - resume processing blockchain
 /medium {cycle} - post medium article about cycle {cycle}", ReplyKeyboards.MainMenu(resMgr, user));
                     }
-                    else if (message.Text.StartsWith("/sql") && Config.DevUserNames.Contains(message.From.Username))
+                    else if (message.Text.StartsWith("/sql") && Config.Telegram.DevUsers.Contains(message.From.Username))
                     {
                         OnSql(db, user, message.Text.Substring("/sql".Length));
                     }
-                    else if (message.Text.StartsWith("/devstat") && Config.DevUserNames.Contains(message.From.Username))
+                    else if (message.Text.StartsWith("/devstat") && Config.Telegram.DevUsers.Contains(message.From.Username))
                     {
                         Stream s = GenerateStreamFromString(_serviceProvider.GetService<StatCounter>().ToString());
                         string fileName = "stat.txt";
