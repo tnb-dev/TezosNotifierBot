@@ -1544,11 +1544,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("deleteaddress"))
                 {
-                    UserAddress ua = null;
-                    if (!int.TryParse(callbackData.Substring("deleteaddress ".Length), out var uaid))
-                        ua = null;
-                    else
-                        ua = db.UserAddresses.FirstOrDefault(o => o.UserId == userId && o.Id == uaid && !o.IsDeleted);
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.IsDeleted = true;
@@ -1572,8 +1569,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setthreshold"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("setthreshold ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         user.UserState = UserState.SetAmountThreshold;
@@ -1591,8 +1588,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setname"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("setname ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         user.UserState = UserState.SetName;
@@ -1611,7 +1608,6 @@ namespace TezosNotifyBot
                 if (callbackData.StartsWith("notifyfollowers"))
                 {
                     var addrId = int.Parse(callbackData.Substring("notifyfollowers ".Length));
-
                     var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (userAddress != null)
                     {
@@ -1643,8 +1639,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setdlgthreshold"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("setdlgthreshold ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         user.UserState = UserState.SetDlgAmountThreshold;
@@ -1770,8 +1766,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("bakingon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("bakingon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = true;
@@ -1784,8 +1780,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("manageaddress"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("manageaddress ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
@@ -1796,8 +1792,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("bakingoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("bakingoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = false;
@@ -1810,8 +1806,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("cycleon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("cycleon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = true;
@@ -1824,8 +1820,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("cycleoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("cycleoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = false;
@@ -1838,8 +1834,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneron"))
                 {
-                    var ua = db.UserAddresses.FirstOrDefault(o => !o.IsDeleted && !o.User.Inactive &&
-                        o.Id.ToString() == callbackData.Substring("owneron ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.IsOwner = true;
@@ -1852,8 +1848,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneroff"))
                 {
-                    var ua = db.UserAddresses.FirstOrDefault(o => !o.IsDeleted && !o.User.Inactive &&
-                        o.Id.ToString() == callbackData.Substring("owneroff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.IsOwner = false;
@@ -1866,8 +1862,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("rightson"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("rightson ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyRightsAssigned = true;
@@ -1880,8 +1876,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("rightsoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("rightsoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyRightsAssigned = false;
@@ -1893,8 +1889,8 @@ namespace TezosNotifyBot
                 }
                 if (callbackData.StartsWith("outoffreespaceon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("outoffreespaceon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyOutOfFreeSpace = true;
@@ -1907,8 +1903,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("outoffreespaceoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("outoffreespaceoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyOutOfFreeSpace = false;
@@ -1921,8 +1917,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("tranon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("tranon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyTransactions = true;
@@ -1935,8 +1931,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("tranoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("tranoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyTransactions = false;
@@ -1949,8 +1945,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("awardon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("awardon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyAwardAvailable = true;
@@ -1963,8 +1959,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("awardoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("awardoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyAwardAvailable = false;
@@ -1977,8 +1973,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("dlgon"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("dlgon ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyDelegations = true;
@@ -1991,8 +1987,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("dlgoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("dlgoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyDelegations = false;
@@ -2005,14 +2001,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("toggle-delegate-status"))
                 {
-                    var address = db.GetUserAddresses(userId)
-                        .FirstOrDefault(x => x.Id == callbackArgs.GetInt(0));
-                    
-                    if (address != null)
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    if (ua != null)
                     {
-                        address.NotifyDelegateStatus = !address.NotifyDelegateStatus;
+                        ua.NotifyDelegateStatus = !ua.NotifyDelegateStatus;
                         db.SaveChanges();
-                        ViewAddress(db, user.Id, address, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                     {
@@ -2022,8 +2017,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("misseson"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("misseson ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyMisses = true;
@@ -2036,8 +2031,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("missesoff"))
                 {
-                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
-                        o.Id.ToString() == callbackData.Substring("missesoff ".Length));
+                    var addrId = int.Parse(callbackArgs[0]);
+                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (ua != null)
                     {
                         ua.NotifyMisses = false;
