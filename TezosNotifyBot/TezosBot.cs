@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Humanizer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.InMemory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -50,8 +51,7 @@ namespace TezosNotifyBot
         private readonly IServiceProvider _serviceProvider;
         private BotConfig Config { get; set; }
         private ILogger<TezosBot> Logger { get; }
-        private Repository repo;
-
+        
         /// <summary>
         /// Try to use and extend `botClient`
         /// </summary>
@@ -88,7 +88,7 @@ namespace TezosNotifyBot
         private readonly CommandsManager commandsManager;
         private readonly TezosBotFacade botClient;
         string twitterAccountName;
-        bool twitterNetworkIssueNotified = false;
+
         bool paused = false;
         string botUserName;
         Queue<DateTime> blockProcessings = new Queue<DateTime>();
@@ -106,7 +106,6 @@ namespace TezosNotifyBot
             this.commandsManager = commandsManager;
             this.botClient = botClient;
 
-            repo = _serviceProvider.GetRequiredService<Repository>();
             addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
             resMgr = resourceManager;
         }
@@ -141,42 +140,42 @@ namespace TezosNotifyBot
                 Logger.LogInformation("Старт обработки сообщений @" + me.Username);
                                 
                 var message = new StringBuilder();
-                message.AppendLine($"{me.Username} v{version} started, last block: {repo.GetLastBlockLevel()}");
+                message.AppendLine($"{me.Username} v{version} started");
                 message.AppendLine();
                 message.AppendLine($"Using TzKt api: {(Config.TzKtUrl.Contains("localhost") ? "local" : Config.TzKtUrl)}");
                 message.AppendLine($"Using BCD api: {(Config.BetterCallDevUrl.Contains("localhost") ? "local" : Config.BetterCallDevUrl)}");
-                
-                NotifyDev(message.ToString(), 0);
 
-                var lbl = repo.GetLastBlockLevel();
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var provider = scope.ServiceProvider;
+                    using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+                    NotifyDev(db, message.ToString(), 0);
+                }
                 var tzkt = _serviceProvider.GetRequiredService<ITzKtClient>();
-                var cycles = tzkt.GetCycles();
-                var cycle = cycles.Single(c => c.firstLevel <= lbl.Item1 && lbl.Item1 <= c.lastLevel);                    
-                // TODO: Check why `snapshot_cycle` is null
-                NotifyDev($"Current cycle: {cycle.index}, totalStaking: {cycle.totalStaking}", 0);
-                if (Config.TwitterConsumerKey != null)
+                
+                if (Config.Twitter.ConsumerKey != null)
                 {
                     try
                     {
                         var settings = await twitter.GetSettings();
                         twitterAccountName = (string) JObject.Parse(settings)["screen_name"];
-                        if (Config.TwitterChatId != 0)
-                            Bot.SendTextMessageAsync(Config.TwitterChatId,
+                        if (Config.Twitter.ChatId != 0)
+                            await Bot.SendTextMessageAsync(Config.Twitter.ChatId,
                                 $"🚀 Bot started using twitter account: https://twitter.com/{twitterAccountName}");
-                        //twitter.TweetAsync("🚀 Bot started!");}
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // skip exception
                     }
                 }
-
-                //NotifyDev("🐦 Twitter response: " + twresult, 0, Telegram.Bot.Types.Enums.ParseMode.Default);
-                LoadAddressList(tzkt);
-                DateTime lastBlock;
+                                
+                //DateTime lastBlock;
                 DateTime lastWarn = DateTime.Now;
                 do
                 {
+                    using var scope = _serviceProvider.CreateScope();
+                    var provider = scope.ServiceProvider;
+                    using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
                     if (paused)
 					{
                         Thread.Sleep(5000);
@@ -184,6 +183,7 @@ namespace TezosNotifyBot
 					}
                     try
                     {
+
                         if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
                         {
                             try
@@ -197,24 +197,15 @@ namespace TezosNotifyBot
                             mdReceived = DateTime.Now;
                         }
 
-                        var block = repo.GetLastBlockLevel();
-                        //lastHash = block.Item3;
-                        //if (lastHash == null)
-                        //    lastHash = _nodeManager.Client.GetBlockHeader(block.Item1).hash;
-                        if (!Client_BlockReceived(block.Item1 + 1))
-                            Thread.Sleep(1000);
-                        if (repo.GetLastBlockLevel().Item1 != block.Item1)
-                        {
-                            lastReceived = DateTime.Now;
-                            foreach (var user1 in repo.GetUsers().Where(o => o.NetworkIssueNotified))
-                                user1.NetworkIssueNotified = false;
-                            twitterNetworkIssueNotified = false;
-                        }
+                        var block = db.GetLastBlockLevel();
+                        
+                        if (!Client_BlockReceived(db, tzkt, block.Item1 + 1))
+                            Thread.Sleep(5000);
 
                         if (DateTime.Now.Subtract(lastReceived).TotalMinutes > 5 &&
                             DateTime.Now.Subtract(lastWarn).TotalMinutes > 10)
                         {
-                            NotifyDev(
+                            NotifyDev(db,
                                 $"‼️ Last block {block} received {(int) DateTime.Now.Subtract(lastReceived).TotalMinutes} minutes ago, check node‼️",
                                 0);
                             lastWarn = DateTime.Now;
@@ -225,7 +216,7 @@ namespace TezosNotifyBot
                         if (DateTime.Now.Subtract(lastWebExceptionNotify).TotalMinutes > 5)
                         {
                             LogError(ex);
-                            NotifyDev($"‼️ WebException: " + ex.Message, 0);
+                            NotifyDev(db, $"‼️ WebException: " + ex.Message, 0);
                             lastWebExceptionNotify = DateTime.Now;
                         }
 
@@ -234,16 +225,8 @@ namespace TezosNotifyBot
                     catch (Exception ex)
                     {
                         LogError(ex);
-                        NotifyDev($"‼️{ex.Message}\n🧱{prevBlock.Level + 1}", 0);
+                        NotifyDev(db, $"‼️{ex.Message}\n🧱{prevBlock.Level + 1}", 0);
                     }
-                    
-                    //int wait = 60000 - (int) DateTime.Now.Subtract(lastReceived).TotalMilliseconds;
-                    //if (wait > 10)
-                    //{
-                    //    wait = 5000;
-                    //    Logger.LogDebug($"Waiting {wait} milliseconds");
-                    //    Thread.Sleep(wait);
-                    //}
                 } while (cancelToken.IsCancellationRequested is false);
             }
             catch (Exception fe)
@@ -254,19 +237,22 @@ namespace TezosNotifyBot
 
         private void Twitter_OnTwitResponse(int twitId, string response)
         {
-            var tw = repo.GetTwitterMessage(twitId);
+            using var scope = _serviceProvider.CreateScope();
+            var provider = scope.ServiceProvider;
+            using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+            var tw = db.TwitterMessages.Single(o => o.Id == twitId);
             var jObject = JObject.Parse(response);
             if (jObject["errors"] != null)
             {
-                if (Config.TwitterChatId != 0)
-                    Bot.SendTextMessageAsync(Config.TwitterChatId, $"Twitter Errors: {response}", ParseMode.Default);
+                if (Config.Twitter.ChatId != 0)
+                    Bot.SendTextMessageAsync(Config.Twitter.ChatId, $"Twitter Errors: {response}", ParseMode.Default);
             }
             else
             {
                 tw.TwitterId = (string) jObject["id"];
-                repo.UpdateTwitterMessage(tw);
-                if (Config.TwitterChatId != 0)
-                    Bot.SendTextMessageAsync(Config.TwitterChatId,
+                db.SaveChanges();
+                if (Config.Twitter.ChatId != 0)
+                    Bot.SendTextMessageAsync(Config.Twitter.ChatId,
                         $"Published: https://twitter.com/{twitterAccountName}/status/{tw.TwitterId}", ParseMode.Default,
                         replyMarkup: ReplyKeyboards.TweetSettings(twitId));
             }
@@ -274,27 +260,27 @@ namespace TezosNotifyBot
 
         private int Twitter_OnTwit(string text)
         {
-            if (Config.TwitterChatId != 0)
-                Bot.SendTextMessageAsync(Config.TwitterChatId,
+            using var scope = _serviceProvider.CreateScope();
+            var provider = scope.ServiceProvider;
+            using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+            if (Config.Twitter.ChatId != 0)
+                Bot.SendTextMessageAsync(Config.Twitter.ChatId,
                     text +
                     $"\n\n📏 {Regex.Replace(text, "http(s)?://([\\w-]+.)+[\\w-]+(/[\\w- ./?%&=])?", "01234567890123456789123").Length}",
                     ParseMode.Default);
-            return repo.CreateTwitterMessage(text).Id;
-        }
-
-        private void Worker_OnError(object sender, ErrorEventArgs e)
-        {
-            NotifyDev("‼️" + sender + ": " + e.GetException().Message, 0);
+            var twm = new TwitterMessage { Text = text, CreateDate = DateTime.Now };
+            db.Add(twm);
+            db.SaveChanges();
+            return twm.Id;
         }
 
         //BlockHeader lastHeader;
         //BlockMetadata lastMetadata;
         Block prevBlock;
 
-        private bool Client_BlockReceived(int blockLevel)
+        private bool Client_BlockReceived(Storage.TezosDataContext db, ITzKtClient tzKt, int blockLevel)
         {
-            lastReceived = DateTime.Now;
-            var tzKt = _serviceProvider.GetService<ITzKtClient>();
+            lastReceived = DateTime.Now;            
             if (_currentConstants == null)
                 _currentConstants = tzKt.GetCurrentProtocol().constants;
             var tzKtHead = tzKt.GetHead();
@@ -308,9 +294,9 @@ namespace TezosNotifyBot
             if (prevBlock == null)
                 prevBlock = tzKt.GetBlock(blockLevel - 1);
             
-            ProcessBlockBakingData(block);
+            ProcessBlockBakingData(db, block);
 
-            ProcessBlockMetadata(block, tzKt);
+            ProcessBlockMetadata(db, block, tzKt);
 
             // var periods = tzKt.GetVotingPeriods();
             // var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
@@ -321,8 +307,8 @@ namespace TezosNotifyBot
             //    prevMD.voting_period_kind == "promotion_vote")
             //{
             //    var hash = _nodeManager.Client.GetCurrentProposal(prevHeader.hash);
-            //    var p = repo.GetProposal(hash);
-            //    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+            //    var p = rep_o.GetProposal(hash);
+            //    foreach (var u in rep_o.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
             //    {
             //        var result = blockMetadata.next_protocol == hash
             //            ? resMgr.Get(Res.PromotionVoteSuccess,
@@ -335,7 +321,7 @@ namespace TezosNotifyBot
             //    }
             //}
  
-            var allUsers = repo.GetUsers();/*
+            var allUsers = db.Users.ToList();/*
             foreach (var op in operations)
             {
                 foreach (var content in op.contents)
@@ -352,7 +338,7 @@ namespace TezosNotifyBot
                             decimal rewards = content.metadata.balance_updates.Where(o => o.change > 0)
                                 .Sum(o => o.change);
 
-                            var offenderAddresses = repo.GetUserAddresses(offender);
+                            var offenderAddresses = rep_o.GetUserAddresses(offender);
                             foreach (var ua in offenderAddresses)
                             {
                                 string result = resMgr.Get(Res.DoubleBakingOccured,
@@ -366,7 +352,7 @@ namespace TezosNotifyBot
                                 SendTextMessageUA(ua, result);
                             }
 
-                            var bakerAddresses = repo.GetUserAddresses(block.Baker.address);
+                            var bakerAddresses = rep_o.GetUserAddresses(block.Baker.address);
                             foreach (var ua in bakerAddresses)
                             {
                                 string result = resMgr.Get(Res.DoubleBakingEvidence,
@@ -385,12 +371,12 @@ namespace TezosNotifyBot
             }*/
 
             var fromToAmountHash = new List<(string from, string to, decimal amount, string hash, Token token)>();
-            ProcessTransactions(block.Transactions, fromToAmountHash, allUsers);
+            ProcessTransactions(db, block.Transactions, fromToAmountHash, allUsers);
             foreach (var t in fromToAmountHash.Where(o => o.amount >= 10000 && o.token == null))
-                repo.AddWhaleTransaction(t.from, t.to, block.Level, block.Timestamp, t.amount, t.hash);
+                db.AddWhaleTransaction(t.from, t.to, block.Level, block.Timestamp, t.amount, t.hash);
 
-            ProcessDelegations(block.Delegations);
-            ProcessOriginations(block.Originations);
+            ProcessDelegations(db, block.Delegations);
+            ProcessOriginations(db, block.Originations);
 
             var fromGroup = fromToAmountHash.Where(o => o.from != "").GroupBy(o => new {o.from, o.token});
             foreach (var from in fromGroup)
@@ -414,12 +400,13 @@ namespace TezosNotifyBot
                     }
                 }
 
-                var fromAddresses = repo.GetUserAddresses(from.Key.from).Where(o => o.NotifyTransactions).ToList();
+                var fromAddresses = db.UserAddresses.Include(x => x.User)
+                    .Where(o => o.Address == from.Key.from && !o.IsDeleted && !o.User.Inactive && o.NotifyTransactions).ToList();
                 decimal fromBalance = 0;
                 bool fromDelegate = false;
                 if (fromAddresses.Count > 0)
                 {
-                    if (repo.IsDelegate(from.Key.from))
+                    if (db.Delegates.Any(o => o.Address == from.Key.from))
                     {
                         fromDelegate = true;
                         var di = addrMgr.GetDelegate(block.Hash, from.Key.from);
@@ -455,7 +442,7 @@ namespace TezosNotifyBot
                     if (from_ua.Count() == 1)
                     {
                         var to = from_ua.Single().Item2;
-                        var ua_to = repo.GetUserTezosAddress(ua.UserId, to);
+                        var ua_to = db.GetUserTezosAddress(ua.UserId, to);
                         result = resMgr.Get(Res.OutgoingTransaction,
                             new ContextObject
                             {
@@ -477,7 +464,7 @@ namespace TezosNotifyBot
                         foreach (var to in from_ua.OrderByDescending(o => o.Item3))
                         {
                             cnt++;
-                            var targetAddr = repo.GetUserTezosAddress(ua.UserId, to.Item2);
+                            var targetAddr = db.GetUserTezosAddress(ua.UserId, to.Item2);
                             result += resMgr.Get(Res.To,
                                           new ContextObject
                                               {u = ua.User, Amount = to.Item3, ua = targetAddr, Token = to.token}) +
@@ -511,8 +498,7 @@ namespace TezosNotifyBot
                         result += "\n#outgoing" +
                                   (from.Key.token != null ? " #" + from.Key.token.Symbol.ToLower() : "") +
                                   ua.HashTag() + tags;
-                    SendTextMessageUA(ua, result);
-                    repo.UpdateUserAddress(ua);
+                    SendTextMessageUA(db, ua, result);
                 }
             }
 
@@ -538,12 +524,12 @@ namespace TezosNotifyBot
                     }
                 }
 
-                var toAddresses = repo.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
+                var toAddresses = db.GetUserAddresses(to.Key.to).Where(o => o.NotifyTransactions).ToList();
                 decimal toBalance = 0;
                 bool toDelegate = false;
                 if (toAddresses.Count > 0)
                 {
-                    if (repo.IsDelegate(to.Key.to))
+                    if (db.Delegates.Any(o => o.Address == to.Key.to))
                     {
                         toDelegate = true;
                         var di = addrMgr.GetDelegate(block.Hash, to.Key.to);
@@ -571,7 +557,7 @@ namespace TezosNotifyBot
                 {
                     var receiverAddr = to.Key.to;
                     var senderAddr = to.First().Item1;
-                    var isPayout = repo.IsPayoutAddress(senderAddr);
+                    var isPayout = db.IsPayoutAddress(senderAddr);
                     if (isPayout)
                         return;
                     
@@ -584,7 +570,7 @@ namespace TezosNotifyBot
                     if (amount < receiver.InflationValue)
                         return;
                     
-                    var delegatesAddr = repo.GetUserAddresses(contract.@delegate)
+                    var delegatesAddr = db.GetUserAddresses(contract.@delegate)
                         .Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
                         
                     foreach (var delegateAddress in delegatesAddr)
@@ -617,7 +603,7 @@ namespace TezosNotifyBot
                             text.AppendLine(tags.Select(x => x.Trim()).Join(" "));
                         }
 
-                        PushTextMessage(delegateAddress, text.ToString());
+                        PushTextMessage(db, delegateAddress, text.ToString());
                         // TODO: Using ChatId instead of UserId?
                         //SendTextMessage(delegateAddress.UserId, text.ToString());
                     }
@@ -662,10 +648,10 @@ namespace TezosNotifyBot
                         }
                         else
                         {
-                            var ua_from = repo.GetUserTezosAddress(ua.UserId, from);
+                            var ua_from = db.GetUserTezosAddress(ua.UserId, from);
 
-                            var isSenderPayout = repo.IsPayoutAddress(from);
-                            var isReceiverPayout = repo.IsPayoutAddress(ua.Address);
+                            var isSenderPayout = db.IsPayoutAddress(from);
+                            var isReceiverPayout = db.IsPayoutAddress(ua.Address);
 
                             var isPayoutOperation = isSenderPayout && isReceiverPayout is false;
                             if (isPayoutOperation)
@@ -702,7 +688,7 @@ namespace TezosNotifyBot
                         foreach (var from in to_ua.OrderByDescending(o => o.Item3))
                         {
                             cnt++;
-                            var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from.Item1);
+                            var sourceAddr = db.GetUserTezosAddress(ua.UserId, from.Item1);
                             result += resMgr.Get(Res.From,
                                 new ContextObject
                                     {u = ua.User, Amount = from.Item3, ua = sourceAddr, Token = from.token}) + "\n";
@@ -734,13 +720,12 @@ namespace TezosNotifyBot
                     if (!ua.User.HideHashTags)
                         result += $"\n{operationTag}" + (to.Key.token != null ? " #" + to.Key.token.Symbol.ToLower() : "") +
                                   ua.HashTag() + tags;
-                    SendTextMessageUA(ua, result);
-                    repo.UpdateUserAddress(ua);
+                    SendTextMessageUA(db, ua, result);
                 }
             }
 			
             if (!lastBlockChanged)
-                repo.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
+                db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
             Logger.LogInformation($"Block {block.Level} processed");
             //lastHeader = header;
             //lastHash = header.hash;
@@ -757,7 +742,7 @@ namespace TezosNotifyBot
             return true;
         }
 
-        void ProcessTransactions(List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<User> allUsers)
+        void ProcessTransactions(Storage.TezosDataContext db, List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<User> allUsers)
         {
             foreach (var op in ops)
             {
@@ -772,7 +757,7 @@ namespace TezosNotifyBot
                 if (op.Parameter?.entrypoint == "transfer")
                 {
                     //Logger.LogDebug("transfer " + to + " " + (op.Parameter.value is JObject).ToString() + " " + op.Parameter?.value?.GetType()?.FullName);
-                    token = repo.GetToken(to);
+                    token = db.Tokens.FirstOrDefault(o => o.ContractAddress == to);
                     //if (token?.ContractAddress == "KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton" && op.Parameter?.value is JArray)
                     //    HandleNftTransfer(op, token).ConfigureAwait(true).GetAwaiter().GetResult();
                     if (token != null && op.Parameter.value is JObject)
@@ -787,7 +772,7 @@ namespace TezosNotifyBot
                 }
                 if (op.Parameter?.entrypoint == "mint" && op.Parameter.value is JObject)
                 {
-                    token = repo.GetToken(to);
+                    token = db.Tokens.FirstOrDefault(o => o.ContractAddress == to);
                     if (token != null)
                     {
                         JObject p = op.Parameter.value as JObject;
@@ -804,15 +789,15 @@ namespace TezosNotifyBot
                 // Уведомления о китах
                 if (token == null)
                 {
-                    var ka_from = repo.GetKnownAddress(from) ?? new KnownAddress(from, null);
-                    var ka_to = repo.GetKnownAddress(to) ?? new KnownAddress(to, null);
+                    var ka_from = db.KnownAddresses.SingleOrDefault(x => x.Address == from) ?? new KnownAddress(from, null);
+                    var ka_to = db.KnownAddresses.SingleOrDefault(x => x.Address == to) ?? new KnownAddress(to, null);
                     if (!ka_from.ExcludeWhaleAlert && !ka_to.ExcludeWhaleAlert)
                     {
                         foreach (var u in allUsers.Where(o =>
                             !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount))
                         {
-                            var ua_from = repo.GetUserTezosAddress(u.Id, from);
-                            var ua_to = repo.GetUserTezosAddress(u.Id, to);
+                            var ua_from = db.GetUserTezosAddress(u.Id, from);
+                            var ua_to = db.GetUserTezosAddress(u.Id, to);
                             string result = resMgr.Get(Res.WhaleTransaction,
                                 new ContextObject
                                 {
@@ -828,14 +813,14 @@ namespace TezosNotifyBot
                                 result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
                             }
 
-                            SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                            SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                         }
 
                         // Уведомления о китах для твиттера
                         if (amount >= 500000)
                         {
-                            var ua_from = repo.GetUserTezosAddress(0, from);
-                            var ua_to = repo.GetUserTezosAddress(0, to);
+                            var ua_from = db.GetUserTezosAddress(0, from);
+                            var ua_to = db.GetUserTezosAddress(0, to);
                             string result = resMgr.Get(Res.TwitterWhaleTransaction,
                                 new ContextObject
                                 { OpHash = op.Hash, Amount = amount, md = md, ua_from = ua_from, ua_to = ua_to });
@@ -849,7 +834,7 @@ namespace TezosNotifyBot
 		{
             await twitter.TweetAsync(text);
         }
-        void ProcessDelegations(List<Delegation> ops)
+        void ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops)
 		{
             foreach(var op in ops)
             {
@@ -857,13 +842,13 @@ namespace TezosNotifyBot
                     continue;
                 var from = op.Sender.address;
                 var to = op.NewDelegate?.address;
-                var fromAddresses = repo.GetUserAddresses(from);
+                var fromAddresses = db.GetUserAddresses(from);
                 if (to != null)
                 {
-                    var toAddresses = repo.GetUserAddresses(to);
-                    foreach (var ua in repo.GetUserAddresses(from).Where(o => o.NotifyDelegations))
+                    var toAddresses = db.GetUserAddresses(to);
+                    foreach (var ua in db.GetUserAddresses(from).Where(o => o.NotifyDelegations))
                     {
-                        var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
+                        var targetAddr = db.GetUserTezosAddress(ua.UserId, to);
                         string result = resMgr.Get(Res.NewDelegation,
                             new ContextObject
                             {
@@ -875,14 +860,14 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
-                        SendTextMessageUA(ua, result);
+                        SendTextMessageUA(db, ua, result);
                     }
 
-                    foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
+                    foreach (var ua in db.GetUserAddresses(to).Where(o => o.NotifyDelegations))
                     {                        
                         if (ua.DelegationAmountThreshold > op.Amount / 1000000M)
                             continue;
-                        var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
+                        var sourceAddr = db.GetUserTezosAddress(ua.UserId, from);
                         string result = resMgr.Get(Res.NewDelegation,
                             new ContextObject
                             {
@@ -894,18 +879,18 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#delegation" + sourceAddr.HashTag() + ua.HashTag();
-                        SendTextMessageUA(ua, result);
+                        SendTextMessageUA(db, ua, result);
                     }
                 }
 
                 var prevdelegate = op.PrevDelegate?.address;
                 if (prevdelegate != null)
                 {
-                    foreach (var ua in repo.GetUserAddresses(prevdelegate).Where(o => o.NotifyDelegations))
+                    foreach (var ua in db.GetUserAddresses(prevdelegate).Where(o => o.NotifyDelegations))
                     {
                         if (ua.DelegationAmountThreshold > op.Amount / 1000000M)
                             continue;
-                        var sourceAddr = repo.GetUserTezosAddress(ua.UserId, from);
+                        var sourceAddr = db.GetUserTezosAddress(ua.UserId, from);
                         string result = resMgr.Get(Res.UnDelegation,
                             new ContextObject
                             {
@@ -917,12 +902,12 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#leave_delegate" + sourceAddr.HashTag() + ua.HashTag();
-                        SendTextMessageUA(ua, result);
+                        SendTextMessageUA(db, ua, result);
                     }
                 }
             }
         }
-        void ProcessOriginations(List<Origination> ops)
+        void ProcessOriginations(Storage.TezosDataContext db, List<Origination> ops)
 		{
             foreach (var op in ops)
             {
@@ -933,29 +918,29 @@ namespace TezosNotifyBot
                     continue;
                 var amount = op.ContractBalance / 1000000M;
                 string tezAmount = amount.TezToString();
-                var toAddresses = repo.GetUserAddresses(to);
-                foreach (var ua in repo.GetUserAddresses(op.Sender.address))
+                var toAddresses = db.GetUserAddresses(to);
+                foreach (var ua in db.GetUserAddresses(op.Sender.address))
                 {
-                    var targetAddr = repo.GetUserTezosAddress(ua.UserId, to);
+                    var targetAddr = db.GetUserTezosAddress(ua.UserId, to);
                     string result = resMgr.Get(Res.NewDelegation,
                         new ContextObject
                         { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = ua, ua_to = targetAddr });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
-                    SendTextMessageUA(ua, result);
+                    SendTextMessageUA(db, ua, result);
                 }
 
-                foreach (var ua in repo.GetUserAddresses(to).Where(o => o.NotifyDelegations))
+                foreach (var ua in db.GetUserAddresses(to).Where(o => o.NotifyDelegations))
                 {
                     if (ua.DelegationAmountThreshold > amount)
                         continue;
-                    var sourceAddr = repo.GetUserTezosAddress(ua.UserId, op.OriginatedContract.address);
+                    var sourceAddr = db.GetUserTezosAddress(ua.UserId, op.OriginatedContract.address);
                     string result = resMgr.Get(Res.NewDelegation,
                         new ContextObject
                         { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = sourceAddr, ua_to = ua });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#delegation " + sourceAddr.HashTag() + ua.HashTag();
-                    SendTextMessageUA(ua, result);
+                    SendTextMessageUA(db, ua, result);
                 }
             }
         }
@@ -995,7 +980,7 @@ namespace TezosNotifyBot
 			return result;
         }
         */
-        void ProcessBlockBakingData(Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
+        void ProcessBlockBakingData(Storage.TezosDataContext db, Block block/*, BlockHeader header, BlockMetadata blockMetadata_*/)
         {
             Logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
@@ -1023,7 +1008,7 @@ namespace TezosNotifyBot
 
                 if (baking_right.status == "missed" || baking_right.status == "uncovered")
                 {
-                    var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
+                    var uaddrs = db.GetUserAddresses(baking_right.baker.address);
                     ContractInfo info = null;
                     if (uaddrs.Count > 0)
                         info = addrMgr.GetContract(block.Hash, baking_right.baker.address);
@@ -1047,7 +1032,7 @@ namespace TezosNotifyBot
 
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_baking" + ua.HashTag();
-                        PushTextMessage(ua, result);
+                        PushTextMessage(db, ua, result);
                         //SendTextMessageUA(ua, result);
                     }
                 }
@@ -1055,7 +1040,7 @@ namespace TezosNotifyBot
                 {
                     if (block.blockRound > 1)
                     {
-                        var uaddrs = repo.GetUserAddresses(baking_right.baker.address);
+                        var uaddrs = db.GetUserAddresses(baking_right.baker.address);
                         foreach (var ua in uaddrs)
                         {
                             var result = resMgr.Get(Res.StoleBaking,
@@ -1066,7 +1051,7 @@ namespace TezosNotifyBot
                                 });
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#stole_baking" + ua.HashTag();
-                            PushTextMessage(ua, result);
+                            PushTextMessage(db, ua, result);
                             //SendTextMessageUA(ua, result);
                         }
                     }
@@ -1089,7 +1074,7 @@ namespace TezosNotifyBot
 
                 //rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
                 //    header.level + 1, rewards, d.slots.Value);
-                var uaddrs = repo.GetUserAddresses(d.baker.address);
+                var uaddrs = db.GetUserAddresses(d.baker.address);
                 ContractInfo info = null;
                 if (uaddrs.Count > 0)
                     info = addrMgr.GetContract(block.Hash, d.baker.address);
@@ -1109,7 +1094,7 @@ namespace TezosNotifyBot
                         });
                     if (!ua.User.HideHashTags)
                         result += "\n\n#missed_endorsing" + ua.HashTag();
-                    PushTextMessage(ua, result);
+                    PushTextMessage(db, ua, result);
                     //SendTextMessageUA(ua, result);
                 }
             }
@@ -1135,7 +1120,7 @@ namespace TezosNotifyBot
         }
 
         Cycle currentCycle;
-        void ProcessBlockMetadata(Block block, ITzKtClient tzKtClient)
+        void ProcessBlockMetadata(Storage.TezosDataContext db, Block block, ITzKtClient tzKtClient)
         {
             Logger.LogDebug($"ProcessBlockMetadata {block.Level}");
             var cycles = tzKtClient.GetCycles();
@@ -1146,7 +1131,7 @@ namespace TezosNotifyBot
                 Logger.LogDebug($"Calc delegates rewards on {block.Level}");
                 //User,rewards,tags,lang
                 List<RewardMsg> msgList = new List<RewardMsg>();
-                var delegates = repo.GetUserDelegates();
+                var delegates = rep_o.GetUserDelegates();
                 foreach (var d in delegates.Where(ua => ua.NotifyBakingRewards).GroupBy(ua => ua.Address))
                 {
                     var rewards = tzKtClient.GetBakerRewards(d.Key, cycle.index - 5);
@@ -1204,7 +1189,8 @@ namespace TezosNotifyBot
             }*/
             if (cycle.firstLevel == block.Level)
             {
-                var uad = repo.GetUserDelegates();
+                var uad = db.UserAddresses.Where(o => !o.IsDeleted && (o.NotifyCycleCompletion || o.NotifyBakingRewards || o.NotifyOutOfFreeSpace) && !o.User.Inactive)
+                    .Join(db.Delegates, o => o.Address, o => o.Address, (o, d) => o).Include(x => x.User).ToList();
 
                 var penalties = tzKtClient.GetRevelationPenalties(block.Level - 1);
                 foreach (var penalty in penalties)
@@ -1222,7 +1208,7 @@ namespace TezosNotifyBot
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_revelation" + ua.HashTag();
                         //SendTextMessageUA(ua, result);
-                        PushTextMessage(ua, result);
+                        PushTextMessage(db, ua, result);
                     }
                 }
 
@@ -1242,7 +1228,7 @@ namespace TezosNotifyBot
                 //    {
                 //        decimal accured =
                 //            addrMgr.GetRewardsForCycle(_nodeManager.Client, d, di, blockMetadata.level.cycle - 1);
-                //        repo.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long) accured);
+                //        rep_o.UpdateDelegateAccured(d, (blockMetadata.level.cycle - 1), (long) accured);
                 //    }
                 //}
 
@@ -1281,20 +1267,20 @@ namespace TezosNotifyBot
                     if (!usr.First().User.HideHashTags)
                         perf += "\n\n#cycle" + String.Join("", usr.Select(o => o.HashTag()));
                     //SendTextMessageUA(usr.First(), perf);
-                    PushTextMessage(usr.First(), perf);
+                    PushTextMessage(db, usr.First(), perf);
                 }
                 Logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
                 // TODO: TNB-22
 
-                NotifyAssignedRights(tzKtClient, uad, cycle.index);
+                NotifyAssignedRights(db, tzKtClient, uad, cycle.index);
 
                 //NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
 
-                LoadAddressList(tzKtClient);
+                LoadAddressList(tzKtClient, db);
                 /*
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
                 // Notification of the availability of the award to the delegator
-                var userAddressDelegators = repo.GetDelegators();
+                var userAddressDelegators = rep_o.GetDelegators();
                 var addrs = userAddressDelegators.Select(o => o.Address).Distinct();
                 int cycle1 = cycle.index - 6;
                 foreach (var addr in addrs)
@@ -1309,7 +1295,7 @@ namespace TezosNotifyBot
                                 u = ua.User,
                                 Cycle = cycle1,
                                 Amount = ua_rewards.TotalRewards,
-                                ua_to = repo.GetUserTezosAddress(ua.UserId, ua_rewards.baker.address),
+                                ua_to = rep_o.GetUserTezosAddress(ua.UserId, ua_rewards.baker.address),
                                 ua = ua
                             };
                             var message = resMgr.Get(Res.AwardAvailable, context);
@@ -1323,12 +1309,12 @@ namespace TezosNotifyBot
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1} finished");*/
             }
 
-            VotingNotify(block, cycle, tzKtClient);
+            VotingNotify(db, block, cycle, tzKtClient);
 
             Logger.LogDebug($"ProcessBlockMetadata {block.Level} completed");
         }
 
-        void NotifyAssignedRights(ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
+        void NotifyAssignedRights(Storage.TezosDataContext db, ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
 		{
             var delegates = userAddresses.Where(ua => ua.NotifyCycleCompletion).Select(ua => ua.Address).Distinct();
             Dictionary<string, RightsInfo> rights = new Dictionary<string, RightsInfo>();
@@ -1361,7 +1347,7 @@ namespace TezosNotifyBot
                 if (!u.Key.HideHashTags)
                     message += "#rights_assigned" + tags;
                 //SendTextMessage(u.Key.Id, message, ReplyKeyboards.MainMenu(resMgr, u.Key));
-                PushTextMessage(u.Key.Id, message);
+                PushTextMessage(db, u.Key.Id, message);
             }
 		}
         /*
@@ -1412,13 +1398,13 @@ namespace TezosNotifyBot
                 PushTextMessage(ua, message);
             }
         }*/
-        private void LoadAddressList(ITzKtClient tzKt)
+        private void LoadAddressList(ITzKtClient tzKt, Storage.TezosDataContext db)
         {
             try
             {
                 var t = Explorer.FromId(3);
-                var delegates = repo.GetDelegates();
-                var knownNames = repo.GetKnownAddresses();
+                var delegates = db.Delegates.OrderBy(o => o.Name).ToList();
+                var knownNames = db.KnownAddresses.OrderBy(o => o.Name).ToList();
                 string result = "";
                 int cnt = 0;
                 List<string> updated = new List<string>();
@@ -1430,34 +1416,37 @@ namespace TezosNotifyBot
                     if (string.IsNullOrEmpty(a.alias))
                         continue;
                     updated.Add(addr);
-                    if (delegates.Any(o => o.Address == addr))
+                    var dg = delegates.FirstOrDefault(o => o.Address == addr);
+                    if (dg != null)
                     {
-                        if (delegates.Any(o => o.Address == addr && o.Name != name))
+                        if (dg.Name != name)
                         {
-                            repo.SetDelegateName(addr, name);
+                            dg.Name = name;
                             result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                             cnt++;
                         }
 
                         continue;
                     }
-
-                    if (knownNames.Any(o => o.Address == addr))
+                    var kn = knownNames.FirstOrDefault(o => o.Address == addr);
+                    if (kn != null)
                     {
-                        if (knownNames.Any(o => o.Address == addr && o.Name != name))
+                        if (kn.Name != name)
                         {
-                            repo.SetKnownAddress(addr, name);
+                            kn.Name = name;
                             result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                             cnt++;
                         }
 
                         continue;
                     }
-
-                    repo.SetKnownAddress(addr, name);
+                    else
+                        db.KnownAddresses.Add(new KnownAddress(addr, name));
+                    
                     result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                     cnt++;
                 }
+                db.SaveChanges();
 
                 for (int i = 0; i < 10; i++)
                 {
@@ -1468,31 +1457,34 @@ namespace TezosNotifyBot
                         if (string.IsNullOrEmpty(a.alias) || updated.Contains(addr))
                             continue;
                         updated.Add(addr);
-                        if (knownNames.Any(o => o.Address == addr))
+                        var kn = knownNames.FirstOrDefault(o => o.Address == addr);
+                        if (kn != null)
                         {
-                            if (knownNames.Any(o => o.Address == addr && o.Name != name))
+                            if (kn.Name != name)
                             {
-                                repo.SetKnownAddress(addr, name);
+                                kn.Name = name;
                                 result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                                 cnt++;
                             }
 
                             continue;
                         }
-
-                        repo.SetKnownAddress(addr, name);
+                        else
+                            db.KnownAddresses.Add(new KnownAddress(addr, name));
+                        
                         result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                         cnt++;
                     }
                 }
+                db.SaveChanges();
 
                 result = "Updated names: " + cnt + "\n" + result;
-                NotifyDev(result, 0, ParseMode.Html);
+                NotifyDev(db, result, 0, ParseMode.Html);
             }
             catch (Exception e)
             {
                 LogError(e);
-                NotifyDev("Fail to update address list from GitHub: " + e.Message, 0);
+                NotifyDev(db, "Fail to update address list from GitHub: " + e.Message, 0);
             }
         }
 
@@ -1515,9 +1507,12 @@ namespace TezosNotifyBot
 					}
                 }
                 var callbackArgs = callbackData.Split(' ').Skip(1).ToArray();
-                
-                repo.LogMessage(userId, message.MessageId, null, callbackData);
-                var user = repo.GetUser(userId);
+                using var scope = _serviceProvider.CreateScope();
+                var provider = scope.ServiceProvider;
+                using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+
+                db.LogMessage(userId, message.MessageId, null, callbackData);
+                var user = db.Users.SingleOrDefault(x => x.Id == userId);
                 Logger.LogInformation(user.ToString() + ": button " + callbackData);
                 var t = Explorer.FromId(user.Explorer);
                 if (callbackData == "donate")
@@ -1537,73 +1532,79 @@ namespace TezosNotifyBot
                 if (callbackData.StartsWith("twdelete "))
                 {
                     var twitterMessageId = int.Parse(callbackData.Substring("twdelete ".Length));
-                    var twm = repo.GetTwitterMessage(twitterMessageId);
+                    var twm = db.TwitterMessages.Single(o => o.Id == twitterMessageId);
                     if (twm != null && twm.TwitterId != null)
                     {
                         await twitter.DeleteTweetAsync(twm.TwitterId);
-                        repo.DeleteTwitterMessage(twm);
+                        db.Remove(twm);
+                        db.SaveChanges();
                         await Bot.DeleteMessageAsync(ev.CallbackQuery.Message.Chat.Id, message.MessageId);
                     }
                 }
 
                 if (callbackData.StartsWith("deleteaddress"))
                 {
-                    var ua = repo.RemoveAddr(userId,
-                        callbackData.Substring("deleteaddress ".Length));
+                    UserAddress ua = null;
+                    if (!int.TryParse(callbackData.Substring("deleteaddress ".Length), out var uaid))
+                        ua = null;
+                    else
+                        ua = db.UserAddresses.FirstOrDefault(o => o.UserId == userId && o.Id == uaid && !o.IsDeleted);
                     if (ua != null)
                     {
+                        ua.IsDeleted = true;
+                        db.SaveChanges();
                         string result = resMgr.Get(Res.AddressDeleted, ua);
                         if (!user.HideHashTags)
                             result += "\n\n#deleted" + ua.HashTag();
-                        SendTextMessage(user.Id, result, null, ev.CallbackQuery.Message.MessageId);
-                        NotifyUserActivity($"User {UserLink(user)} deleted [{ua.Address}]({t.account(ua.Address)})");
+                        SendTextMessage(db, user.Id, result, null, ev.CallbackQuery.Message.MessageId);
+                        NotifyUserActivity(db, $"User {UserLink(user)} deleted [{ua.Address}]({t.account(ua.Address)})");
                     }
                     else
-                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("addaddress"))
                 {
                     var addr = callbackData.Substring("addaddress ".Length);
-                    OnNewAddressEntered(user, addr);
+                    OnNewAddressEntered(db, user, addr);
                 }
 
                 if (callbackData.StartsWith("setthreshold"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("setthreshold ".Length));
                     if (ua != null)
                     {
                         user.UserState = UserState.SetAmountThreshold;
                         user.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                         string result = resMgr.Get(Res.EnterAmountThreshold, ua);
                         if (!user.HideHashTags)
                             result += "\n\n#txthreshold" + ua.HashTag();
-                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("setname"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("setname ".Length));
                     if (ua != null)
                     {
                         user.UserState = UserState.SetName;
                         user.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                         string result = resMgr.Get(Res.EnterNewName, ua);
                         if (!user.HideHashTags)
                             result += "\n\n#rename" + ua.HashTag();
-                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
@@ -1611,7 +1612,7 @@ namespace TezosNotifyBot
                 {
                     var addrId = int.Parse(callbackData.Substring("notifyfollowers ".Length));
 
-                    var userAddress = repo.GetUserAddress(userId, addrId);
+                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (userAddress != null)
                     {
                         var cycles = _serviceProvider.GetService<ITzKtClient>().GetCycles();
@@ -1623,92 +1624,91 @@ namespace TezosNotifyBot
                             return;
 						}
                         // TODO: Maybe reuse user var? 
-                        var u = repo.GetUser(userId);
-                        u.UserState = UserState.NotifyFollowers;
-                        u.EditUserAddressId = userAddress.Id;
-                        repo.UpdateUser(u);
+                        user.UserState = UserState.NotifyFollowers;
+                        user.EditUserAddressId = userAddress.Id;
+                        db.SaveChanges();
 
                         var result = resMgr.Get(Res.EnterMessageForAddressFollowers, userAddress);
                         if (user.IsAdmin(Config.Telegram))
                         {
-                            foreach (var follower in GetFollowers(userAddress.Address))
+                            foreach (var follower in GetFollowers(db, userAddress.Address))
                                 result += $"\n{follower} [{follower.Id}]";
                         }
-                        SendTextMessage(u.Id, result, ReplyKeyboards.BackMenu(resMgr, u));
+                        SendTextMessage(db, user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("setdlgthreshold"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("setdlgthreshold ".Length));
                     if (ua != null)
                     {
                         user.UserState = UserState.SetDlgAmountThreshold;
                         user.EditUserAddressId = ua.Id;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                         string result = resMgr.Get(Res.EnterDlgAmountThreshold, ua);
                         if (!user.HideHashTags)
                             result += "\n\n#dlgthreshold" + ua.HashTag();
-                        SendTextMessage(user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                     else
-                        SendTextMessage(user.Id, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("change_delegators_balance_threshold "))
                 {
                     var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = repo.GetUserAddress(userId, addrId);
+                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
                     if (userAddress == null)
                     {
-                        SendTextMessage(userId, resMgr.Get(Res.AddressNotExist, user), null,
+                        SendTextMessage(db, userId, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
                     }
                     else
                     {
                         user.UserState = UserState.SetDelegatorsBalanceThreshold;
                         user.EditUserAddressId = addrId;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                         var text = resMgr.Get(Res.EnterDelegatorsBalanceThreshold, userAddress);
-                        SendTextMessage(user.Id, text, ReplyKeyboards.BackMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, text, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                 }
 
                 if (callbackData.StartsWith("toggle_payout_notify"))
                 {
                     var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = repo.GetUserAddress(userId, addrId);
+                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
 
                     if (userAddress != null)
                     {
                         userAddress.NotifyPayout = !userAddress.NotifyPayout;
-                        repo.UpdateUserAddress(userAddress);
-                        ViewAddress(user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
                     }
                 }
                 
                 if (callbackData.StartsWith("toggle_delegators_balance"))
                 {
                     var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = repo.GetUserAddress(userId, addrId);
+                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
 
                     if (userAddress != null)
                     {
                         userAddress.NotifyDelegatorsBalance = !userAddress.NotifyDelegatorsBalance;
-                        repo.UpdateUserAddress(userAddress);
+                        db.SaveChanges();
                         // TODO: Update message keyboard
-                        ViewAddress(user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(db, user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
                     }
                 }
 
                 if (callbackData == "set_explorer")
                 {
-                    SendTextMessage(user.Id, resMgr.Get(Res.ChooseExplorer, user), ReplyKeyboards.ExplorerSettings(user),
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.ChooseExplorer, user), ReplyKeyboards.ExplorerSettings(user),
                         ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_explorer_"))
@@ -1717,66 +1717,66 @@ namespace TezosNotifyBot
                     if (user.Explorer != exp)
                     {
                         user.Explorer = exp;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                     }
-                    SendTextMessage(user.Id, resMgr.Get(Res.ExplorerChanged, user), null,
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.ExplorerChanged, user), null,
                         ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_whalealert"))
                 {
-                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user),
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user),
                         ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_wa_"))
                 {
                     int wat = int.Parse(callbackData.Substring("set_wa_".Length));
                     user.WhaleAlertThreshold = wat * 1000;
-                    repo.UpdateUser(user);
-                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, ev.CallbackQuery.Message.MessageId);
+                    db.SaveChanges();
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_swa_off"))
                 {
                     user.SmartWhaleAlerts = false;
-                    repo.UpdateUser(user);
-                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
+                    db.SaveChanges();
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_swa_on"))
                 {
                     user.SmartWhaleAlerts = true;
-                    repo.UpdateUser(user);
-                    SendTextMessage(user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
+                    db.SaveChanges();
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_nialert"))
                 {
-                    SendTextMessage(user.Id, resMgr.Get(Res.NetworkIssueAlertsTip, user),
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.NetworkIssueAlertsTip, user),
                         ReplyKeyboards.NetworkIssueAlertSettings(resMgr, user), ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_ni_"))
                 {
                     int nin = int.Parse(callbackData.Substring("set_ni_".Length));
                     user.NetworkIssueNotify = nin;
-                    repo.UpdateUser(user);
-                    SendTextMessage(user.Id, resMgr.Get(Res.NetworkIssueAlertSet, user), null,
+                    db.SaveChanges();
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.NetworkIssueAlertSet, user), null,
                         ev.CallbackQuery.Message.MessageId);
                 }
                 else if (callbackData.StartsWith("set_"))
                 {
                     user.Language = callbackData.Substring("set_".Length);
-                    repo.UpdateUser(user);
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    db.SaveChanges();
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
-                    SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
                 if (callbackData.StartsWith("bakingon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("bakingon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1784,11 +1784,11 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("manageaddress"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("manageaddress ".Length));
                     if (ua != null)
                     {
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1796,13 +1796,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("bakingoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("bakingoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyBakingRewards = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1810,13 +1810,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("cycleon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("cycleon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1824,13 +1824,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("cycleoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("cycleoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyCycleCompletion = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1838,13 +1838,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneron"))
                 {
-                    var ua = repo.GetUserAddresses().FirstOrDefault(o =>
+                    var ua = db.UserAddresses.FirstOrDefault(o => !o.IsDeleted && !o.User.Inactive &&
                         o.Id.ToString() == callbackData.Substring("owneron ".Length));
                     if (ua != null)
                     {
                         ua.IsOwner = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1852,13 +1852,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("owneroff"))
                 {
-                    var ua = repo.GetUserAddresses().FirstOrDefault(o =>
+                    var ua = db.UserAddresses.FirstOrDefault(o => !o.IsDeleted && !o.User.Inactive &&
                         o.Id.ToString() == callbackData.Substring("owneroff ".Length));
                     if (ua != null)
                     {
                         ua.IsOwner = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1866,13 +1866,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("rightson"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("rightson ".Length));
                     if (ua != null)
                     {
                         ua.NotifyRightsAssigned = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1880,26 +1880,26 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("rightsoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("rightsoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyRightsAssigned = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
                 if (callbackData.StartsWith("outoffreespaceon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("outoffreespaceon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyOutOfFreeSpace = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1907,13 +1907,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("outoffreespaceoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("outoffreespaceoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyOutOfFreeSpace = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1921,13 +1921,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("tranon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("tranon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyTransactions = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1935,13 +1935,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("tranoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("tranoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyTransactions = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1949,13 +1949,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("awardon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("awardon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyAwardAvailable = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1963,13 +1963,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("awardoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("awardoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyAwardAvailable = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1977,13 +1977,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("dlgon"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("dlgon ".Length));
                     if (ua != null)
                     {
                         ua.NotifyDelegations = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -1991,13 +1991,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("dlgoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("dlgoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyDelegations = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -2005,14 +2005,14 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("toggle-delegate-status"))
                 {
-                    var address = repo.GetUserAddresses(userId)
+                    var address = db.GetUserAddresses(userId)
                         .FirstOrDefault(x => x.Id == callbackArgs.GetInt(0));
                     
                     if (address != null)
                     {
                         address.NotifyDelegateStatus = !address.NotifyDelegateStatus;
-                        repo.UpdateUserAddress(address);
-                        ViewAddress(user.Id, address, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, address, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                     {
@@ -2022,13 +2022,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("misseson"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("misseson ".Length));
                     if (ua != null)
                     {
                         ua.NotifyMisses = true;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -2036,13 +2036,13 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("missesoff"))
                 {
-                    var ua = repo.GetUserAddresses(userId).FirstOrDefault(o =>
+                    var ua = db.GetUserAddresses(userId).FirstOrDefault(o =>
                         o.Id.ToString() == callbackData.Substring("missesoff ".Length));
                     if (ua != null)
                     {
                         ua.NotifyMisses = false;
-                        repo.UpdateUserAddress(ua);
-                        ViewAddress(user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        db.SaveChanges();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                     else
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
@@ -2051,63 +2051,63 @@ namespace TezosNotifyBot
                 if (callbackData.StartsWith("hidehashtags"))
                 {
                     user.HideHashTags = true;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.HashTagsOff, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("showhashtags"))
                 {
                     user.HideHashTags = false;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.HashTagsOn, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
                 
                 if (callbackData.StartsWith("change_currency"))
                 {
                     user.Currency = user.Currency == UserCurrency.Usd ? UserCurrency.Eur : UserCurrency.Usd;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.UserCurrencyChanged, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("showvotingnotify"))
                 {
                     user.VotingNotify = true;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.VotingNotifyChanged, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("hidevotingnotify"))
                 {
                     user.VotingNotify = false;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.VotingNotifyChanged, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("tezos_release_on"))
                 {
                     user.ReleaseNotify = true;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.ReleaseNotifyChanged, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
                 if (callbackData.StartsWith("tezos_release_off"))
                 {
                     user.ReleaseNotify = false;
-                    repo.UpdateUser(user);
+                    db.SaveChanges();
                     SendTextMessage(user.Id, resMgr.Get(Res.ReleaseNotifyChanged, user));
-                    SendTextMessage(user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
+                    SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(resMgr, user, Config.Telegram),
                         ev.CallbackQuery.Message.MessageId);
                 }
 
@@ -2116,18 +2116,18 @@ namespace TezosNotifyBot
                     if (callbackData.StartsWith("broadcast"))
                     {
                         user.UserState = UserState.Broadcast;
-                        SendTextMessage(user.Id, $"Enter your message for [{user.Language}] bot users",
+                        SendTextMessage(db, user.Id, $"Enter your message for [{user.Language}] bot users",
                             ReplyKeyboards.BackMenu(resMgr, user));
                     }
 
                     if (callbackData.StartsWith("getuseraddresses"))
                     {
-                        OnSql(user, "select * from user_address");
+                        OnSql(db, user, "select * from user_address");
                     }
 
                     if (callbackData.StartsWith("getusermessages"))
                     {
-                        OnSql(user, "select * from message");
+                        OnSql(db, user, "select * from message");
                     }
 
                     if (callbackData.StartsWith("cmd"))
@@ -2160,13 +2160,13 @@ namespace TezosNotifyBot
                                 pos += resultSplit.Length;
                                 if (resultSplit.Trim() == "")
                                     continue;
-                                SendTextMessage(user.Id, resultSplit, ReplyKeyboards.MainMenu(resMgr, user));
+                                SendTextMessage(db, user.Id, resultSplit, ReplyKeyboards.MainMenu(resMgr, user));
                             } while (pos < result.Length);
                         }
                         catch (Exception ex)
                         {
                             LogError(ex);
-                            SendTextMessage(user.Id, "❗️" + ex.Message, ReplyKeyboards.MainMenu(resMgr, user));
+                            SendTextMessage(db, user.Id, "❗️" + ex.Message, ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
                 }
@@ -2177,13 +2177,13 @@ namespace TezosNotifyBot
             }
         }
 
-        List<User> GetFollowers(string addr)
+        List<User> GetFollowers(Storage.TezosDataContext db, string addr)
         {
             var di = addrMgr.GetDelegate("", addr);
-            var results = repo.GetUserAddresses(addr).Select(o => o.User).ToList();
+            var results = db.GetUserAddresses(addr).Select(o => o.User).ToList();
             foreach (var d in di.delegated_contracts)
             {
-                var users = repo.GetUserAddresses(d);
+                var users = db.GetUserAddresses(d);
                 foreach (var u in users)
                     if (!results.Contains(u.User))
                         results.Add(u.User);
@@ -2194,13 +2194,17 @@ namespace TezosNotifyBot
 
         void OnUpdate(object su, UpdateEventArgs evu)
         {
+            using var scope = _serviceProvider.CreateScope();
+            var provider = scope.ServiceProvider;
+            using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+
             if (evu.Update.ChosenInlineResult != null)
             {
                 if (evu.Update.ChosenInlineResult.ResultId == "info")
 				{
                     return;
 				}
-                OnNewAddressEntered(repo.GetUser(evu.Update.ChosenInlineResult.From.Id),
+                OnNewAddressEntered(db, db.GetUser(evu.Update.ChosenInlineResult.From.Id),
                     evu.Update.ChosenInlineResult.ResultId);
                 return;
             }
@@ -2225,10 +2229,10 @@ namespace TezosNotifyBot
                     Bot.AnswerInlineQueryAsync(evu.Update.InlineQuery.Id, results_info, 10);
                     return;
                 }
-                var ka = repo.GetKnownAddresses()
+                var ka = db.KnownAddresses
                     .Where(o => o.Name.Replace("'", "").Replace("`", "").Replace(" ", "").ToLower().Contains(q))
                     .Select(o => new {o.Address, o.Name});
-                var da = repo.GetDelegates()
+                var da = db.Delegates
                     .Where(o => o.Name != null &&
                                 o.Name.Replace("'", "").Replace("`", "").Replace(" ", "").ToLower().Contains(q))
                     .Select(o => new {o.Address, o.Name});
@@ -2247,7 +2251,7 @@ namespace TezosNotifyBot
             var message = update.Message;
             //if (update.ChannelPost != null && update.ChannelPost.Type == Telegram.Bot.Types.Enums.MessageType.Text)
             //{
-            //    var user = repo.GetUser(update.ChannelPost.From.Id);
+            //    var user = rep_o.GetUser(update.ChannelPost.From.Id);
             //    if (Regex.IsMatch(update.ChannelPost.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
             //    {
             //        OnNewAddressEntered(user, message.Text, update.ChannelPost.Chat);
@@ -2263,7 +2267,7 @@ namespace TezosNotifyBot
             {
                 if (message != null && message.From.IsBot)
                     return;
-                var user = message != null ? repo.GetUser(message.From.Id) : null;
+                var user = message != null ? db.Users.SingleOrDefault(x => x.Id == message.From.Id) : null;
 
                 if (message != null && message.Type == MessageType.Photo &&
                     message.Chat.Type == ChatType.Private &&
@@ -2277,15 +2281,15 @@ namespace TezosNotifyBot
                         Bot.GetInfoAndDownloadFileAsync(properSize.FileId, fileStream)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
 
-                        var users = repo.GetUsers().Where(o => !o.Inactive && o.Language == user.Language).ToList();
+                        var users = db.Users.Where(o => !o.Inactive && o.Language == user.Language).ToList();
                         if (user.UserState == UserState.NotifyFollowers)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
-                            users = GetFollowers(ua.Address);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            users = GetFollowers(db, ua.Address);
                             if (!user.IsAdmin(Config.Telegram))
 							{
                                 ua.LastMessageLevel = prevBlock.Level;
-                                repo.UpdateUserAddress(ua);
+                                db.SaveChanges();
 							}
                         }
 
@@ -2306,17 +2310,17 @@ namespace TezosNotifyBot
                             catch (ChatNotFoundException)
                             {
                                 user1.Inactive = true;
-                                repo.UpdateUser(user1);
-                                NotifyUserActivity("😕 User " + UserLink(user1) + " not started chat with bot");
+                                db.SaveChanges();
+                                NotifyUserActivity(db, "😕 User " + UserLink(user1) + " not started chat with bot");
                             }
                             catch (ApiRequestException are)
                             {
-                                NotifyUserActivity("🐞 Error while sending message for " + UserLink(user) + ": " +
+                                NotifyUserActivity(db, "🐞 Error while sending message for " + UserLink(user) + ": " +
                                                    are.Message);
                                 if (are.Message.StartsWith("Forbidden"))
                                 {
                                     user.Inactive = true;
-                                    repo.UpdateUser(user);
+                                    db.SaveChanges();
                                 }
                                 else
                                     LogError(are);
@@ -2326,8 +2330,8 @@ namespace TezosNotifyBot
                                 if (ex.Message == "Forbidden: bot was blocked by the user")
                                 {
                                     user.Inactive = true;
-                                    repo.UpdateUser(user);
-                                    NotifyUserActivity("😕 Bot was blocked by the user " + UserLink(user));
+                                    db.SaveChanges();
+                                    NotifyUserActivity(db, "😕 Bot was blocked by the user " + UserLink(user));
                                 }
                                 else
                                     LogError(ex);
@@ -2335,7 +2339,7 @@ namespace TezosNotifyBot
                         }
                     }
 
-                    SendTextMessage(user.Id,
+                    SendTextMessage(db, user.Id,
                         resMgr.Get(
                             user.UserState == UserState.Broadcast ? Res.MessageDelivered : Res.MessageDeliveredForUsers,
                             user) + " (" + count.ToString() + ")", ReplyKeyboards.MainMenu(resMgr, user));
@@ -2345,25 +2349,25 @@ namespace TezosNotifyBot
                 if (message != null && message.Type == MessageType.Text &&
                     message.Chat.Type == ChatType.Private)
                 {
-                    bool newUser = !repo.UserExists(message.From.Id);
+                    bool newUser = !db.Users.Any(x => x.Id == message.From.Id);
 
-                    repo.LogMessage(message.From, message.MessageId, message.Text, null);
-                    user = repo.GetUser(message.From.Id);
+                    db.LogMessage(message.From, message.MessageId, message.Text, null);
+                    user = db.GetUser(message.From.Id);
                     Logger.LogInformation(UserTitle(message.From) + ": " + message.Text);
                     if (newUser)
-                        NotifyUserActivity("🔅 New user: " + UserLink(user));
+                        NotifyUserActivity(db, "🔅 New user: " + UserLink(user));
                     bool welcomeBack = false;
                     if (user.Inactive)
                     {
                         user.Inactive = false;
-                        repo.UpdateUser(user);
+                        db.SaveChanges();
                         welcomeBack = true;
-                        NotifyUserActivity("🤗 User " + UserLink(user) + " is back");
+                        NotifyUserActivity(db, "🤗 User " + UserLink(user) + " is back");
                     }
                     if (message.Text.StartsWith("/start"))
                     {
                         if (newUser || welcomeBack)
-                            SendTextMessage(user.Id,
+                            SendTextMessage(db, user.Id,
                                 welcomeBack ? resMgr.Get(Res.WelcomeBack, user) : resMgr.Get(Res.Welcome, user),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         var cmd = message.Text.Substring("/start".Length).Replace("_", " ").Trim();
@@ -2371,56 +2375,41 @@ namespace TezosNotifyBot
                         {
                             var explorer = Explorer.FromStart(message.Text);
                             user.Explorer = explorer.id;
-                            repo.UpdateUser(user);
+                            db.SaveChanges();
                             var addr = cmd.Replace(explorer.buttonprefix + " ", "");
-                            OnNewAddressEntered(user, addr);
+                            OnNewAddressEntered(db, user, addr);
                         }
                         else if (!newUser && !welcomeBack)
-                            SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user),
+                            SendTextMessage(db, user.Id, resMgr.Get(Res.Welcome, user),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.Contains("Tezos blockchain info"))
-					{
+                    {
                         return;
-					}
+                    }
                     else if (Config.Telegram.DevUsers.Contains(message.From.Username) &&
                              message.ReplyToMessage != null &&
                              message.ReplyToMessage.Entities.Length > 0 &&
                              message.ReplyToMessage.Entities[0].User != null)
                     {
-                        var replyUser = repo.GetUser(message.ReplyToMessage.Entities[0].User.Id);
-                        SendTextMessage(replyUser.Id, resMgr.Get(Res.SupportReply, replyUser) + "\n\n" + message.Text,
+                        var replyUser = db.GetUser(message.ReplyToMessage.Entities[0].User.Id);
+                        SendTextMessage(db, replyUser.Id, resMgr.Get(Res.SupportReply, replyUser) + "\n\n" + message.Text,
                             ReplyKeyboards.MainMenu(resMgr, replyUser));
-                        NotifyDev(
+                        NotifyDev(db,
                             "📤 Message for " + UserLink(replyUser) + " from " + UserLink(user) + ":\n\n" +
                             message.Text.Replace("_", "__").Replace("`", "'").Replace("*", "**").Replace("[", "(")
                                 .Replace("]", ")") + "\n\n#outgoing", user.Id);
                     }
-                    /*else if (u.UserState == Model.UserState.Default && Regex.IsMatch(message.Text.Replace(" ", "").Replace("\r", "").Replace("\n", ""), "^[a-fA-F0-9]*$"))
-                    {
-                        var result = client2.Inject(message.Text.Replace(" ", "").Replace("\r", "").Replace("\n", ""));
-                        if (result.StartsWith("\"o") && result.Length == 54)
-                        {
-                            result = JsonConvert.DeserializeObject<string>(result);
-                            string url = $"https://tzscan.io/{result}";
-                            NotifyDev("💉 User " + UserLink(u) + " injected operation: " + url, u.UserId);
-                            SendTextMessage(u.UserId, "✔️ " + url, ReplyKeyboards.MainMenu(resMgr, u));
-                        }
-                        else
-                        {
-                            NotifyDev("💉 User " + UserLink(u) + " injected operation failed: " + result, u.UserId);
-                            SendTextMessage(u.UserId, result, ReplyKeyboards.MainMenu(resMgr, u));
-                        }
-                    }*/
+                    
                     else if (message.Text == ReplyKeyboards.CmdNewAddress(resMgr, user))
                     {
-                        OnNewAddress(user);
+                        OnNewAddress(db, user);
                     }
                     else if (message.Text == "/outflow_off")
                     {
                         user.SmartWhaleAlerts = false;
-                        repo.UpdateUser(user);
-                        SendTextMessage(user.Id, resMgr.Get(Res.WhaleOutflowOff, user), ReplyKeyboards.MainMenu(resMgr, user));
+                        db.SaveChanges();
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleOutflowOff, user), ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
                     {
@@ -2434,39 +2423,39 @@ namespace TezosNotifyBot
                         var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
                         try
                         {
-                            var result = mw.CreatePost(repo, prevCycle, currentCycle);
-                            NotifyUserActivity($"New Medium post: [{result.data.title}]({result.data.url})");
+                            var result = mw.CreatePost(db, prevCycle, currentCycle);
+                            NotifyUserActivity(db, $"New Medium post: [{result.data.title}]({result.data.url})");
                             var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blockchain";
                             twitter.TweetAsync(tweet);
                         }
                         catch (Exception e)
                         {
-                            NotifyDev("Failed to create medium post: " + e.Message + "\nAuth token:" + _serviceProvider.GetService<IOptions<MediumOptions>>().Value.AuthToken + "\n" + e.StackTrace, user.Id, ParseMode.Default, true);
+                            NotifyDev(db, "Failed to create medium post: " + e.Message + "\nAuth token:" + _serviceProvider.GetService<IOptions<MediumOptions>>().Value.AuthToken + "\n" + e.StackTrace, user.Id, ParseMode.Default, true);
                         }
                     }
                     else if (message.Text == "/stop" && user.IsAdmin(Config.Telegram))
                     {
                         paused = true;
-                        NotifyDev("Blockchain processing paused", 0);
+                        NotifyDev(db, "Blockchain processing paused", 0);
                     }
                     else if (message.Text == "/resume" && user.IsAdmin(Config.Telegram))
                     {
                         paused = false;
-                        NotifyDev("Blockchain processing resumed", user.Id, ParseMode.Default);
+                        NotifyDev(db, "Blockchain processing resumed", user.Id, ParseMode.Default);
                     }
                     else if (message.Text.StartsWith("/forward") && user.IsAdmin(Config.Telegram))
                     {
                         var msgid = int.Parse(message.Text.Substring("/forward".Length).Trim());
-                        var msg = repo.GetMessage(msgid);
+                        var msg = db.Messages.FirstOrDefault(o => o.Id == msgid);
                         var m = Bot.ForwardMessageAsync(msg.UserId, msg.UserId, (int)msg.TelegramMessageId)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
-                        SendTextMessage(user.Id, $"Message forwarded for user {UserLink(repo.GetUser(msg.UserId))}",
+                        SendTextMessage(db, user.Id, $"Message forwarded for user {UserLink(db.GetUser(msg.UserId))}",
                             ReplyKeyboards.MainMenu(resMgr, user), parseMode: ParseMode.Markdown);
                         Bot.ForwardMessageAsync(user.Id, msg.UserId, (int)msg.TelegramMessageId);
                     }
                     else if (message.Text.StartsWith("/help") && Config.DevUserNames.Contains(message.From.Username))
                     {
-                        SendTextMessage(user.Id, @"Administrator commands:
+                        SendTextMessage(db, user.Id, @"Administrator commands:
 /sql {query} - run sql query
 /block - show current block
 /setblock {number} - set last processed block
@@ -2489,10 +2478,10 @@ namespace TezosNotifyBot
                     }
                     else if (message.Text.StartsWith("/sql") && Config.DevUserNames.Contains(message.From.Username))
                     {
-                        OnSql(user, message.Text.Substring("/sql".Length));
+                        OnSql(db, user, message.Text.Substring("/sql".Length));
                     }
                     else if (message.Text.StartsWith("/devstat") && Config.DevUserNames.Contains(message.From.Username))
-					{                        
+                    {
                         Stream s = GenerateStreamFromString(_serviceProvider.GetService<StatCounter>().ToString());
                         string fileName = "stat.txt";
                         var f = new InputOnlineFile(s, fileName);
@@ -2501,48 +2490,49 @@ namespace TezosNotifyBot
                     else if (message.Text == "/twclean")
                     {
                         int cnt = 0;
-                        foreach (var twm in repo.GetTwitterMessages(DateTime.Now.AddDays(-7)))
+                        foreach (var twm in db.TwitterMessages.Where(o => o.CreateDate >= DateTime.Now.AddDays(-7)).OrderBy(o => o.Id).ToList())
                         {
                             if (twm.TwitterId != null)
                             {
                                 twitter.DeleteTweetAsync(twm.TwitterId).ConfigureAwait(true).GetAwaiter().GetResult();
-                                repo.DeleteTwitterMessage(twm);
+                                db.TwitterMessages.Remove(twm);
+                                db.SaveChanges();
                                 cnt++;
                             }
                         }
 
-                        SendTextMessage(user.Id, $"Deleted tweets: {cnt}", ReplyKeyboards.MainMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, $"Deleted tweets: {cnt}", ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text == ReplyKeyboards.CmdMyAddresses(resMgr, user) ||
                         message.Text.StartsWith("/list"))
                     {
-                        OnMyAddresses(message.From.Id, user);
+                        OnMyAddresses(db, message.From.Id, user);
                     }
                     else if (message.Text.StartsWith("/addrlist") &&
                              Config.DevUserNames.Contains(message.From.Username))
                     {
                         if (int.TryParse(message.Text.Substring("/addrlist".Length).Trim(), out int userid))
                         {
-                            var u1 = repo.GetUser(userid);
+                            var u1 = db.GetUser(userid);
                             if (u1 != null)
-                                OnMyAddresses(message.From.Id, u1);
+                                OnMyAddresses(db, message.From.Id, u1);
                             else
-                                SendTextMessage(user.Id, $"User not found: {userid}",
+                                SendTextMessage(db, user.Id, $"User not found: {userid}",
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else
-                            SendTextMessage(user.Id, "Command syntax:\n/addrlist {userid}",
+                            SendTextMessage(db, user.Id, "Command syntax:\n/addrlist {userid}",
                                 ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/msglist") && Config.DevUserNames.Contains(message.From.Username))
                     {
                         if (int.TryParse(message.Text.Substring("/msglist".Length).Trim(), out int userid))
                         {
-                            OnSql(user,
+                            OnSql(db, user,
                                 $"select * from message where user_id = {userid} and create_date >= 'now'::timestamp - '1 month'::interval order by create_date");
                         }
                         else
-                            SendTextMessage(user.Id, "Command syntax:\n/msglist {userid}",
+                            SendTextMessage(db, user.Id, "Command syntax:\n/msglist {userid}",
                                 ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/userinfo") &&
@@ -2550,7 +2540,7 @@ namespace TezosNotifyBot
                     {
                         if (int.TryParse(message.Text.Substring("/userinfo".Length).Trim(), out int userid))
                         {
-                            var u1 = repo.GetUser(userid);
+                            var u1 = db.GetUser(userid);
                             if (u1 != null)
                             {
                                 string result = $"User {u1.ToString()} [{u1.Id}]\n";
@@ -2562,19 +2552,19 @@ namespace TezosNotifyBot
                                 result += $"Network Issue Notify: {u1.NetworkIssueNotify}\n";
                                 result += $"Voting Notify: {(u1.VotingNotify ? "on" : "off")}\n";
                                 result += $"Whale Alert Threshold: {u1.WhaleAlertThreshold}\n";
-                                SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
+                                SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
                             }
                             else
-                                SendTextMessage(user.Id, $"User not found: {userid}",
+                                SendTextMessage(db, user.Id, $"User not found: {userid}",
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else
-                            SendTextMessage(user.Id, "Command syntax:\n/addrlist {userid}",
+                            SendTextMessage(db, user.Id, "Command syntax:\n/addrlist {userid}",
                                 ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text == "/res" && Config.DevUserNames.Contains(message.From.Username))
                     {
-                        var ua1 = repo.GetUserAddresses(user.Id)[0];
+                        var ua1 = db.GetUserAddresses(user.Id)[0];
                         ua1.AveragePerformance = 92.321M;
                         ua1.Delegators = 123;
                         ua1.FreeSpace = 190910312.123M;
@@ -2582,9 +2572,9 @@ namespace TezosNotifyBot
                         ua1.Performance = 12.32M;
                         ua1.StakingBalance = 178128312.23M;
 
-                        var ua2 = repo.GetUserAddresses(user.Id)[1];
-                        var ua3 = repo.GetUserAddresses(user.Id)[2];
-                        var p = repo.GetProposal("PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo");
+                        var ua2 = db.GetUserAddresses(user.Id)[1];
+                        var ua3 = db.GetUserAddresses(user.Id)[2];
+                        var p = new Domain.Proposal { Hash = "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo", Name = "Delphi" };
                         p.Delegates = new List<UserAddress>();
                         p.Delegates.Add(ua1);
                         p.Delegates.Add(ua2);
@@ -2607,7 +2597,7 @@ namespace TezosNotifyBot
                         };
                         foreach (Res res in Enum.GetValues(typeof(Res)))
                         {
-                            SendTextMessage(user.Id, $"#{res.ToString()}\n\n" + resMgr.Get(res, contextObject),
+                            SendTextMessage(db, user.Id, $"#{res.ToString()}\n\n" + resMgr.Get(res, contextObject),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
@@ -2637,7 +2627,7 @@ namespace TezosNotifyBot
                                     .Replace("с", "s").Replace("т", "t").Replace("у", "u").Replace("ф", "f")
                                     .Replace("х", "h").Replace("ц", "c").Replace("ч", "ch").Replace("ш", "sh")
                                     .Replace("щ", "sh").Replace("э", "e").Replace("ю", "u").Replace("я", "ya");
-                                var da = repo.GetDelegates()
+                                var da = rep_o.GetDelegates()
                                     .Where(o => o.Name != null && o.Name.Replace("'", "").Replace("`", "")
                                         .Replace(" ", "").ToLower().Contains(q)).Select(o => new { o.Address, o.Name });
                                 addr = da.Select(o => o.Address).FirstOrDefault();
@@ -2647,10 +2637,10 @@ namespace TezosNotifyBot
                         if (addr != null && cycle > 0)
                         {
                             var t = Explorer.FromId(user.Explorer);
-                            var d = repo.GetDelegateName(addr);
+                            var d = rep_o.GetDelegateName(addr);
                             string result =
                                 $"Baking statistics for <a href='{t.account(addr)}'>{d}</a> in cycle {cycle}:\n";
-                            var bu = repo.GetBalanceUpdates(addr, cycle);
+                            var bu = rep_o.GetBalanceUpdates(addr, cycle);
                             result +=
                                 $"Baked / Missed: <b>{bu.Count(o => o.Type == 1)} ({(bu.Where(o => o.Type == 1).Sum(o => o.Amount) / 1000000M).TezToString()}) / {bu.Count(o => o.Type == 3)} ({(bu.Where(o => o.Type == 3).Sum(o => o.Amount) / 1000000M).TezToString()})</b>\n";
                             result +=
@@ -2663,8 +2653,8 @@ namespace TezosNotifyBot
                             decimal max = 0;
                             for (int i = 0; i < 10; i++)
                             {
-                                var rew1 = repo.GetRewards(addr, cycle - i, false);
-                                var max1 = repo.GetRewards(addr, cycle - i, true);
+                                var rew1 = rep_o.GetRewards(addr, cycle - i, false);
+                                var max1 = rep_o.GetRewards(addr, cycle - i, true);
                                 rew += rew1;
                                 max += max1;
                                 result +=
@@ -2691,7 +2681,7 @@ namespace TezosNotifyBot
                     }
                     else if (message.Text == "/stat")
                     {
-                        Stat(update);
+                        Stat(db, update);
                     }
                     else if (message.Text == "/set_ru" || message.Text == "/set_en")
                     {
@@ -2699,20 +2689,20 @@ namespace TezosNotifyBot
                         if (lang != null)
                         {
                             user.Language = lang;
-                            repo.UpdateUser(user);
-                            SendTextMessage(user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
+                            db.SaveChanges();
+                            SendTextMessage(db, user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                         }
                             
                     }
                     else if (message.Text == "/block")
                     {
-                        int l = repo.GetLastBlockLevel().Item1;
+                        int l = db.GetLastBlockLevel().Item1;
                         int c = (l - 1) / 4096;
                         int p = l - c * 4096 - 1;
                         var dtlist = blockProcessings.ToList();
                         var avg = (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
                         var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
-                        SendTextMessage(user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}\nCache size: {cs}",
+                        SendTextMessage(db, user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}\nCache size: {cs}",
                             ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/setblock") &&
@@ -2722,11 +2712,15 @@ namespace TezosNotifyBot
                         {
                             var tzKt = _serviceProvider.GetService<ITzKtClient>();
                             var b = tzKt.GetBlock(num);
-                            repo.SetLastBlockLevel(num, b.blockRound, b.Hash);
+                            var lbl = db.LastBlock.Single();
+                            lbl.Level = num;
+                            lbl.Priority = b.blockRound;
+                            lbl.Hash = b.Hash;
+                            db.SaveChanges();
                             lastBlockChanged = true;
                             var c = tzKt.GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
-                            NotifyDev(
-                                $"Last block processed changed: {repo.GetLastBlockLevel().Item1}, {repo.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, totalStaking: {c.totalStaking}",
+                            NotifyDev(db,
+                                $"Last block processed changed: {db.GetLastBlockLevel().Item1}, {db.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, totalStaking: {c.totalStaking}",
                                 0);
                             _currentConstants = null;
                         }
@@ -2743,13 +2737,21 @@ namespace TezosNotifyBot
                             {
                                 string addr = dnMatch.Groups[1].Value.Trim();
                                 string name = dnMatch.Groups[3].Value.Trim();
-                                repo.SetKnownAddress(addr, name);
+                                var d = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+                                if (d == null)
+                                {
+                                    d = new KnownAddress(addr, name);
+                                    db.KnownAddresses.Add(d);
+                                }
+
+                                d.Name = name;
+                                db.SaveChanges();
                                 result += $"<a href='{t.account(addr)}'>{addr.ShortAddr()}</a> {name}\n";
                             }
                         }
 
                         if (result != "")
-                            NotifyDev("Установлены названия:\n\n" + result, 0, ParseMode.Html);
+                            NotifyDev(db, "Names assigned:\n\n" + result, 0, ParseMode.Html);
                     }
                     //else if (Config.DevUserNames.Contains(message.From.Username) &&
                     //         message.Text.StartsWith("/processmd"))
@@ -2782,13 +2784,13 @@ namespace TezosNotifyBot
                     //        SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
                     //    }
                     //}
-                    else if (Config.DevUserNames.Contains(message.From.Username) &&
+                    else if (Config.Telegram.DevUsers.Contains(message.From.Username) &&
                              message.Text.StartsWith("/loaddelegatelist"))
                     {
                         //LoadDelegateList();
-                        SendTextMessage(user.Id, "Not implemented", ReplyKeyboards.MainMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, "Not implemented", ReplyKeyboards.MainMenu(resMgr, user));
                     }
-                    else if (Config.DevUserNames.Contains(message.From.Username) &&
+                    else if (Config.Telegram.DevUsers.Contains(message.From.Username) &&
                              message.Text.StartsWith("/setdelegatename"))
                     {
                         var dn = message.Text.Substring("/setdelegatename ".Length);
@@ -2797,8 +2799,16 @@ namespace TezosNotifyBot
                         {
                             string addr = dnMatch.Groups[1].Value.Trim();
                             string name = dnMatch.Groups[2].Value.Trim();
-                            repo.SetDelegateName(addr, name);
-                            SendTextMessage(user.Id, $"👑 {addr}: <b>{name}</b>",
+                            var d = db.Delegates.FirstOrDefault(o => o.Address == addr);
+                            if (d == null)
+                            {
+                                d = new Domain.Delegate { Address = addr };
+                                db.Delegates.Add(d);
+                            }
+
+                            d.Name = name;
+                            db.SaveChanges();
+                            SendTextMessage(db, user.Id, $"👑 {addr}: <b>{name}</b>",
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
@@ -2809,7 +2819,7 @@ namespace TezosNotifyBot
                     }
                     else if (message.Text.StartsWith("/add") && !Regex.IsMatch(message.Text, "(tz|KT)[a-zA-Z0-9]{34}"))
 					{
-                        OnNewAddress(user);
+                        OnNewAddress(db, user);
 					}
                     else if (message.Text.StartsWith("/trnthreshold"))
 					{
@@ -2820,12 +2830,12 @@ namespace TezosNotifyBot
                             string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                             if (long.TryParse(threshold, out long t))
                             {
-                                var ua = repo.GetUserTezosAddress(user.Id, addr);
+                                var ua = db.GetUserTezosAddress(user.Id, addr);
                                 if (ua.Id != 0)
                                 {
                                     ua.AmountThreshold = t;
-                                    repo.UpdateUserAddress(ua);
-                                    SendTextMessage(user.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
+                                    db.SaveChanges();
+                                    SendTextMessage(db, user.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
                                     return;
                                 }
                             }
@@ -2842,12 +2852,12 @@ namespace TezosNotifyBot
                             string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                             if (long.TryParse(threshold, out long t))
                             {
-                                var ua = repo.GetUserTezosAddress(user.Id, addr);
+                                var ua = db.GetUserTezosAddress(user.Id, addr);
                                 if (ua.Id != 0)
                                 {
                                     ua.DelegationAmountThreshold = t;
-                                    repo.UpdateUserAddress(ua);
-                                    SendTextMessage(user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
+                                    db.SaveChanges();
+                                    SendTextMessage(db, user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
                                     return;
                                 }
                             }
@@ -2859,23 +2869,23 @@ namespace TezosNotifyBot
                              user.UserState != UserState.Broadcast && user.UserState != UserState.Support &&
                              user.UserState != UserState.NotifyFollowers)
                     {
-                        OnNewAddressEntered(user, message.Text.Replace("/add", ""));
+                        OnNewAddressEntered(db, user, message.Text.Replace("/add", ""));
                     }
                     else if (message.Text == ReplyKeyboards.CmdGoBack(resMgr, user))
                     {
-                        SendTextMessage(user.Id, resMgr.Get(Res.SeeYou, user), ReplyKeyboards.MainMenu(resMgr, user));
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.SeeYou, user), ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text == ReplyKeyboards.CmdContact(resMgr, user))
                     {
                         user.UserState = UserState.Support;
-                        SendTextMessage(user.Id, resMgr.Get(Res.WriteHere, user),
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.WriteHere, user),
                             ReplyKeyboards.BackMenu(resMgr, user));
                         return;
                     }
                     else if (message.Text == ReplyKeyboards.CmdSettings(resMgr, user) ||
                         message.Text.StartsWith("/settings"))
                     {
-                        SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
                     else
                     {
@@ -2886,7 +2896,7 @@ namespace TezosNotifyBot
                             var dialog = _serviceProvider.GetRequiredService<DialogService>();
                             var (action, answer) = dialog.Intent(user.Id.ToString(), message.Text, user.Culture);
                             // TODO: Add `action == input.unknown` handling
-                            SendTextMessage(user.Id, answer,
+                            SendTextMessage(db, user.Id, answer,
                                 ReplyKeyboards.MainMenu(resMgr, user));
 
                             var messageBuilder = new MessageBuilder();
@@ -2906,111 +2916,111 @@ namespace TezosNotifyBot
                             
                             messageBuilder.WithHashTag("inbox");
                             
-                            NotifyDev(messageBuilder.Build(), 0);
+                            NotifyDev(db, messageBuilder.Build(), 0);
                         }
                         else if (user.UserState == UserState.SetAmountThreshold)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             if (ua != null && decimal.TryParse(message.Text.Replace(" ", "").Replace(",", "."),
                                 out decimal amount) && amount >= 0)
                             {
                                 ua.AmountThreshold = amount;
-                                repo.UpdateUserAddress(ua);
-                                SendTextMessage(user.Id, resMgr.Get(Res.ThresholdEstablished, ua),
+                                db.SaveChanges();
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.ThresholdEstablished, ua),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                             }
                             else
-                                SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.SetDlgAmountThreshold)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             if (ua != null && decimal.TryParse(message.Text.Replace(" ", "").Replace(",", "."),
                                 out decimal amount) && amount >= 0)
                             {
                                 ua.DelegationAmountThreshold = amount;
-                                repo.UpdateUserAddress(ua);
-                                SendTextMessage(user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua),
+                                db.SaveChanges();
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.DlgThresholdEstablished, ua),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                             }
                             else
-                                SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.SetDelegatorsBalanceThreshold)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             if (ua != null && decimal.TryParse(message.Text.Replace(" ", "").Replace(",", "."),
                                 out var amount) && amount >= 0)
                             {
                                 ua.DelegatorsBalanceThreshold = amount;
-                                repo.UpdateUserAddress(ua);
-                                SendTextMessage(user.Id, resMgr.Get(Res.ChangedDelegatorsBalanceThreshold, ua),
+                                db.SaveChanges();
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.ChangedDelegatorsBalanceThreshold, ua),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                             }
                             else
-                                SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.SetName)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             if (ua != null)
                             {
                                 ua.Name = Regex.Replace(message.Text.Trim(), "<.*?>", "");
-                                repo.UpdateUserAddress(ua);
+                                db.SaveChanges();
                                 string result = resMgr.Get(Res.AddressRenamed, ua);
                                 if (!ua.User.HideHashTags)
                                     result += "\n\n#rename" + ua.HashTag();
-                                SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
+                                SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
                             }
                             else
-                                SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
+                                SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user),
                                     ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.NotifyFollowers)
                         {
-                            var ua = repo.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
+                            var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
                             string text = ApplyEntities(message.Text, message.Entities);
                             if (!user.IsAdmin(Config.Telegram))
                             {
                                 ua.LastMessageLevel = prevBlock.Level;
-                                repo.UpdateUserAddress(ua);
+                                db.SaveChanges();
                                 text = resMgr.Get(Res.DelegateMessage, ua) + "\n\n" + text;
                             }
                             int count = 0;
-                            foreach (var u1 in GetFollowers(ua.Address))
+                            foreach (var u1 in GetFollowers(db, ua.Address))
                             {
                                 var tags = !u1.HideHashTags ? "\n\n#delegate_message" + ua.HashTag() : "";
-                                SendTextMessage(u1.Id, text + tags, ReplyKeyboards.MainMenu(resMgr, user), disableNotification: true);
+                                SendTextMessage(db, u1.Id, text + tags, ReplyKeyboards.MainMenu(resMgr, user), disableNotification: true);
                                 count++;
                             }
-                            SendTextMessage(user.Id, resMgr.Get(Res.MessageDeliveredForUsers, new ContextObject { u = user, Amount = count }),
+                            SendTextMessage(db, user.Id, resMgr.Get(Res.MessageDeliveredForUsers, new ContextObject { u = user, Amount = count }),
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else if (user.UserState == UserState.Broadcast)
                         {
                             int count = 0;
                             string text = ApplyEntities(message.Text, message.Entities);
-                            foreach (var user1 in repo.GetUsers())
+                            foreach (var user1 in db.Users.Where(o => !o.Inactive).ToList())
                             {
                                 if (user1.Language == user.Language)
                                 {
-                                    SendTextMessage(user1.Id, text, ReplyKeyboards.MainMenu(resMgr, user1),
+                                    SendTextMessage(db, user1.Id, text, ReplyKeyboards.MainMenu(resMgr, user1),
                                         disableNotification: true);
                                     count++;
                                 }
                             }
 
                             user.UserState = UserState.Default;
-                            SendTextMessage(user.Id,
+                            SendTextMessage(db, user.Id,
                                 resMgr.Get(Res.MessageDelivered, user) + "(" + count.ToString() + ")",
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                         else
                         {
-                            SendTextMessage(user.Id, resMgr.Get(Res.UnrecognizedCommand, user) + ": " + message.Text,
+                            SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user) + ": " + message.Text,
                                 ReplyKeyboards.MainMenu(resMgr, user));
                         }
                     }
@@ -3021,7 +3031,7 @@ namespace TezosNotifyBot
                     (message?.Chat.Type == ChatType.Group || message?.Chat.Type == ChatType.Supergroup ||
                     update.ChannelPost != null))
                 {
-                    bool newChat = !repo.UserExists(message?.Chat.Id ?? update.ChannelPost.Chat.Id);
+                    bool newChat = db.GetUser(message?.Chat.Id ?? update.ChannelPost.Chat.Id) == null;
                     var chat = message?.Chat ?? update.ChannelPost.Chat;
                     var from = message?.From ?? update.ChannelPost.From;
                     if (from?.IsBot ?? false)
@@ -3037,11 +3047,11 @@ namespace TezosNotifyBot
                         !messageText.StartsWith("/dlgthreshold") &&
                         !Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                         return;
-                    repo.LogMessage(chat, messageId, messageText, null);
-                    user = repo.GetUser(chat.Id);
+                    db.LogMessage(chat, messageId, messageText, null);
+                    user = db.GetUser(chat.Id);
                     Logger.LogInformation(ChatTitle(chat) + ": " + messageText);
                     if (newChat)
-                        NotifyUserActivity("👥 New chat: " + ChatLink(user));
+                        NotifyUserActivity(db, "👥 New chat: " + ChatLink(user));
     
                     if (messageText.StartsWith("/info"))
                     {
@@ -3052,7 +3062,7 @@ namespace TezosNotifyBot
 					{
                         if (update.ChannelPost != null ||
                             Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
-                            SendTextMessage(user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
+                            SendTextMessage(db, user.Id, resMgr.Get(Res.Settings, user).Substring(2), ReplyKeyboards.Settings(resMgr, user, Config.Telegram));
                     }
 
                     if (messageText.StartsWith("/add") || (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}") && update.ChannelPost == null))
@@ -3063,7 +3073,7 @@ namespace TezosNotifyBot
                             if (Regex.IsMatch(messageText, "(tz|KT)[a-zA-Z0-9]{34}"))
                             {
                                 string addr = Regex.Matches(messageText, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
-                                OnNewAddressEntered(user, messageText.Substring(messageText.IndexOf(addr)));
+                                OnNewAddressEntered(db, user, messageText.Substring(messageText.IndexOf(addr)));
                             }
                             else
                                 SendTextMessage(user.Id, $"Use <b>add</b> command with Tezos address and the title for this address (optional). For example::\n/add@{botUserName} <i>tz1XuPMB8X28jSoy7cEsXok5UVR5mfhvZLNf Аrthur</i>");
@@ -3075,7 +3085,7 @@ namespace TezosNotifyBot
                         if (update.ChannelPost != null ||
                             Bot.GetChatAdministratorsAsync(chat.Id).ConfigureAwait(true).GetAwaiter().GetResult().Any(m => m.User.Id == from.Id))
                         {
-                            OnMyAddresses(chat.Id, user);
+                            OnMyAddresses(db, chat.Id, user);
                         }
                     }
 
@@ -3091,12 +3101,12 @@ namespace TezosNotifyBot
                                 string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                                 if (long.TryParse(threshold, out long t))
                                 {
-                                    var ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    var ua = db.GetUserTezosAddress(chat.Id, addr);
                                     if (ua.Id != 0)
                                     {
                                         ua.AmountThreshold = t;
-                                        repo.UpdateUserAddress(ua);
-                                        SendTextMessage(chat.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
+                                        db.SaveChanges();
+                                        SendTextMessage(db, chat.Id, resMgr.Get(Res.ThresholdEstablished, ua), null);
                                         return;
                                     }
                                 }
@@ -3118,12 +3128,12 @@ namespace TezosNotifyBot
                                 string threshold = msg.Substring(msg.IndexOf(addr) + addr.Length).Trim();
                                 if (long.TryParse(threshold, out long t))
                                 {
-                                    var ua = repo.GetUserTezosAddress(chat.Id, addr);
+                                    var ua = db.GetUserTezosAddress(chat.Id, addr);
                                     if (ua.Id != 0)
                                     {
                                         ua.DelegationAmountThreshold = t;
-                                        repo.UpdateUserAddress(ua);
-                                        SendTextMessage(chat.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
+                                        db.SaveChanges();
+                                        SendTextMessage(db, chat.Id, resMgr.Get(Res.DlgThresholdEstablished, ua), null);
                                         return;
                                     }
                                 }
@@ -3138,7 +3148,7 @@ namespace TezosNotifyBot
                     {
                         if (chatAdmins.Any(o => o.User.Id == message.From.Id))
                         {
-                            var u = repo.GetUser(message.From.Id);
+                            var u = rep_o.GetUser(message.From.Id);
                             if (message.ForwardFrom == null)
                                 OnNewAddressEntered(u, message.Text, message.Chat);
                             else
@@ -3150,9 +3160,9 @@ namespace TezosNotifyBot
                     }*/
                 }
 
-                if (message?.Type == MessageType.Document && Config.DevUserNames.Contains(message.From.Username))
+                if (message?.Type == MessageType.Document && Config.Telegram.DevUsers.Contains(message.From.Username))
                 {
-                    Upload(message, repo.GetUser(message.From.Id));
+                    Upload(db, message, db.GetUser(message.From.Id));
                 }
             }
             catch (Exception e)
@@ -3160,7 +3170,7 @@ namespace TezosNotifyBot
                 LogError(e);
                 try
                 {
-                    NotifyDev("‼️ " + e.Message, 0);
+                    NotifyDev(db, "‼️ " + e.Message, 0);
                 }
                 catch
                 {
@@ -3215,18 +3225,18 @@ namespace TezosNotifyBot
             //        result += "Ни одного предложения не поступило";
             //    else
             //        result += "Текущие предложения: " + String.Join("; ",
-            //            proposals.Select(o => (repo.GetProposal(o.Key)?.Name ?? o.Key) + $" - {o.Value} rolls")
+            //            proposals.Select(o => (rep_o.GetProposal(o.Key)?.Name ?? o.Key) + $" - {o.Value} rolls")
             //                .ToArray());
             //}
 
             Bot.SendTextMessageAsync(chatId, result, ParseMode.Html).ConfigureAwait(true).GetAwaiter().GetResult();
         }
 
-        void Stat(Update update)
+        void Stat(Storage.TezosDataContext db, Update update)
         {
             var chatId = update.Message.Chat?.Id ?? update.Message.From.Id;
-            string result = $"Active users: {repo.GetUsers().Count(o => !o.Inactive)}\n";
-            result += $"Monitored addresses: {repo.GetUserAddresses().Select(o => o.Address).Distinct().Count()}\n";
+            string result = $"Active users: {db.Users.Count(o => !o.Inactive)}\n";
+            result += $"Monitored addresses: {db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).Select(o => o.Address).Distinct().Count()}\n";
 
             Bot.SendTextMessageAsync(chatId, result, ParseMode.Html).ConfigureAwait(true).GetAwaiter().GetResult();
         }
@@ -3234,19 +3244,19 @@ namespace TezosNotifyBot
 
         #region Commands
 
-        void OnNewAddress(User user)
+        void OnNewAddress(Storage.TezosDataContext db, User user)
         {
-            SendTextMessage(user.Id, resMgr.Get(Res.NewAddressHint, user), ReplyKeyboards.Search(resMgr, user));
+            SendTextMessage(db, user.Id, resMgr.Get(Res.NewAddressHint, user), ReplyKeyboards.Search(resMgr, user));
         }
 
-        void OnSql(User u, string sql)
+        void OnSql(Storage.TezosDataContext db, User u, string sql)
         {
             try
             {
-                var res = repo.RunSql(sql);
+                var res = db.RunSql(sql);
                 string allData = String.Join("\r\n", res.Select(o => String.Join(';', o)).ToArray());
                 if (res[0].Length <= 3 && res.Count <= 20)
-                    SendTextMessage(u.Id, allData, ReplyKeyboards.MainMenu(resMgr, u));
+                    SendTextMessage(db, u.Id, allData, ReplyKeyboards.MainMenu(resMgr, u));
                 else
                 {
                     Stream s = GenerateStreamFromString(allData);
@@ -3263,11 +3273,11 @@ namespace TezosNotifyBot
             }
             catch (Exception e)
             {
-                SendTextMessage(u.Id, e.Message, ReplyKeyboards.MainMenu(resMgr, u));
+                SendTextMessage(db, u.Id, e.Message, ReplyKeyboards.MainMenu(resMgr, u));
             }
         }
 
-        void OnNewAddressEntered(User user, string msg, Telegram.Bot.Types.Chat chat = null)
+        void OnNewAddressEntered(Storage.TezosDataContext db, User user, string msg, Telegram.Bot.Types.Chat chat = null)
         {
             Bot.SendChatActionAsync(chat?.Id ?? user.Id, ChatAction.Typing);
             string addr = Regex.Matches(msg, "(tz|KT)[a-zA-Z0-9]{34}").First().Value;
@@ -3281,9 +3291,9 @@ namespace TezosNotifyBot
                 name = addr.ShortAddr().Replace("…", "");
             name = Regex.Replace(name, "<.*?>", "");
             if (String.IsNullOrEmpty(name))
-                name = repo.GetKnownAddressName(addr);
+                name = db.GetKnownAddressName(addr);
             if (String.IsNullOrEmpty(name))
-                name = repo.GetDelegateName(addr).Replace("…", "");
+                name = db.GetDelegateName(addr).Replace("…", "");
             try
             {
                 var ci = addrMgr.GetContract(prevBlock.Hash, addr);
@@ -3291,7 +3301,7 @@ namespace TezosNotifyBot
                 if (ci != null)
                 {
                     decimal bal = ci.balance / 1000000M;
-                    (UserAddress ua, DelegateInfo di) = NewUserAddress(user, addr, name, bal, chat?.Id ?? 0);
+                    (UserAddress ua, DelegateInfo di) = NewUserAddress(db, user, addr, name, bal, chat?.Id ?? 0);
                     string result = resMgr.Get(Res.AddressAdded, ua) + "\n";
 
                     result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
@@ -3307,7 +3317,7 @@ namespace TezosNotifyBot
 
                     if (ci.@delegate != null && di == null)
                     {
-                        string delname = repo.GetDelegateName(ci.@delegate);
+                        string delname = db.GetDelegateName(ci.@delegate);
                         result += resMgr.Get(Res.Delegate, ua) +
                                   $": <a href='{t.account(ci.@delegate)}'>{delname}</a>\n";
                     }
@@ -3316,8 +3326,8 @@ namespace TezosNotifyBot
                         result += "\n#added" + ua.HashTag();
                     if (chat == null)
                     {
-                        SendTextMessage(user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
-                        NotifyUserActivity($"🔥 User {UserLink(user)} added [{addr}]({t.account(addr)})" +
+                        SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu(resMgr, user));
+                        NotifyUserActivity(db, $"🔥 User {UserLink(user)} added [{addr}]({t.account(addr)})" +
                                            (!String.IsNullOrEmpty(name)
                                                ? $" as **{name.Replace("_", "__").Replace("`", "'")}**"
                                                : "") + $" (" + bal.TezToString() + ")");
@@ -3325,7 +3335,7 @@ namespace TezosNotifyBot
                     else
                     {
                         SendTextMessage(chat.Id, result);
-                        NotifyUserActivity($"🔥 User {UserLink(user)} added [{addr}]({t.account(addr)})" +
+                        NotifyUserActivity(db, $"🔥 User {UserLink(user)} added [{addr}]({t.account(addr)})" +
                                            (!String.IsNullOrEmpty(name)
                                                ? $" as **{name.Replace("_", "__").Replace("`", "'")}**"
                                                : "") + $" (" + bal.TezToString() + ")" +
@@ -3337,7 +3347,7 @@ namespace TezosNotifyBot
                 else
                 {
                     if (chat == null)
-                        SendTextMessage(user.Id, resMgr.Get(Res.IncorrectTezosAddress, user),
+                        SendTextMessage(db, user.Id, resMgr.Get(Res.IncorrectTezosAddress, user),
                             ReplyKeyboards.MainMenu(resMgr, user));
                     else
                         SendTextMessage(chat.Id, resMgr.Get(Res.IncorrectTezosAddress, user));
@@ -3347,7 +3357,7 @@ namespace TezosNotifyBot
             {
                 Logger.LogError(e, $"Error on adding \"{msg}\":\n{e.Message}");
                 if (chat == null)
-                    SendTextMessage(user.Id, resMgr.Get(Res.IncorrectTezosAddress, user),
+                    SendTextMessage(db, user.Id, resMgr.Get(Res.IncorrectTezosAddress, user),
                         ReplyKeyboards.MainMenu(resMgr, user));
                 else
                     SendTextMessage(chat.Id, resMgr.Get(Res.IncorrectTezosAddress, user));
@@ -3388,15 +3398,15 @@ namespace TezosNotifyBot
             return resMgr.Get(Res.FreeSpace, ua) + "\n";
         }*/
 
-        Action ViewAddress(long chatId, UserAddress ua, int msgid)
+        Action ViewAddress(Storage.TezosDataContext db, long chatId, UserAddress ua, int msgid)
         {
             var user = ua.User;
             var culture = new CultureInfo(user.Language);
 
             var t = Explorer.FromId(ua.User.Explorer);
-            var isDelegate = repo.IsDelegate(ua.Address);
+            var isDelegate = db.Delegates.Any(o => o.Address == ua.Address);
             var result = chatId == ua.UserId ? "" : $"ℹ️User {ua.User} [{ua.UserId}] address\n";
-            var config = repo.GetAddressConfig(ua.Address);
+            var config = db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == ua.Address);
             result += isDelegate ? $"{config?.Icon ?? "👑"} " : "";
             if (!String.IsNullOrEmpty(ua.Name))
                 result += "<b>" + ua.Name + "</b>\n";
@@ -3408,7 +3418,7 @@ namespace TezosNotifyBot
             result += resMgr.Get(Res.CurrentBalance, (ua, md)) + "\n";
             if (ci.@delegate != null && !isDelegate)
             {
-                string delname = repo.GetDelegateName(ci.@delegate);
+                string delname = db.GetDelegateName(ci.@delegate);
                 result += resMgr.Get(Res.Delegate, ua) + $": <a href='{t.account(ci.@delegate)}'>{delname}</a>\n";
             }
 
@@ -3572,14 +3582,14 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
                     result += resMgr.Get(Res.DelegateRightsAssigned, ua) + "\n";
                     result += resMgr.Get(Res.DelegateOutOfFreeSpace, ua) + "\n";
-                    result += resMgr.Get(Res.Watchers, ua) + repo.GetUserAddresses(ua.Address).Count + "\n";
+                    result += resMgr.Get(Res.Watchers, ua) + db.GetUserAddresses(ua.Address).Count + "\n";
                 }
 
                 if (!ua.User.HideHashTags)
                     // One new line for `address tune` and two for `inline mode`
                     // TODO: Change `result` from string to StringBuilder
                     result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
-                return () => SendTextMessage(chatId, result,
+                return () => SendTextMessage(db, chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
                             Config.Telegram)
@@ -3590,9 +3600,9 @@ namespace TezosNotifyBot
                 if (!ua.User.HideHashTags)
                     result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
                 string name = "";
-                if (ci?.@delegate != null && !repo.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
-                    name = repo.GetDelegateName(ci.@delegate);
-                return () => SendTextMessage(chatId, result,
+                if (ci?.@delegate != null && !db.GetUserAddresses(ua.UserId).Any(o => o.Address == ci.@delegate))
+                    name = db.GetDelegateName(ci.@delegate);
+                return () => SendTextMessage(db, chatId, result,
                     chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(resMgr, ua.User, ua.Id.ToString(), msgid == 0 ? null : ua,
                             new Tuple<string, string>(name, ci?.@delegate))
@@ -3600,11 +3610,11 @@ namespace TezosNotifyBot
             }
         }
 
-        void OnMyAddresses(long chatId, User user)
+        void OnMyAddresses(Storage.TezosDataContext db, long chatId, User user)
         {
-            var addresses = repo.GetUserAddresses(user.Id);
+            var addresses = db.GetUserAddresses(user.Id);
             if (addresses.Count == 0)
-                SendTextMessage(user.Id, resMgr.Get(Res.NoAddresses, user), ReplyKeyboards.MainMenu(resMgr, user));
+                SendTextMessage(db, user.Id, resMgr.Get(Res.NoAddresses, user), ReplyKeyboards.MainMenu(resMgr, user));
             else
 
             {
@@ -3612,7 +3622,7 @@ namespace TezosNotifyBot
                 foreach (var ua in addresses)
                 {
                     Bot.SendChatActionAsync(chatId, ChatAction.Typing);
-                    results.Add(ViewAddress(chatId, ua, 0));
+                    results.Add(ViewAddress(db, chatId, ua, 0));
                 }
 
                 foreach (var r in results)
@@ -3620,9 +3630,9 @@ namespace TezosNotifyBot
             }
         }
 
-        (UserAddress, DelegateInfo) NewUserAddress(User user, string addr, string name, decimal balance, long chatId)
+        (UserAddress, DelegateInfo) NewUserAddress(Storage.TezosDataContext db, User user, string addr, string name, decimal balance, long chatId)
         {
-            var ua = repo.AddUserAddress(user, addr, balance, name, chatId);
+            var ua = db.AddUserAddress(user, addr, balance, name, chatId);
             DelegateInfo di = null;
             try
             {
@@ -3633,10 +3643,14 @@ namespace TezosNotifyBot
                         di = addrMgr.GetDelegate(prevBlock.Hash, addr);
                         if (di != null)
                         {
-                            if (!repo.IsDelegate(addr))
+                            if (!db.Delegates.Any(o => o.Address == addr))
                             {
-                                repo.AddDelegate(addr, addr.ShortAddr());
-                                NotifyUserActivity($"💤 New delegate {addr} monitored");
+                                db.Delegates.Add(new Domain.Delegate {
+                                    Address = addr,
+                                    Name = addr.ShortAddr()
+                                });
+                                db.SaveChanges();
+                                NotifyUserActivity(db, $"💤 New delegate {addr} monitored");
                             }
                         }
                     }
@@ -3655,23 +3669,23 @@ namespace TezosNotifyBot
 
         #endregion
 
-        public void NotifyDev(string text, long currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
+        public void NotifyDev(Storage.TezosDataContext db, string text, long currentUserID, ParseMode parseMode = ParseMode.Markdown, bool current = false)
         {
-            foreach (var devUser in Config.DevUserNames)
+            foreach (var devUser in Config.Telegram.DevUsers)
             {
-                var user = repo.GetUser(devUser);
+                var user = db.Users.SingleOrDefault(o => o.Username == devUser);
                 if (user != null && ((user.Id != currentUserID && !current) || (user.Id == currentUserID && current)))
                 {
                     while (text.Length > 4096)
                     {
                         int lastIndexOf = text.Substring(0, 4096).LastIndexOf('\n');
-                        SendTextMessage(user.Id, text.Substring(0, lastIndexOf), ReplyKeyboards.MainMenu(resMgr, user),
+                        SendTextMessage(db, user.Id, text.Substring(0, lastIndexOf), ReplyKeyboards.MainMenu(resMgr, user),
                             parseMode: parseMode);
                         text = text.Substring(lastIndexOf + 1);
                     };
 
                     if (text != "")
-                        SendTextMessage(user.Id, text, ReplyKeyboards.MainMenu(resMgr, user), parseMode: parseMode);
+                        SendTextMessage(db, user.Id, text, ReplyKeyboards.MainMenu(resMgr, user), parseMode: parseMode);
                 }
             }
         }
@@ -3691,26 +3705,27 @@ namespace TezosNotifyBot
             }
         }
 
-        void PushTextMessage(UserAddress ua, string text)
+        void PushTextMessage(Storage.TezosDataContext db, UserAddress ua, string text)
         {
-            repo.SaveMessage(Domain.Message.Push(ua.UserId, text));
+            PushTextMessage(db, ua.UserId, text);
         }
-        void PushTextMessage(long userId, string text)
+        void PushTextMessage(Storage.TezosDataContext db, long userId, string text)
         {
-            repo.SaveMessage(Domain.Message.Push(userId, text));
+            db.Add(Domain.Message.Push(userId, text));
+            db.SaveChanges();
         }
-        void SendTextMessageUA(UserAddress ua, string text)
+        void SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text)
         {
             if (ua.ChatId == 0)
-                SendTextMessage(ua.UserId, text, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                SendTextMessage(db, ua.UserId, text, ReplyKeyboards.MainMenu(resMgr, ua.User));
             else
                 SendTextMessage(ua.ChatId, text);
         }
 
-        public int SendTextMessage(long userId, string text, IReplyMarkup keyboard, int replaceId = 0,
+        public int SendTextMessage(Storage.TezosDataContext db, long userId, string text, IReplyMarkup keyboard, int replaceId = 0,
             ParseMode parseMode = ParseMode.Html, bool disableNotification = false)
         {
-            var u = repo.GetUser(userId);
+            var u = db.GetUser(userId);
             if (u.Inactive)
                 return 0;
             try
@@ -3721,7 +3736,7 @@ namespace TezosNotifyBot
                     Message msg = Bot
                             .SendTextMessageAsync(userId, text, parseMode, disableWebPagePreview: true, disableNotification: disableNotification, replyMarkup: keyboard)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
-                        repo.LogOutMessage(userId, msg.MessageId, text);
+                        db.LogOutMessage(userId, msg.MessageId, text);
                         Thread.Sleep(50);
                     return msg.MessageId;
                 }
@@ -3730,7 +3745,7 @@ namespace TezosNotifyBot
                     var msg = Bot
                         .EditMessageTextAsync(userId, replaceId, text, parseMode, disableWebPagePreview: true,
                             replyMarkup: (InlineKeyboardMarkup) keyboard).ConfigureAwait(true).GetAwaiter().GetResult();
-                    repo.LogOutMessage(userId, msg.MessageId, text);
+                    db.LogOutMessage(userId, msg.MessageId, text);
                     return msg.MessageId;
                 }
             }
@@ -3740,32 +3755,32 @@ namespace TezosNotifyBot
             catch (ChatNotFoundException)
             {
                 u.Inactive = true;
-                repo.UpdateUser(u);
-                NotifyDev("😕 User " + UserLink(u) + " not started chat with bot", userId);
+                db.SaveChanges();
+                NotifyDev(db, "😕 User " + UserLink(u) + " not started chat with bot", userId);
             }
             catch (BadRequestException bre)
 			{
                 if(bre.Message.Contains("no rights to send"))
 				{
                     u.Inactive = true;
-                    repo.UpdateUser(u);
-                    NotifyDev("😕 Bot have no rights to send a message for " + UserLink(u), userId);
+                    db.SaveChanges();
+                    NotifyDev(db, "😕 Bot have no rights to send a message for " + UserLink(u), userId);
                 }
                 else
                     LogError(bre);
             }
             catch (ApiRequestException are)
             {
-                NotifyDev("🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, userId);
+                NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, userId);
                 if (are.Message.StartsWith("Forbidden"))
                 {
                     u.Inactive = true;
-                    repo.UpdateUser(u);
+                    db.SaveChanges();
                 }
                 else if (are.Message.Contains("group chat was upgraded to a supergroup chat"))
                 {
                     u.Inactive = true;
-                    repo.UpdateUser(u);
+                    db.SaveChanges();
                 }
                 else
                     LogError(are);
@@ -3775,8 +3790,8 @@ namespace TezosNotifyBot
                 if (ex.Message == "Forbidden: bot was blocked by the user")
                 {
                     u.Inactive = true;
-                    repo.UpdateUser(u);
-                    NotifyDev("😕 Bot was blocked by the user " + UserLink(u), userId);
+                    db.SaveChanges();
+                    NotifyDev(db, "😕 Bot was blocked by the user " + UserLink(u), userId);
                 }
                 else
                     LogError(ex);
@@ -3785,7 +3800,7 @@ namespace TezosNotifyBot
             return 0;
         }
 
-        public void NotifyUserActivity(string text)
+        public void NotifyUserActivity(Storage.TezosDataContext db, string text)
         {
             foreach (var userId in Config.Telegram.ActivityChat)
             {
@@ -3793,7 +3808,7 @@ namespace TezosNotifyBot
                 {
                     if (userId > 0)
                     {
-                        var u = repo.GetUser((int) userId);
+                        var u = db.GetUser((int) userId);
                         Bot.SendTextMessageAsync(userId, text, ParseMode.Markdown, disableWebPagePreview: true,
                                 replyMarkup: ReplyKeyboards.MainMenu(resMgr, u)).ConfigureAwait(true).GetAwaiter()
                             .GetResult();
@@ -3806,7 +3821,7 @@ namespace TezosNotifyBot
                 }
                 catch (Exception ex)
                 {
-                    NotifyDev($"🐞 Error while sending message for chat {userId}: " + ex.Message, 0);
+                    NotifyDev(db, $"🐞 Error while sending message for chat {userId}: " + ex.Message, 0);
                     LogError(ex);
                 }
             }
@@ -3857,7 +3872,7 @@ namespace TezosNotifyBot
             return stream;
         }
 
-        async void Upload(Message message, User user)
+        async void Upload(Storage.TezosDataContext db, Message message, User user)
         {
             try
             {
@@ -3882,14 +3897,14 @@ namespace TezosNotifyBot
                                 result += "\n🔹 " + destination;
                             }
 
-                            NotifyDev("🖇 Files uploaded by " + UserLink(user) + ":" + result, 0);
+                            NotifyDev(db, "🖇 Files uploaded by " + UserLink(user) + ":" + result, 0);
                         }
                     }
                     else
                     {
                         var destination = Path.Combine(path, message.Document.FileName);
                         File.WriteAllBytes(destination, fileStream.GetBuffer());
-                        NotifyDev("📎 File uploaded by " + UserLink(user) + ": " + destination, 0);
+                        NotifyDev(db, "📎 File uploaded by " + UserLink(user) + ": " + destination, 0);
                     }
                 }
             }

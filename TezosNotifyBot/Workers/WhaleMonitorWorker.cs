@@ -66,9 +66,9 @@ namespace TezosNotifyBot.Workers
             {
                 var tzKt = provider.GetService<ITzKtClient>();
                 var tzKtBlock = tzKt.GetBlock(block.Level);
-                var repo = provider.GetRequiredService<Repository>();
-                var wtlist = repo.GetWhaleTransactions();
-                var allUsers = repo.GetUsers();
+                //var repo = provider.GetRequiredService<Repository>();
+                var wtlist = db.WhaleTransactions.Include(o => o.Notifications).ToList();
+                var allUsers = db.Users.ToList();
                 if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
                 {
                     try
@@ -95,7 +95,7 @@ namespace TezosNotifyBot.Workers
                     foreach (var u in allUsers.Where(o =>
                          !o.Inactive && o.WhaleThreshold > 0 && o.WhaleThreshold <= amount && o.SmartWhaleAlerts))
                     {
-                        var ua_from = repo.GetUserTezosAddress(u.Id, address.Key);
+                        var ua_from = db.GetUserTezosAddress(u.Id, address.Key);
                         var listFiltered = address.Where(o => !o.Notifications.Any(n => n.UserId == u.Id) && o.Amount < u.WhaleThreshold);
 
                         if (listFiltered.Count() <= 1 || listFiltered.Sum(o => o.Amount) < u.WhaleThreshold) continue;
@@ -112,7 +112,7 @@ namespace TezosNotifyBot.Workers
                         string tags = "";
                         foreach (var op in listFiltered.OrderByDescending(o => o.Amount).Take(10).OrderBy(o => o.Level))
                         {
-                            var ua_to = repo.GetUserTezosAddress(u.Id, op.ToAddress);
+                            var ua_to = db.GetUserTezosAddress(u.Id, op.ToAddress);
                             result += "\n" + resMgr.Get(Res.WhaleOutflowItem,
                             new ContextObject
                             {
@@ -123,7 +123,7 @@ namespace TezosNotifyBot.Workers
                                 Block = op.Level,
                                 OpHash = op.OpHash
                             });
-                            repo.AddWhaleTransactionNotify(op.Id, u.Id);
+                            await db.AddWhaleTransactionNotify(op.Id, u.Id);
                             tags += ua_to.HashTag();
                         }
                         if (u.Type == 0)
@@ -133,12 +133,12 @@ namespace TezosNotifyBot.Workers
                             result += "\n\n#whale" + ua_from.HashTag() + tags;
                         }
 
-                        bot.SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        bot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
                 }
 
                 var minDate = tzKtBlock.Timestamp.AddDays(-_config.WhaleSeriesLength);
-                repo.CleanWhaleTransactions(minDate);
+                db.CleanWhaleTransactions(minDate);
 
                 lastBlock = block.Level;
             }

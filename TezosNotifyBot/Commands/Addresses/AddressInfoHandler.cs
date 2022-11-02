@@ -7,19 +7,19 @@ using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Storage;
+using System.Linq;
 
 namespace TezosNotifyBot.Commands.Addresses
 {
     public class AddressInfoHandler : BaseHandler, ICallbackHandler
     {
-        private readonly Repository _repo;
+        //private readonly Repository _repo;
         private readonly ResourceManager _lang;
 
-        public AddressInfoHandler(Repository repo, ResourceManager lang, TezosDataContext db,
+        public AddressInfoHandler(ResourceManager lang, TezosDataContext db,
             TezosBotFacade botClient)
             : base(db, botClient)
         {
-            _repo = repo;
             _lang = lang;
         }
 
@@ -36,7 +36,7 @@ namespace TezosNotifyBot.Commands.Addresses
                 return;
             }
 
-            var isDelegate = _repo.IsDelegate(address.Address);
+            var isDelegate = Db.Delegates.Any(o => o.Address == address.Address);
 
             var lang = user.Language;
             var title = _lang.Get(Res.AddressInfoTitle, lang, new { ua = address });

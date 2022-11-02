@@ -44,22 +44,21 @@ namespace TezosNotifyBot.Workers
                 using var scope = _provider.CreateScope();
                 var bot = scope.ServiceProvider.GetRequiredService<TezosBot>();
                 using var db = scope.ServiceProvider.GetRequiredService<TezosDataContext>();
-                var repo = scope.ServiceProvider.GetRequiredService<Repository>();
                 lastLevel = db.LastBlock.Single().Level;
                 var cycles = _tzKtClient.GetCycles();
                 var currentCycle = cycles.FirstOrDefault(c => c.firstLevel <= lastLevel && lastLevel <= c.lastLevel);
                 if (lastCycle == 0 && currentCycle != null)
                 {
                     lastCycle = currentCycle.index;
-                    bot.NotifyDev($"MediumWorker started on cycle {lastCycle}", 0);
+                    bot.NotifyDev(db, $"MediumWorker started on cycle {lastCycle}", 0);
                 }
                 if (currentCycle != null && lastCycle != currentCycle.index)
                 {
                     try
                     {
                         var prevCycle = cycles.Single(c => c.index == currentCycle.index - 1);
-                        var result = CreatePost(repo, prevCycle, currentCycle);
-                        bot.NotifyUserActivity($"🧐 New Medium post: [{result.data.title}]({result.data.url})");
+                        var result = CreatePost(db, prevCycle, currentCycle);
+                        bot.NotifyUserActivity(db, $"🧐 New Medium post: [{result.data.title}]({result.data.url})");
                         var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blockchain";
                         lastCycle = currentCycle.index;
                         bot.Tweet(tweet);
@@ -67,7 +66,7 @@ namespace TezosNotifyBot.Workers
                     catch (Exception e)
                     {
                         _logger.LogError(e, "Failed to create medium post");
-                        bot.NotifyDev("🛑 Failed to create medium post: \n" + e.Message + "\n" + e.StackTrace, 0);
+                        bot.NotifyDev(db, "🛑 Failed to create medium post: \n" + e.Message + "\n" + e.StackTrace, 0);
                     }
                 }
                 // Wait one minute
@@ -75,7 +74,7 @@ namespace TezosNotifyBot.Workers
             }
         }
 
-        public Medium.Response CreatePost(Repository repo, Cycle prevCycle, Cycle currentCycle)
+        public Medium.Response CreatePost(Storage.TezosDataContext db, Cycle prevCycle, Cycle currentCycle)
 		{
             StringBuilder post = new StringBuilder();
             post.AppendLine($"<h1>Tezos Blockchain cycle {prevCycle.index} stats</h1>");
@@ -102,8 +101,8 @@ namespace TezosNotifyBot.Workers
             post.AppendLine("<ul>");
             foreach (var wt in whaleTransactions)
             {
-                var sender = repo.GetUserTezosAddress(0, wt.Sender.address);
-                var target = repo.GetUserTezosAddress(0, wt.Target.address);
+                var sender = db.GetUserTezosAddress(0, wt.Sender.address);
+                var target = db.GetUserTezosAddress(0, wt.Target.address);
                 post.AppendLine($"<li><a target='_blank' href='https://tzkt.io/{wt.Hash}?utm_source=tezosnotifierbot'>transaction</a> of {(wt.Amount / 1000000M).TezToString()} ({(wt.Amount / 1000000M).TezToUsd(md)} USD) from <a href='https://tzkt.io/{wt.Sender.address}?utm_source=tezosnotifierbot'>{sender.DisplayName()}</a> to <a href='https://tzkt.io/{wt.Target.address}?utm_source=tezosnotifierbot'>{target.DisplayName()}</a></li>");
             }
             post.AppendLine("</ul>");

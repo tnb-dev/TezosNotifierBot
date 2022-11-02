@@ -5,6 +5,7 @@ using System.Text;
 using TezosNotifyBot.Tzkt;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using Microsoft.EntityFrameworkCore;
 
 namespace TezosNotifyBot
 {
@@ -12,7 +13,7 @@ namespace TezosNotifyBot
 	{
         string periodStatus;
         string votingStatus;
-		void VotingNotify(Block block, Cycle cycle, ITzKtClient tzKtClient)
+		void VotingNotify(Storage.TezosDataContext db, Block block, Cycle cycle, ITzKtClient tzKtClient)
         {
             var periods = tzKtClient.GetVotingPeriods();
             var period = periods.Single(p => p.firstLevel <= block.Level && block.Level <= p.lastLevel);
@@ -24,17 +25,17 @@ namespace TezosNotifyBot
             {
                 var hash = proposal.Proposal.Hash;
                 var from = proposal.@Delegate.Address;
-                var p = repo.GetProposal(hash);
+                var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                 if (p == null)
                 {
-                    p = repo.AddProposal(hash, from, proposal.Period.Index);
+                    p = db.AddProposal(hash, from, proposal.Period.Index);
                     p.VotedRolls = proposal.Rolls;
 
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
                     {
-                        var ua = repo.GetUserAddresses(u.Id).FirstOrDefault(o => o.Address == from);
+                        var ua = db.UserAddresses.FirstOrDefault(o => o.UserId == u.Id && !o.IsDeleted && o.Address == from);
                         if (ua == null)
-                            ua = new UserAddress { Address = from, Name = repo.GetDelegateName(from) };
+                            ua = new UserAddress { Address = from, Name = db.GetDelegateName(from) };
                         ua.StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll;
                         var result = resMgr.Get(Res.NewProposal,
                             new ContextObject
@@ -48,7 +49,7 @@ namespace TezosNotifyBot
                             });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
 
                     //Twitter
@@ -59,7 +60,7 @@ namespace TezosNotifyBot
                                 ua = new UserAddress
                                 {
                                     Address = from,
-                                    Name = repo.GetDelegateName(from),
+                                    Name = db.GetDelegateName(from),
                                     StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll
                                 },
                                 p = p,
@@ -74,7 +75,7 @@ namespace TezosNotifyBot
 				{
                     var prop = tzKtClient.GetProposals(proposal.Period.Epoch).Single(p => p.hash == hash);
                     p.VotedRolls = prop.rolls;
-                    foreach (var ua in repo.GetUserAddresses(from))
+                    foreach (var ua in db.UserAddresses.Include(x => x.User).Where(o => o.Address == from && !o.IsDeleted && !o.User.Inactive).ToList())
                     {
                         if (ua.User.VotingNotify)
                         {
@@ -92,13 +93,13 @@ namespace TezosNotifyBot
                                 });
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                            SendTextMessage(ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                            SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
                         }
                     }
 
                     if (Config.Telegram.VotingChat != 0)
 					{
-                        var ua = new UserAddress { Address = from, Name = repo.GetDelegateName(from) };
+                        var ua = new UserAddress { Address = from, Name = db.GetDelegateName(from) };
                         ua.StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll;
                         var result = resMgr.Get(Res.SupplyProposal,
                             new ContextObject
@@ -110,7 +111,7 @@ namespace TezosNotifyBot
                                 Block = block.Level,
                                 Period = proposal.Period.Index
                             });
-                        SendTextMessage(Config.Telegram.VotingChat, result, null);
+                        SendTextMessage(db, Config.Telegram.VotingChat, result, null);
                     }
                 }
             }
@@ -125,11 +126,11 @@ namespace TezosNotifyBot
                 //int rolls = listings.Single(o => o.pkh == from).rolls;
                 int allrolls = period.totalRolls.Value;
 
-                var p = repo.GetProposal(hash);
+                var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                 if (p == null)
                 {
-                    p = repo.AddProposal(hash, from, ballot.Period.Index);
-                    NotifyDev($"⚠️ Proposal {p.Name} missed in database, added", 0);
+                    p = db.AddProposal(hash, from, ballot.Period.Index);
+                    NotifyDev(db, $"⚠️ Proposal {p.Name} missed in database, added", 0);
                 }                                
 
                 Res bp = Res.BallotProposal_pass;
@@ -137,7 +138,7 @@ namespace TezosNotifyBot
                     bp = Res.BallotProposal_yay;
                 if (ballot.Vote == "nay")
                     bp = Res.BallotProposal_nay;
-                foreach (var ua in repo.GetUserAddresses(from))
+                foreach (var ua in db.UserAddresses.Include(x => x.User).Where(o => o.Address == from && !o.IsDeleted && !o.User.Inactive).ToList())
                 {
                     if (ua.User.VotingNotify)
                     {
@@ -155,13 +156,13 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                        SendTextMessage(ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                        SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
                     }
                 }
 
                 if (Config.Telegram.VotingChat != 0)
 				{
-                    var ua = new UserAddress { Address = from, Name = repo.GetDelegateName(from) };
+                    var ua = new UserAddress { Address = from, Name = db.GetDelegateName(from) };
                     ua.StakingBalance = ballot.Rolls * TezosConstants.TokensPerRoll;                    
                     var result = resMgr.Get(bp,
                         new ContextObject
@@ -173,7 +174,7 @@ namespace TezosNotifyBot
                             Block = block.Level,
                             Period = ballot.Period.Index
                         });
-                    SendTextMessage(Config.Telegram.VotingChat, result, null);
+                    SendTextMessage(db, Config.Telegram.VotingChat, result, null);
                 }
                 // Check quorum
 
@@ -189,13 +190,13 @@ namespace TezosNotifyBot
                 if (participation * 100M / allrolls >= quorum &&
                     (participation - ballot.Rolls) * 100M / allrolls < quorum)
                 {
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
                     {
                         var result = resMgr.Get(Res.QuorumReached,
                             new ContextObject { u = u, p = p, Block = block.Level, Period = ballot.Period.Index });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
 
                     {
@@ -216,20 +217,19 @@ namespace TezosNotifyBot
                     var supporters = tzKtClient.GetUpvotes(period.epoch).GroupBy(o => o.Proposal.Hash)
                         .ToDictionary(o => o.Key, o => o.Select(p => p.Delegate.Address).ToList());
 
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
                     {
                         var t = Explorer.FromId(u.Explorer);
                         if (proposals.Count == 1)
                         {
-                            string propHash = proposals[0].hash;
-                            var p = repo.GetProposal(propHash);
+                            string hash = proposals[0].hash;
+                            var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                             if (p == null)
-                                p = repo.AddProposal(propHash, null, prevPeriod.index);
+                                p = db.AddProposal(hash, null, prevPeriod.index);
 
-                            var delegateList = supporters[propHash];
+                            var delegateList = supporters[hash];
                             // Список поддержавших делегатов, которые мониторит юзер
-                            var addrList = repo.GetUserAddresses(u.Id).Where(o => delegateList.Contains(o.Address))
-                                .ToList();
+                            var addrList = db.UserAddresses.Where(o => o.UserId == u.Id && !o.IsDeleted).ToList().Where(o => delegateList.Contains(o.Address)).ToList();
                             p.Delegates = addrList;
                             p.VotedRolls = proposals.Single().rolls;
                             string tags = "";
@@ -249,7 +249,7 @@ namespace TezosNotifyBot
 
                             if (!u.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + tags;
-                            SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                            SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                         }
                         else
                         {
@@ -257,10 +257,9 @@ namespace TezosNotifyBot
                             string tags = "";
                             foreach (var prop in proposals)
                             {
-                                string propHash = prop.hash;
-                                var delegateList = supporters[propHash];
-                                var addrList = repo.GetUserAddresses(u.Id).Where(o => delegateList.Contains(o.Address))
-                                    .ToList();
+                                string hash = prop.hash;
+                                var delegateList = supporters[hash];
+                                var addrList = db.UserAddresses.Where(o => o.UserId == u.Id && !o.IsDeleted).ToList().Where(o => delegateList.Contains(o.Address)).ToList();
                                 string delegateListString = "";
                                 if (addrList.Count() > 0)
                                 {
@@ -270,9 +269,9 @@ namespace TezosNotifyBot
                                     tags += String.Join("", addrList.Select(o => o.HashTag()));
                                 }
 
-                                var p = repo.GetProposal(propHash);
+                                var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                                 if (p == null)
-                                    p = repo.AddProposal(propHash, null, prevPeriod.index);
+                                    p = db.AddProposal(hash, null, prevPeriod.index);
                                 p.VotedRolls = prop.rolls;
                                 p.Delegates = addrList;
                                 propItems +=
@@ -283,13 +282,12 @@ namespace TezosNotifyBot
 
                             {
                                 var prop = proposals.OrderByDescending(o => o.rolls).First();
-                                string propHash = prop.hash;
-                                var p = repo.GetProposal(propHash);
+                                string hash = prop.hash;
+                                var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                                 p.VotedRolls = prop.rolls;
-                                var delegateList = supporters[propHash];
+                                var delegateList = supporters[hash];
                                 // Список поддержавших делегатов, которые мониторит юзер
-                                var addrList = repo.GetUserAddresses(u.Id).Where(o => delegateList.Contains(o.Address))
-                                    .ToList();
+                                var addrList = db.UserAddresses.Where(o => o.UserId == u.Id && !o.IsDeleted).ToList().Where(o => delegateList.Contains(o.Address)).ToList();
                                 p.Delegates = addrList;
                                 string result =
                                     resMgr.Get(Res.ProposalSelectedMany,
@@ -299,7 +297,7 @@ namespace TezosNotifyBot
                                         new ContextObject { p = p, u = u, Block = block.Level, Period = period.index });
                                 if (!u.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag() + tags;
-                                SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                                SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                             }
                         }
                     }
@@ -308,26 +306,27 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "exploration" && period.kind == "testing")
 				{
                     var proposal = tzKtClient.GetProposals(period.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = repo.GetProposal(proposal.hash);
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
 					{
 						var result = resMgr.Get(Res.TestingVoteSuccess,
 							new ContextObject { p = p, u = u, Block = block.Level, Period = period.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
                         
                     // Делегат не проголосовал
                     var ballots = tzKtClient.GetBallots(prevPeriod.index).Select(b => b.Delegate.Address).ToHashSet();
-                    foreach (var ua in repo.GetUserDelegates(true).Where(a => a.User.VotingNotify))
+                    foreach (var ua in db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive && o.User.VotingNotify)
+                        .Join(db.Delegates, o => o.Address, o => o.Address, (o, d) => o).Include(x => x.User).ToList())
                     {
                         if (!ballots.Contains(ua.Address))
                         {
                             var result = resMgr.Get(Res.DelegateDidNotVoted, (ua, p));
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                            SendTextMessage(ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                            SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
                         }
 					}
 				}
@@ -335,22 +334,22 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "exploration" && period.kind == "proposal")
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = repo.GetProposal(proposal.hash);
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
 					{
 						var result = resMgr.Get(Res.TestingVoteFailed,
 							new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
                 }
 
                 if (prevPeriod.kind == "promotion")
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = repo.GetProposal(proposal.hash);
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
 					{
 						var result = period.kind == "adoption"
 							? resMgr.Get(Res.PromotionVoteSuccess,
@@ -359,20 +358,20 @@ namespace TezosNotifyBot
 								new ContextObject { p = p, u = u, Block = prevPeriod.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
 					}
                 }
                 if (prevPeriod.kind == "adoption")
                 {
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = repo.GetProposal(proposal.hash);
-                    foreach (var u in repo.GetUsers().Where(o => !o.Inactive && o.VotingNotify))
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
                     {
                         var result = resMgr.Get(Res.AdoptionFinished,
                                 new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag();
-                        SendTextMessage(u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
                     }
                 }
             }

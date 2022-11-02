@@ -16,7 +16,7 @@ namespace TezosNotifyBot
 {
 	partial class TezosBot
 	{
-		async Task HandleNftTransfer(Transaction tr, Token token)
+		async Task HandleNftTransfer(Storage.TezosDataContext db, Transaction tr, Token token)
 		{
 			var parms = (tr.Parameter.value as Newtonsoft.Json.Linq.JArray)[0];
 			var from = (string)parms["from_"];
@@ -26,7 +26,7 @@ namespace TezosNotifyBot
 			var token_id = (int)txs["token_id"];
 
 			Logger.LogDebug($"from_ {from} to {to} amount {amount} id {token_id}");
-			var toAddresses = repo.GetUserAddresses(to).Where(o => o.NotifyTransactions).ToList();
+			var toAddresses = db.GetUserAddresses(to).Where(o => o.NotifyTransactions).ToList();
 			if (toAddresses.Count == 0)
 				return;
 
@@ -57,7 +57,7 @@ namespace TezosNotifyBot
 				}
 				catch(ApiRequestException e)
 				{
-					NotifyDev($"{e.Message}, Error send NFT notification: {artifactUri}", 0);
+					NotifyDev(db, $"{e.Message}, Error send NFT notification: {artifactUri}", 0);
 				}
 			}
 		}
