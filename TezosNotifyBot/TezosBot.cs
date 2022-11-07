@@ -1511,6 +1511,11 @@ namespace TezosNotifyBot
                 var provider = scope.ServiceProvider;
                 using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 
+                Func<UserAddress> useraddr = () => {
+                    var addrId = int.Parse(callbackArgs[0]);
+                    return db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                };
+
                 db.LogMessage(userId, message.MessageId, null, callbackData);
                 var user = db.Users.SingleOrDefault(x => x.Id == userId);
                 Logger.LogInformation(user.ToString() + ": button " + callbackData);
@@ -1544,8 +1549,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("deleteaddress"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    var ua = useraddr();
                     if (ua != null)
                     {
                         ua.IsDeleted = true;
@@ -1569,8 +1573,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setthreshold"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    var ua = useraddr();
                     if (ua != null)
                     {
                         user.UserState = UserState.SetAmountThreshold;
@@ -1588,8 +1591,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setname"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    var ua = useraddr();
                     if (ua != null)
                     {
                         user.UserState = UserState.SetName;
@@ -1607,27 +1609,26 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("notifyfollowers"))
                 {
-                    var addrId = int.Parse(callbackData.Substring("notifyfollowers ".Length));
-                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (userAddress != null)
+                    var ua = useraddr();
+                    if (ua != null)
                     {
                         var cycles = _serviceProvider.GetService<ITzKtClient>().GetCycles();
-                        if (userAddress.IsOwner && !user.IsAdmin(Config.Telegram) &&
+                        if (ua.IsOwner && !user.IsAdmin(Config.Telegram) &&
                             cycles.Single(c => c.firstLevel <= prevBlock.Level && prevBlock.Level <= c.lastLevel) ==
-                            cycles.Single(c => c.firstLevel <= userAddress.LastMessageLevel && userAddress.LastMessageLevel <= c.lastLevel))
+                            cycles.Single(c => c.firstLevel <= ua.LastMessageLevel && ua.LastMessageLevel <= c.lastLevel))
                         {
                             SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
                             return;
 						}
                         // TODO: Maybe reuse user var? 
                         user.UserState = UserState.NotifyFollowers;
-                        user.EditUserAddressId = userAddress.Id;
+                        user.EditUserAddressId = ua.Id;
                         db.SaveChanges();
 
-                        var result = resMgr.Get(Res.EnterMessageForAddressFollowers, userAddress);
+                        var result = resMgr.Get(Res.EnterMessageForAddressFollowers, ua);
                         if (user.IsAdmin(Config.Telegram))
                         {
-                            foreach (var follower in GetFollowers(db, userAddress.Address))
+                            foreach (var follower in GetFollowers(db, ua.Address))
                                 result += $"\n{follower} [{follower.Id}]";
                         }
                         SendTextMessage(db, user.Id, result, ReplyKeyboards.BackMenu(resMgr, user));
@@ -1639,8 +1640,7 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("setdlgthreshold"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    var ua = useraddr();
                     if (ua != null)
                     {
                         user.UserState = UserState.SetDlgAmountThreshold;
@@ -1658,9 +1658,8 @@ namespace TezosNotifyBot
 
                 if (callbackData.StartsWith("change_delegators_balance_threshold "))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (userAddress == null)
+                    var ua = useraddr();
+                    if (ua == null)
                     {
                         SendTextMessage(db, userId, resMgr.Get(Res.AddressNotExist, user), null,
                             ev.CallbackQuery.Message.MessageId);
@@ -1668,37 +1667,33 @@ namespace TezosNotifyBot
                     else
                     {
                         user.UserState = UserState.SetDelegatorsBalanceThreshold;
-                        user.EditUserAddressId = addrId;
+                        user.EditUserAddressId = ua.Id;
                         db.SaveChanges();
-                        var text = resMgr.Get(Res.EnterDelegatorsBalanceThreshold, userAddress);
+                        var text = resMgr.Get(Res.EnterDelegatorsBalanceThreshold, ua);
                         SendTextMessage(db, user.Id, text, ReplyKeyboards.BackMenu(resMgr, user));
                     }
                 }
 
                 if (callbackData.StartsWith("toggle_payout_notify"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-
-                    if (userAddress != null)
+                    var ua = useraddr();
+                    if (ua != null)
                     {
-                        userAddress.NotifyPayout = !userAddress.NotifyPayout;
+                        ua.NotifyPayout = !ua.NotifyPayout;
                         db.SaveChanges();
-                        ViewAddress(db, user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                 }
                 
                 if (callbackData.StartsWith("toggle_delegators_balance"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var userAddress = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-
-                    if (userAddress != null)
+                    var ua = useraddr();
+                    if (ua != null)
                     {
-                        userAddress.NotifyDelegatorsBalance = !userAddress.NotifyDelegatorsBalance;
+                        ua.NotifyDelegatorsBalance = !ua.NotifyDelegatorsBalance;
                         db.SaveChanges();
                         // TODO: Update message keyboard
-                        ViewAddress(db, user.Id, userAddress, ev.CallbackQuery.Message.MessageId)();
+                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
                     }
                 }
 
@@ -1764,24 +1759,9 @@ namespace TezosNotifyBot
                     SendTextMessage(db, user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu(resMgr, user));
                 }
 
-                if (callbackData.StartsWith("bakingon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyBakingRewards = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
                 if (callbackData.StartsWith("manageaddress"))
                 {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
+                    var ua = useraddr();
                     if (ua != null)
                     {
                         ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
@@ -1790,258 +1770,40 @@ namespace TezosNotifyBot
                         await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                 }
 
-                if (callbackData.StartsWith("bakingoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
+                Action<string, Action<UserAddress>> editUA = async (cmd, action) => {
+                    if (callbackData.StartsWith(cmd))
                     {
-                        ua.NotifyBakingRewards = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        var ua = useraddr();
+                        if (ua != null)
+                        {
+                            action(ua);
+                            db.SaveChanges();
+                            ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
+                        }
+                        else
+                            await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
                     }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
+                };
 
-                if (callbackData.StartsWith("cycleon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyCycleCompletion = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("cycleoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyCycleCompletion = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("owneron"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.IsOwner = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("owneroff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.IsOwner = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("rightson"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyRightsAssigned = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("rightsoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyRightsAssigned = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-                if (callbackData.StartsWith("outoffreespaceon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyOutOfFreeSpace = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("outoffreespaceoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyOutOfFreeSpace = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("tranon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyTransactions = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("tranoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyTransactions = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("awardon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyAwardAvailable = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("awardoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyAwardAvailable = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("dlgon"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyDelegations = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("dlgoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyDelegations = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("toggle-delegate-status"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyDelegateStatus = !ua.NotifyDelegateStatus;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                    {
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                    }
-                }
-
-                if (callbackData.StartsWith("misseson"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyMisses = true;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
-
-                if (callbackData.StartsWith("missesoff"))
-                {
-                    var addrId = int.Parse(callbackArgs[0]);
-                    var ua = db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
-                    if (ua != null)
-                    {
-                        ua.NotifyMisses = false;
-                        db.SaveChanges();
-                        ViewAddress(db, user.Id, ua, ev.CallbackQuery.Message.MessageId)();
-                    }
-                    else
-                        await Bot.AnswerCallbackQueryAsync(ev.CallbackQuery.Id, resMgr.Get(Res.AddressNotExist, user));
-                }
+                editUA("bakingon", ua => ua.NotifyBakingRewards = true);
+                editUA("bakingoff", ua => ua.NotifyBakingRewards = false);
+                editUA("cycleon", ua => ua.NotifyCycleCompletion = true);
+                editUA("cycleoff", ua => ua.NotifyCycleCompletion = false);
+                editUA("owneron", ua => ua.IsOwner = true);
+                editUA("owneroff", ua => ua.IsOwner = false);
+                editUA("rightson", ua => ua.NotifyRightsAssigned = true);
+                editUA("rightsoff", ua => ua.NotifyRightsAssigned = false);
+                editUA("outoffreespaceon", ua => ua.NotifyOutOfFreeSpace = true);
+                editUA("outoffreespaceoff", ua => ua.NotifyOutOfFreeSpace = false);
+                editUA("tranon", ua => ua.NotifyTransactions = true);
+                editUA("tranoff", ua => ua.NotifyTransactions = false);
+                editUA("awardon", ua => ua.NotifyAwardAvailable = true);
+                editUA("awardoff", ua => ua.NotifyAwardAvailable = false);
+                editUA("dlgon", ua => ua.NotifyDelegations = true);
+                editUA("dlgoff", ua => ua.NotifyDelegations = false);
+                editUA("misseson", ua => ua.NotifyMisses = true);
+                editUA("missesoff", ua => ua.NotifyMisses = false);
+                editUA("toggle-delegate-status", ua => ua.NotifyDelegateStatus = !ua.NotifyDelegateStatus);
 
                 if (callbackData.StartsWith("hidehashtags"))
                 {
