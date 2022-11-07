@@ -31,7 +31,7 @@ namespace TezosNotifyBot
                     p = db.AddProposal(hash, from, proposal.Period.Index);
                     p.VotedRolls = proposal.Rolls;
 
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
                     {
                         var ua = db.UserAddresses.FirstOrDefault(o => o.UserId == u.Id && !o.IsDeleted && o.Address == from);
                         if (ua == null)
@@ -68,7 +68,7 @@ namespace TezosNotifyBot
                                 Period = proposal.Period.Index
                             });
                         twText += "\n#Tezos #XTZ #blockchain";
-                        twitter.TweetAsync(twText);
+                        twitter.TweetAsync(twText).ConfigureAwait(true).GetAwaiter().GetResult();
                     }
                 }
                 else
@@ -190,7 +190,7 @@ namespace TezosNotifyBot
                 if (participation * 100M / allrolls >= quorum &&
                     (participation - ballot.Rolls) * 100M / allrolls < quorum)
                 {
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
                     {
                         var result = resMgr.Get(Res.QuorumReached,
                             new ContextObject { u = u, p = p, Block = block.Level, Period = ballot.Period.Index });
@@ -203,7 +203,7 @@ namespace TezosNotifyBot
                         var twText = resMgr.Get(Res.TwitterQuorumReached,
                             new ContextObject { p = p, Block = block.Level, Period = ballot.Period.Index });
                         twText += "\n#Tezos #XTZ #blockchain";
-                        twitter.TweetAsync(twText);
+                        twitter.TweetAsync(twText).ConfigureAwait(true).GetAwaiter().GetResult();
                     }
                 }
             }
@@ -217,7 +217,7 @@ namespace TezosNotifyBot
                     var supporters = tzKtClient.GetUpvotes(period.epoch).GroupBy(o => o.Proposal.Hash)
                         .ToDictionary(o => o.Key, o => o.Select(p => p.Delegate.Address).ToList());
 
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
                     {
                         var t = Explorer.FromId(u.Explorer);
                         if (proposals.Count == 1)
@@ -307,7 +307,7 @@ namespace TezosNotifyBot
 				{
                     var proposal = tzKtClient.GetProposals(period.epoch).OrderByDescending(p => p.rolls).First();
                     var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = resMgr.Get(Res.TestingVoteSuccess,
 							new ContextObject { p = p, u = u, Block = block.Level, Period = period.index });
@@ -335,7 +335,7 @@ namespace TezosNotifyBot
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
                     var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = resMgr.Get(Res.TestingVoteFailed,
 							new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
@@ -349,7 +349,7 @@ namespace TezosNotifyBot
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
                     var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = period.kind == "adoption"
 							? resMgr.Get(Res.PromotionVoteSuccess,
@@ -365,7 +365,7 @@ namespace TezosNotifyBot
                 {
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
                     var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
-                    foreach (var u in db.Users.Where(o => !o.Inactive && o.VotingNotify))
+                    foreach (var u in db.GetVotingNotifyUsers())
                     {
                         var result = resMgr.Get(Res.AdoptionFinished,
                                 new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });

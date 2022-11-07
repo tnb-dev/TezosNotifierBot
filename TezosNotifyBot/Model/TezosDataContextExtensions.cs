@@ -127,7 +127,8 @@ namespace TezosNotifyBot.Model
             db.Add(msg);
             db.SaveChanges();
         }
-        public static User GetUser(this TezosDataContext _db, long id) => _db.Users.SingleOrDefault(x => x.Id == id);
+        public static User GetUser(this TezosDataContext db, long id) => db.Users.SingleOrDefault(x => x.Id == id);
+        public static List<User> GetVotingNotifyUsers(this TezosDataContext db) => db.Users.Where(o => !o.Inactive && o.VotingNotify).ToList();
         public static void LogMessage(this TezosDataContext db, Telegram.Bot.Types.User from, int messageId, string text, string data)
         {
 
