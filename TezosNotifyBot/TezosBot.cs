@@ -817,7 +817,7 @@ namespace TezosNotifyBot
                         }
 
                         // Уведомления о китах для твиттера
-                        if (amount >= 500000)
+                        if (amount >= 999000)
                         {
                             var ua_from = db.GetUserTezosAddress(0, from);
                             var ua_to = db.GetUserTezosAddress(0, to);
