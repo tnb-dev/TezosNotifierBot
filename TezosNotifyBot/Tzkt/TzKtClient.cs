@@ -174,7 +174,7 @@ namespace TezosNotifyBot.Tzkt
 					return (string)result;
 				}
 				_logger.LogDebug($"download {_client.BaseAddress}{addr}");
-				System.Threading.Thread.Sleep(20);
+				System.Threading.Thread.Sleep(50);
 				result = _client.GetStringAsync(addr).ConfigureAwait(false).GetAwaiter().GetResult();
 				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
 				if (caching)
