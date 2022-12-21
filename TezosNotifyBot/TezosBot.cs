@@ -226,6 +226,8 @@ namespace TezosNotifyBot
                     {
                         LogError(ex);
                         NotifyDev(db, $"‼️{ex.Message}\n🧱{prevBlock.Level + 1}", 0);
+                        _serviceProvider.GetService<IMemoryCache>().Clear(); 
+                        Thread.Sleep(10000);
                     }
                 } while (cancelToken.IsCancellationRequested is false);
             }
