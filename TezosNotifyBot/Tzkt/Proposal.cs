@@ -23,7 +23,7 @@ namespace TezosNotifyBot.Tzkt
         public string agora { get; set; }
         public string alias { get; set; }
         public string Hash { get; set; }
-        public int invoice { get; set; }
+        public ulong invoice { get; set; }
     }
 
     public class ProposalUpvote : Operation
