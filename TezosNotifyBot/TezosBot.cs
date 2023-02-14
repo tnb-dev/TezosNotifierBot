@@ -3178,7 +3178,7 @@ namespace TezosNotifyBot
                 string delname = db.GetDelegateName(ci.@delegate);
                 result += resMgr.Get(Res.Delegate, ua) + $": <a href='{t.account(ci.@delegate)}'>{delname}</a>\n";
             }
-
+            /*
             var bcd = _serviceProvider.GetService<IBetterCallDevClient>();
             var bcdAcc = bcd.GetAccount(ua.Address);
             if (bcdAcc.balances.Count > 0)
@@ -3188,7 +3188,7 @@ namespace TezosNotifyBot
                               bcdAcc.balances.Where(t => (t.symbol != null || (t.contract ?? "").Length > 32) && t.Balance > 0).Select(t =>
                                   $"<b>{t.Balance.ToString("###,###,###,###,##0.########", CultureInfo.InvariantCulture)}</b> {(t.symbol ?? t.contract.ShortAddr())}"));
                 result += "\n";
-            }
+            }*/
 
             if (isDelegate)
             {

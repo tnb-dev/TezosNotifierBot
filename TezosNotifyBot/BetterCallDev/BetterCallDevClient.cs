@@ -5,7 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
-
+/*
 namespace TezosNotifyBot.BetterCallDev
 {
 	public class BetterCallDevClient : IBetterCallDevClient
@@ -79,7 +79,7 @@ namespace TezosNotifyBot.BetterCallDev
 					token.level = t.level;
 					yield return token;
 				}
-			}*/
+			}*//*
 		}
 
 		public Token GetToken(string contract, int tokenId)
@@ -117,3 +117,4 @@ namespace TezosNotifyBot.BetterCallDev
 		}
 	}
 }
+*/

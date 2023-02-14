@@ -22,7 +22,7 @@ namespace TezosNotifyBot.Commands.Addresses
 {
     public class AddressTransactionListHandler : BaseHandler, ICallbackHandler
     {
-        public TokenService TokenService { get; }
+        //public TokenService TokenService { get; }
         private AddressTransactionsRepository TransactionsRepository { get; }
         private const int takePerPage = 10;
 
@@ -35,12 +35,12 @@ namespace TezosNotifyBot.Commands.Addresses
             TezosDataContext db,
             TezosBotFacade botClient,
             ResourceManager lang,
-            TokenService tokenService,
+            //TokenService tokenService,
             AddressTransactionsRepository transactionsRepository
         )
             : base(db, botClient)
         {
-            TokenService = tokenService;
+            //TokenService = tokenService;
             TransactionsRepository = transactionsRepository;
             this.lang = lang;
         }
@@ -97,7 +97,7 @@ namespace TezosNotifyBot.Commands.Addresses
                         {
                             var tokenId = param[0]["txs"]?[0]?["token_id"]?.Value<int>();
                             if (tokenId is null)
-                                continue;
+                                continue;/*
                             var token = await TokenService.GetToken(tx.Target.address, (int)tokenId);
                             var amount = param[0]["txs"]?[0]?["amount"]?.Value<decimal>();
                             var target = param[0]["txs"]?[0]?["to_"]?.Value<string>();
@@ -107,7 +107,7 @@ namespace TezosNotifyBot.Commands.Addresses
                                 data.AddressName = target.ShortAddr();
                                 data.Address = target;
                                 data.Amount = Utils.AmountToString((decimal)amount, token);
-                            }
+                            }*/
                         }
                     }
                     else
