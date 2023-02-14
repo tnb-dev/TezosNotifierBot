@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-
+/*
 namespace TezosNotifyBot.BetterCallDev
 {
 	public interface IBetterCallDevClient
@@ -12,3 +12,4 @@ namespace TezosNotifyBot.BetterCallDev
 		List<Operation> GetOperations(string ophash);
 	}
 }
+*/

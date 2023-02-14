@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Storage;
-
+/*
 namespace TezosNotifyBot.Services
 {
     public class TokenService
@@ -45,3 +45,4 @@ namespace TezosNotifyBot.Services
         }
     }
 }
+*/

@@ -84,7 +84,7 @@ namespace TezosNotifyBot
                             );
                     });
 
-                    services.AddScoped<TokenService>();
+                    //services.AddScoped<TokenService>();
                     services.AddScoped<AddressService>();
                     services.AddSingleton<AddressTransactionsRepository>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
@@ -98,10 +98,10 @@ namespace TezosNotifyBot
                         var config = sp.GetService<IOptions<BotConfig>>();
                         return new CryptoCompareClient(config.Value.CryptoCompareToken, new HttpClient(), sp.GetService<ILogger<CryptoCompareClient>>());
                     });
-                    services.AddTransient<IBetterCallDevClient>(sp =>
-                        new BetterCallDevClient(
-                            sp.GetService<ILogger<BetterCallDevClient>>(),
-                            context.Configuration.GetValue<string>("BetterCallDevUrl")));
+                    //services.AddTransient<IBetterCallDevClient>(sp =>
+                    //    new BetterCallDevClient(
+                    //        sp.GetService<ILogger<BetterCallDevClient>>(),
+                    //        context.Configuration.GetValue<string>("BetterCallDevUrl")));
                     services.AddTransient<Repository>();
                     services.AddTransient<TezosBot>();
                     services.AddTransient<TezosBotFacade>();
@@ -145,7 +145,7 @@ namespace TezosNotifyBot
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
-                    services.AddHostedService<TokensMonitorWorker>();
+                    //services.AddHostedService<TokensMonitorWorker>();
                     services.AddHostedService<WhaleMonitorWorker>();
                     services.AddHostedService<MediumWorker>();
 
