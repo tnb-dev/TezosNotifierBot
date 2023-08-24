@@ -111,9 +111,9 @@ namespace TezosNotifyBot.Tzkt
 			var str = Download($"v1/rewards/bakers/{address}?limit=12");
 			return JsonConvert.DeserializeObject<List<Rewards>>(str);
 		}
-		List<Right> ITzKtClient.GetRights(int level)
+		List<Right> ITzKtClient.GetRights(int level, string status)
 		{
-			var str = Download($"v1/rights?level={level}&limit=10000");
+			var str = Download($"v1/rights?level={level}&limit=10000&status={status}");
 			return JsonConvert.DeserializeObject<List<Right>>(str);
 		}
 		List<Right> ITzKtClient.GetRights(string baker, int cycle)
