@@ -294,7 +294,7 @@ namespace TezosNotifyBot
             if (prevBlock == null)
                 prevBlock = tzKt.GetBlock(blockLevel - 1);
             
-            //ProcessBlockBakingData(db, block);
+            ProcessBlockBakingData(db, block);
 
             ProcessBlockMetadata(db, block, tzKt);
 
