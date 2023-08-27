@@ -296,7 +296,7 @@ namespace TezosNotifyBot
             if (prevBlock == null)
                 prevBlock = tzKt.GetBlock(blockLevel - 1);
             
-            //ProcessBlockBakingData(db, block);
+            ProcessBlockBakingData(db, block);
 
             ProcessBlockMetadata(db, block, tzKt);
 
@@ -987,129 +987,48 @@ namespace TezosNotifyBot
             Logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
             var tzktClient = _serviceProvider.GetService<ITzKtClient>();
-            var operations = block.Endorsements;// tzktClient.GetEndorsements(header.level);
-            var rights = tzktClient.GetRights(block.Level);
-            var baking_rights = rights.Where(r => r.type == "baking");
-            var endorsing_rights = rights.Where(r => r.type == "endorsing");
+            var missedRights = tzktClient.GetRights(block.Level, "missed");
+            foreach (var right in missedRights)
+			{
+                var uaddrs = db.GetUserAddresses(right.baker.address);
+                ContractInfo info = null;
+                if (uaddrs.Count > 0)
+                    info = addrMgr.GetContract(block.Hash, right.baker.address);
 
-            // Проверка baking rights
-            Logger.LogDebug($"Baking rights processing {block.Level}");
-            //int slots = endorsing_rights.Where(r => r.status == "realized").Sum(o => o.slots.Value);
-            //if (header.level <= 655360)
-            //    slots = 32;
-            foreach (var baking_right in baking_rights)
-            {
-                //if (baking_right.priority == 0 && baking_right.status == "missed")
-                //{
-                //    long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
-                //    if (baking_right.level >= Config.CarthageStart)
-                //        rewards = 80000000L * slots / 32 / 2;
-                //    rewardsManager.BalanceUpdate(baking_right.baker.address, RewardsManager.RewardType.MissedBaking,
-                //        header.level + 1, rewards);
-                //}
-
-                if (baking_right.status == "missed" || baking_right.status == "uncovered")
+                if (right.type == "baking")
                 {
-                    var uaddrs = db.GetUserAddresses(baking_right.baker.address);
-                    ContractInfo info = null;
-                    if (uaddrs.Count > 0)
-                        info = addrMgr.GetContract(block.Hash, baking_right.baker.address);
-
-                    //long rewards = (16000000 * (8 + 2 * slots / 32)) / 10;
-                    //if (baking_right.level >= Config.CarthageStart)
-                    //    rewards = 80000000L * slots / 32 / 2;
-
                     foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                     {
                         ua.Balance = info.balance / 1000000M;
                         var result = resMgr.Get(Res.MissedBaking,
-                            new ContextObject
-                                {
+                            new ContextObject {
                                 u = ua.User,
                                 ua = ua,
-                                Block = block.Level,
-                                Amount = block.Reward / 1000000M,
-                                Rights = new RightsInfo(baking_right)
+                                Block = block.Level
                             });
 
                         if (!ua.User.HideHashTags)
                             result += "\n\n#missed_baking" + ua.HashTag();
                         PushTextMessage(db, ua, result);
-                        //SendTextMessageUA(ua, result);
                     }
                 }
-                else
+                if (right.type == "endorsing")
                 {
-                    if (block.blockRound > 1)
+                    foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
                     {
-                        var uaddrs = db.GetUserAddresses(baking_right.baker.address);
-                        foreach (var ua in uaddrs)
-                        {
-                            var result = resMgr.Get(Res.StoleBaking,
-                                new ContextObject
-                                {
-                                    u = ua.User, ua = ua, Block = block.Level, Priority = block.blockRound,
-                                    Amount = block.Reward / 1000000M
-                                });
-                            if (!ua.User.HideHashTags)
-                                result += "\n\n#stole_baking" + ua.HashTag();
-                            PushTextMessage(db, ua, result);
-                            //SendTextMessageUA(ua, result);
-                        }
+                        ua.Balance = info.balance / 1000000M;                        
+                        var result = resMgr.Get(Res.MissedEndorsing,
+                            new ContextObject {
+                                u = ua.User,
+                                ua = ua,
+                                Block = block.Level
+                            });
+                        if (!ua.User.HideHashTags)
+                            result += "\n\n#missed_endorsing" + ua.HashTag();
+                        PushTextMessage(db, ua, result);
                     }
-
-                    break;
                 }
             }
-            //var priority = header.priority;
-            Logger.LogDebug($"Endorsements processing {block.Level}");
-
-            foreach (var d in endorsing_rights.Where(r => r.status == "missed" || r.status == "uncovered"))
-            {
-                //long rewards = (uint)(2000000 / (priority + 1)) * (uint)d.slots;
-                //if (header.level >= Config.CarthageStart)
-                //{
-                //    rewards = 80000000 * d.slots.Value / 32 / 2;
-                //    if (priority > 0)
-                //        rewards = rewards * 2 / 3;
-                //}
-
-                //rewardsManager.BalanceUpdate(d.baker.address, RewardsManager.RewardType.MissedEndorsing,
-                //    header.level + 1, rewards, d.slots.Value);
-                var uaddrs = db.GetUserAddresses(d.baker.address);
-                ContractInfo info = null;
-                if (uaddrs.Count > 0)
-                    info = addrMgr.GetContract(block.Hash, d.baker.address);
-                foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
-                {
-                    ua.Balance = info.balance / 1000000M;
-                    var someEndorsement = block.Endorsements.FirstOrDefault() ?? new Endorsement { Slots = 1 };
-                    var rewards = someEndorsement.Rewards / (ulong)someEndorsement.Slots * (ulong)d.slots.Value;
-                    var result = resMgr.Get(Res.MissedEndorsing,
-                        new ContextObject
-                        {
-                            u = ua.User,
-                            ua = ua,
-                            Block = block.Level,
-                            Amount = rewards / 1000000M,
-                            Rights = new RightsInfo(d)
-                        });
-                    if (!ua.User.HideHashTags)
-                        result += "\n\n#missed_endorsing" + ua.HashTag();
-                    PushTextMessage(db, ua, result);
-                    //SendTextMessageUA(ua, result);
-                }
-            }
-
-            /*Logger.LogDebug($"Updating rewards {header.level}");
-            foreach (var bu in blockMetadata.balance_updates.Where(o =>
-                o.kind == "freezer" && o.category == "rewards" && (o.level ?? o.cycle) == blockMetadata.level.cycle))
-                rewardsManager.BalanceUpdate(bu.@delegate,
-                    header.priority == 0 ? RewardsManager.RewardType.Baking : RewardsManager.RewardType.StolenBaking,
-                    header.level + 1, bu.change);
-            foreach (var op in operations)
-                rewardsManager.BalanceUpdate(op.@delegate.address, RewardsManager.RewardType.Endorsing, header.level + 1, op.Rewards, op.Slots);
-            */
             Logger.LogInformation($"Block {block.Level} baking data processed");
         }
 

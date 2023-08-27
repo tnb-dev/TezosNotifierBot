@@ -329,10 +329,10 @@ Or use the search:
 Last block <a href='{t.block(Block)}'>{Block}</a> baked {Minutes} minutes ago.
 
 All bakers need to check their software
-#MissedBaking;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил выпечку блока <a href='{t.block(Block)}'>{Block}</a>{(Rights.Status == "uncovered" ? " из-за нехватки средств (текущий баланс " + ua.Balance.TezToString() + ")" : "")}
-#MissedBaking;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed baking block <a href='{t.block(Block)}'>{Block}</a>{(Rights.Status == "uncovered" ? " due to lack of funds (current balance " + ua.Balance.TezToString() + ")" : "")}
-#MissedEndorsing;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил заверение блока <a href='{t.block(Block)}'>{Block}</a>{(Rights.Status == "uncovered" ? " из-за нехватки средств (текущий баланс " + ua.Balance.TezToString() + ")" : "")}
-#MissedEndorsing;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed endorsement for block <a href='{t.block(Block)}'>{Block}</a>{(Rights.Status == "uncovered" ? " due to lack of funds (current balance " + ua.Balance.TezToString() + ")" : "")}
+#MissedBaking;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил выпечку блока <a href='{t.block(Block)}'>{Block}</a>
+#MissedBaking;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed baking block <a href='{t.block(Block)}'>{Block}</a>
+#MissedEndorsing;ru;🤷🏻‍♂️ Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> пропустил заверение блока <a href='{t.block(Block)}'>{Block}</a>
+#MissedEndorsing;en;🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> missed endorsement for block <a href='{t.block(Block)}'>{Block}</a>
 #CycleCompleted;ru;🏁 Цикл {Cycle} завершен за {CycleLength.Days} дня, {CycleLength.Hours} часов, {CycleLength.Minutes} минут!
 Следующий {(Cycle + 1)} цикл закончится {RusDT(NextEnd)} UTC.
 #CycleCompleted;en;🏁 Cycle {Cycle} is completed in {CycleLength.Days} days, {CycleLength.Hours} hours, {CycleLength.Minutes} minutes!

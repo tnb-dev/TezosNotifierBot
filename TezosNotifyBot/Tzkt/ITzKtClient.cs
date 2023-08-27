@@ -25,7 +25,7 @@ namespace TezosNotifyBot.Tzkt
 		Rewards GetDelegatorRewards(string address, int cycle);
 		Rewards GetBakerRewards(string address, int cycle);
 		List<Rewards> GetBakerFutureRewards(string address);
-		List<Right> GetRights(int level);
+		List<Right> GetRights(int level, string status);
 		List<Right> GetRights(string baker, int cycle);
 		List<Endorsement> GetEndorsements(int level);
 		Block GetBlock(int level);
