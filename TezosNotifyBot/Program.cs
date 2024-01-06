@@ -147,7 +147,7 @@ namespace TezosNotifyBot
                     services.AddHostedService<BroadcastWorker>();
                     //services.AddHostedService<TokensMonitorWorker>();
                     services.AddHostedService<WhaleMonitorWorker>();
-                    services.AddHostedService<MediumWorker>();
+                    //services.AddHostedService<MediumWorker>();
 
                     services.Scan(scan => scan
                         .FromCallingAssembly()
