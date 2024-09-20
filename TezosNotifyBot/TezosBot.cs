@@ -2378,7 +2378,7 @@ namespace TezosNotifyBot
                         int c = (l - 1) / 4096;
                         int p = l - c * 4096 - 1;
                         var dtlist = blockProcessings.ToList();
-                        var avg = (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
+                        var avg = 0;// (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
                         var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
                         SendTextMessage(db, user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}\nCache size: {cs}",
                             ReplyKeyboards.MainMenu(resMgr, user));
