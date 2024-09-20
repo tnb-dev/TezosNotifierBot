@@ -296,7 +296,7 @@ namespace TezosNotifyBot
             if (prevBlock == null)
                 prevBlock = tzKt.GetBlock(blockLevel - 1);
             
-            ProcessBlockBakingData(db, block);
+            //ProcessBlockBakingData(db, block);//@fix it!
 
             ProcessBlockMetadata(db, block, tzKt);
 
@@ -1108,7 +1108,7 @@ namespace TezosNotifyBot
                 }
                 Logger.LogDebug($"Calc delegates rewards finished on {block.Level}");
             }*/
-            if (cycle.firstLevel == block.Level)
+            if (false)//cycle.firstLevel == block.Level)@fix it!
             {
                 var uad = db.UserAddresses.Where(o => !o.IsDeleted && (o.NotifyCycleCompletion || o.NotifyBakingRewards || o.NotifyOutOfFreeSpace) && !o.User.Inactive)
                     .Join(db.Delegates, o => o.Address, o => o.Address, (o, d) => o).Include(x => x.User).ToList();
