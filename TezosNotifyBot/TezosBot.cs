@@ -2375,12 +2375,12 @@ namespace TezosNotifyBot
                     else if (message.Text == "/block")
                     {
                         int l = db.GetLastBlockLevel().Item1;
-                        int c = (l - 1) / 4096;
-                        int p = l - c * 4096 - 1;
+                        //int c = (l - 1) / 4096;
+                        //int p = l - c * 4096 - 1;
                         var dtlist = blockProcessings.ToList();
-                        var avg = 0;// (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average();
+                        var avg = dtlist.Count > 1 ? (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average() : double.NaN;
                         var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
-                        SendTextMessage(db, user.Id, $"Last block processed: {l}, cycle {c}, position {p}\nAvg. processing time: {avg}\nCache size: {cs}",
+                        SendTextMessage(db, user.Id, $"Last block processed: {l}, msh sent: {msgSent}\nAvg. processing time: {avg}\nCache size: {cs}",
                             ReplyKeyboards.MainMenu(resMgr, user));
                     }
                     else if (message.Text.StartsWith("/setblock") &&
@@ -3400,6 +3400,7 @@ namespace TezosNotifyBot
                 SendTextMessage(ua.ChatId, text);
         }
 
+        int msgSent = 0;
         public int SendTextMessage(Storage.TezosDataContext db, long userId, string text, IReplyMarkup keyboard, int replaceId = 0,
             ParseMode parseMode = ParseMode.Html, bool disableNotification = false)
         {
@@ -3415,8 +3416,9 @@ namespace TezosNotifyBot
                             .SendTextMessageAsync(userId, text, parseMode, disableWebPagePreview: true, disableNotification: disableNotification, replyMarkup: keyboard)
                             .ConfigureAwait(true).GetAwaiter().GetResult();
                         db.LogOutMessage(userId, msg.MessageId, text);
-                        Thread.Sleep(50);
-                    return msg.MessageId;
+                    Thread.Sleep(50);
+                    msgSent++;
+					return msg.MessageId;
                 }
                 else
                 {
