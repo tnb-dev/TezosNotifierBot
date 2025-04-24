@@ -14,13 +14,5 @@
     "blockurl": "https://tzstats.com/{0}?utm_source=tezosnotifierbot",
     "accounturl": "https://tzstats.com/{0}?utm_source=tezosnotifierbot",
     "opurl": "https://tzstats.com/{0}?utm_source=tezosnotifierbot"
-  },
-  {
-    "id": 4,
-    "name": "mininax.io",
-    "buttonprefix": "mininax",
-    "blockurl": "https://mininax.io/mainnet/blocks/{0}?utm_source=tezosnotifierbot",
-    "accounturl": "https://mininax.io/mainnet/accounts/{0}?utm_source=tezosnotifierbot",
-    "opurl": "https://mininax.io/mainnet/operations/{0}?utm_source=tezosnotifierbot"
   }
 ]

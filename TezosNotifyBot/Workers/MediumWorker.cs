@@ -12,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TezosNotifyBot.Model;
 using Telegram.Bot.Types.Enums;
-using TezosNotifyBot.Model;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
 
@@ -50,7 +49,7 @@ namespace TezosNotifyBot.Workers
                 if (lastCycle == 0 && currentCycle != null)
                 {
                     lastCycle = currentCycle.index;
-                    bot.NotifyDev(db, $"MediumWorker started on cycle {lastCycle}", 0);
+                    await bot.NotifyDev(db, $"MediumWorker started on cycle {lastCycle}", 0);
                 }
                 if (currentCycle != null && lastCycle != currentCycle.index)
                 {
@@ -58,15 +57,14 @@ namespace TezosNotifyBot.Workers
                     {
                         var prevCycle = cycles.Single(c => c.index == currentCycle.index - 1);
                         var result = CreatePost(db, prevCycle, currentCycle);
-                        bot.NotifyUserActivity(db, $"🧐 New Medium post: [{result.data.title}]({result.data.url})");
+                        await bot.NotifyUserActivity(db, $"🧐 New Medium post: [{result.data.title}]({result.data.url})");
                         var tweet = $"Check-out general {prevCycle.index} cycle stats in our blog: {result.data.url}\n\n#Tezos #XTZ #cryprocurrency #crypto #blockchain";
                         lastCycle = currentCycle.index;
-                        bot.Tweet(tweet);
                     }
                     catch (Exception e)
                     {
                         _logger.LogError(e, "Failed to create medium post");
-                        bot.NotifyDev(db, "🛑 Failed to create medium post: \n" + e.Message + "\n" + e.StackTrace, 0);
+                        await bot.NotifyDev(db, "🛑 Failed to create medium post: \n" + e.Message + "\n" + e.StackTrace, 0);
                     }
                 }
                 // Wait one minute

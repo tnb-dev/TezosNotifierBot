@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2035
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35828.75 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot", "TezosNotifyBot\TezosNotifyBot.csproj", "{FFAE57E9-2564-4C0B-B589-CE608EE49857}"
 EndProject
@@ -12,6 +12,18 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot.Shared", "TezosNotifyBot.Shared\TezosNotifyBot.Shared.csproj", "{D54310DD-0D46-49A5-AB03-D33E524AD009}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TezosNotifyBot.Dialog", "TezosNotifyBot.Dialog\TezosNotifyBot.Dialog.csproj", "{D6ED75E0-687A-4A3D-B5EC-9B33A84248EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		.dockerignore = .dockerignore
+		.gitlab-ci.yml = .gitlab-ci.yml
+		DEPLOY.md = DEPLOY.md
+		DEVELOP.md = DEVELOP.md
+		Dockerfile = Dockerfile
+		LICENSE = LICENSE
+		Makefile = Makefile
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

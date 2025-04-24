@@ -1,6 +1,7 @@
 namespace TezosNotifyBot.Domain
 {
-    public class Delegate
+#nullable disable
+	public class Delegate
     {
         public int Id { get; set; }
         

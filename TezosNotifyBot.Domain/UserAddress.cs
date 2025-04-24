@@ -5,7 +5,8 @@ using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class UserAddress : IHasId<int>, IHasHashTag
+#nullable disable
+	public class UserAddress : IHasId<int>, IHasHashTag
     {
         public int Id { get; set; }
         public string Address { get; set; } = "";
@@ -15,7 +16,7 @@ namespace TezosNotifyBot.Domain
         public decimal Balance { get; set; }
         public DateTime LastUpdate { get; set; }
         public bool IsDeleted { get; set; }
-        public string? Name { get; set; }
+        public string Name { get; set; }
         public bool NotifyBakingRewards { get; set; }
         public decimal AmountThreshold { get; set; }
 

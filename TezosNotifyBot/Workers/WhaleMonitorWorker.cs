@@ -69,7 +69,7 @@ namespace TezosNotifyBot.Workers
                 //var repo = provider.GetRequiredService<Repository>();
                 var wtlist = db.WhaleTransactions.Include(o => o.Notifications).ToList();
                 var allUsers = db.Users.ToList();
-                if (DateTime.Now.Subtract(mdReceived).TotalMinutes > 5)
+                if (DateTime.UtcNow.Subtract(mdReceived).TotalMinutes > 5)
                 {
                     try
                     {
@@ -79,7 +79,7 @@ namespace TezosNotifyBot.Workers
                     {
                     }
 
-                    mdReceived = DateTime.Now;
+                    mdReceived = DateTime.UtcNow;
                 }
 
                 foreach (var address in wtlist.GroupBy(o => o.FromAddress).Where(o => o.Sum(o1 => o1.Amount) >= 250000))
@@ -133,7 +133,7 @@ namespace TezosNotifyBot.Workers
                             result += "\n\n#whale" + ua_from.HashTag() + tags;
                         }
 
-                        bot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        await bot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                     }
                 }
 

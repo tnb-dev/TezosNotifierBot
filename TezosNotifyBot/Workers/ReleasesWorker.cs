@@ -22,20 +22,17 @@ namespace TezosNotifyBot.Workers
         private readonly ILogger<ReleasesWorker> _logger;
         private readonly IOptions<ReleasesWorkerOptions> _options;
         private readonly ResourceManager _resourceManager;
-        private readonly TwitterClient _twitter;
 
         public ReleasesWorker(
             IServiceProvider serviceProvider,
             ILogger<ReleasesWorker> logger,
             IOptions<ReleasesWorkerOptions> options,
-            ResourceManager resourceManager,
-            TwitterClient twitter
+            ResourceManager resourceManager
         )
         {
             _logger = logger;
             _options = options;
             _resourceManager = resourceManager;
-            _twitter = twitter;
             _serviceProvider = serviceProvider;
         }
 
@@ -65,7 +62,6 @@ namespace TezosNotifyBot.Workers
                                 continue;
                             }
 
-                            await PublishTwitter(release);
                             await BroadcastRelease(db, release);
                         }
                     }
@@ -78,21 +74,6 @@ namespace TezosNotifyBot.Workers
                 }
 
                 await Task.Delay(_options.Value.RefreshInterval);
-
-                async Task PublishTwitter(TezosRelease release)
-                {
-                    var desc = release.Description is null
-                        ? "."
-                        : $": {release.Description.Ellipsis(128)}";
-
-                    var text =
-                        $"🦊 #Tezos software update {release.Name} released{desc}" +
-                        "\n\n" +
-                        $"Release: {release.Url}\n" +
-                        (release.AnnounceUrl.HasValue() ? $"Announcement: {release.AnnounceUrl}" : "");
-
-                    await _twitter.TweetAsync(text.TrimEnd());
-                }
 
                 async Task BroadcastRelease(TezosDataContext db, TezosRelease release)
                 {

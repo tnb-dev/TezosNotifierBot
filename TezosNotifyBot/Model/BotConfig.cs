@@ -9,13 +9,10 @@ namespace TezosNotifyBot.Model
 		{
 			CarthageStart = 851969;
 		}
-
-		public TwitterOptions Twitter { get; set; }
-		
+				
 		public TelegramOptions Telegram { get; set; }
 
 		public string TzKtUrl { get; set; }
-		public string BetterCallDevUrl { get; set; }
 		
         public string ProxyType { get; set; }
         public string ProxyAddress { get; set; }
@@ -28,26 +25,7 @@ namespace TezosNotifyBot.Model
 
 		public string CryptoCompareToken { get; set; }
 
-		//public Node[] Nodes { get; set; }
-
 		public TimeSpan DelegateInactiveTime { get; set; }
-		
-		
-		// TODO: Refactor access to this properties
-		[Obsolete]
-		public List<string> DevUserNames => Telegram.DevUsers;
-		[Obsolete]
-		public string TwitterConsumerKey => Twitter.ConsumerKey;
-		[Obsolete]
-        public string TwitterConsumerKeySecret => Twitter.ConsumerKeySecret;
-        [Obsolete]
-        public string TwitterAccessToken => Twitter.AccessToken;
-        [Obsolete]
-		public string TwitterAccessTokenSecret  => Twitter.AccessTokenSecret;
-		[Obsolete]
-		public long TwitterChatId => Twitter.ChatId;
-		[Obsolete]
-		public int TwitterNetworkIssueNotify => Twitter.NetworkIssueNotify;
 	}
 
     public class TelegramOptions
@@ -57,14 +35,4 @@ namespace TezosNotifyBot.Model
 	    public long[] ActivityChat { get; set; }
 		public long VotingChat { get; set; }
 	}
-
-    public class TwitterOptions
-    {
-	    public string ConsumerKey { get; set; }
-	    public string ConsumerKeySecret { get; set; }
-	    public string AccessToken { get; set; }
-	    public string AccessTokenSecret { get; set; }
-	    public long ChatId { get; set; }
-	    public int NetworkIssueNotify { get; set; }
-    }
 }

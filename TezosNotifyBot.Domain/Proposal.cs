@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 namespace TezosNotifyBot.Domain
 {
-    public class Proposal
+#nullable disable
+	public class Proposal
     {
         public int Id { get; set; }
         public string Hash { get; set; }

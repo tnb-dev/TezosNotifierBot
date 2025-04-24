@@ -6,20 +6,22 @@ using TezosNotifyBot.Tzkt;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace TezosNotifyBot
 {
-	partial class TezosBot
+	partial class TezosProcessing
 	{
-        string periodStatus;
-        string votingStatus;
-		void VotingNotify(Storage.TezosDataContext db, Block block, Cycle cycle, ITzKtClient tzKtClient)
+        public string PeriodStatus { get; private set; }
+        public string VotingStatus { get; private set; }
+
+		async Task VotingNotify(Storage.TezosDataContext db, Block block, Cycle cycle, ITzKtClient tzKtClient)
         {
             var periods = tzKtClient.GetVotingPeriods();
             var period = periods.Single(p => p.firstLevel <= block.Level && block.Level <= p.lastLevel);
-            periodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" period ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
+            PeriodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" period ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
             if (period.kind != "promotion" && period.kind != "exploration")
-                votingStatus = "";
+                VotingStatus = "";
             // Proposals
             foreach (var proposal in block.Proposals)
             {
@@ -49,26 +51,7 @@ namespace TezosNotifyBot
                             });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                    }
-
-                    //Twitter
-                    {
-                        var twText = resMgr.Get(Res.TwitterNewProposal,
-                            new ContextObject
-                            {
-                                ua = new UserAddress
-                                {
-                                    Address = from,
-                                    Name = db.GetDelegateName(from),
-                                    StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll
-                                },
-                                p = p,
-                                OpHash = proposal.Hash,
-                                Period = proposal.Period.Index
-                            });
-                        twText += "\n#Tezos #XTZ #blockchain";
-                        twitter.TweetAsync(twText).ConfigureAwait(true).GetAwaiter().GetResult();
+                        await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                     }
                 }
                 else
@@ -93,11 +76,11 @@ namespace TezosNotifyBot
                                 });
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                            SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                            await tezosBot.SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu);
                         }
                     }
 
-                    if (Config.Telegram.VotingChat != 0)
+                    if (config.Telegram.VotingChat != 0)
 					{
                         var ua = new UserAddress { Address = from, Name = db.GetDelegateName(from) };
                         ua.StakingBalance = proposal.Rolls * TezosConstants.TokensPerRoll;
@@ -111,7 +94,7 @@ namespace TezosNotifyBot
                                 Block = block.Level,
                                 Period = proposal.Period.Index
                             });
-                        SendTextMessage(db, Config.Telegram.VotingChat, result, null);
+                        await tezosBot.SendTextMessage(db, config.Telegram.VotingChat, result, null);
                     }
                 }
             }
@@ -130,7 +113,7 @@ namespace TezosNotifyBot
                 if (p == null)
                 {
                     p = db.AddProposal(hash, from, ballot.Period.Index);
-                    NotifyDev(db, $"⚠️ Proposal {p.Name} missed in database, added", 0);
+                    await tezosBot.NotifyDev(db, $"⚠️ Proposal {p.Name} missed in database, added", 0);
                 }                                
 
                 Res bp = Res.BallotProposal_pass;
@@ -156,11 +139,11 @@ namespace TezosNotifyBot
                             });
                         if (!ua.User.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                        SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                        await tezosBot.SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu);
                     }
                 }
 
-                if (Config.Telegram.VotingChat != 0)
+                if (config.Telegram.VotingChat != 0)
 				{
                     var ua = new UserAddress { Address = from, Name = db.GetDelegateName(from) };
                     ua.StakingBalance = ballot.Rolls * TezosConstants.TokensPerRoll;                    
@@ -174,7 +157,7 @@ namespace TezosNotifyBot
                             Block = block.Level,
                             Period = ballot.Period.Index
                         });
-                    SendTextMessage(db, Config.Telegram.VotingChat, result, null);
+                    await tezosBot.SendTextMessage(db, config.Telegram.VotingChat, result, null);
                 }
                 // Check quorum
 
@@ -184,8 +167,8 @@ namespace TezosNotifyBot
 
                 var curQuorum = participation.Value * 100M / allrolls;
                 var curSupermajority = period.yayRolls.Value * 100M / (period.yayRolls + period.nayRolls);
-                votingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}% / {quorum.Value.ToString("0.00")}%";
-                votingStatus += $"\nSupermajority: {curSupermajority.Value.ToString("0.00")}% / {period.supermajority}%";
+                VotingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}% / {quorum.Value.ToString("0.00")}%";
+                VotingStatus += $"\nSupermajority: {curSupermajority.Value.ToString("0.00")}% / {period.supermajority}%";
                 
                 if (participation * 100M / allrolls >= quorum &&
                     (participation - ballot.Rolls) * 100M / allrolls < quorum)
@@ -196,14 +179,7 @@ namespace TezosNotifyBot
                             new ContextObject { u = u, p = p, Block = block.Level, Period = ballot.Period.Index });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag();
-                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
-                    }
-
-                    {
-                        var twText = resMgr.Get(Res.TwitterQuorumReached,
-                            new ContextObject { p = p, Block = block.Level, Period = ballot.Period.Index });
-                        twText += "\n#Tezos #XTZ #blockchain";
-                        twitter.TweetAsync(twText).ConfigureAwait(true).GetAwaiter().GetResult();
+                        await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                     }
                 }
             }
@@ -219,7 +195,6 @@ namespace TezosNotifyBot
 
                     foreach (var u in db.GetVotingNotifyUsers())
                     {
-                        var t = Explorer.FromId(u.Explorer);
                         if (proposals.Count == 1)
                         {
                             string hash = proposals[0].hash;
@@ -249,7 +224,7 @@ namespace TezosNotifyBot
 
                             if (!u.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + tags;
-                            SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                            await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                         }
                         else
                         {
@@ -297,7 +272,7 @@ namespace TezosNotifyBot
                                         new ContextObject { p = p, u = u, Block = block.Level, Period = period.index });
                                 if (!u.HideHashTags)
                                     result += "\n\n#proposal" + p.HashTag() + tags;
-                                SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                                await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                             }
                         }
                     }
@@ -313,7 +288,7 @@ namespace TezosNotifyBot
 							new ContextObject { p = p, u = u, Block = block.Level, Period = period.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 					}
                         
                     // Делегат не проголосовал
@@ -326,7 +301,7 @@ namespace TezosNotifyBot
                             var result = resMgr.Get(Res.DelegateDidNotVoted, (ua, p));
                             if (!ua.User.HideHashTags)
                                 result += "\n\n#proposal" + p.HashTag() + ua.HashTag();
-                            SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu(resMgr, ua.User));
+                            await tezosBot.SendTextMessage(db, ua.UserId, result, ReplyKeyboards.MainMenu);
                         }
 					}
 				}
@@ -341,7 +316,7 @@ namespace TezosNotifyBot
 							new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 					}
                 }
 
@@ -358,7 +333,7 @@ namespace TezosNotifyBot
 								new ContextObject { p = p, u = u, Block = prevPeriod.index });
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
-						SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+						await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 					}
                 }
                 if (prevPeriod.kind == "adoption")
@@ -371,7 +346,7 @@ namespace TezosNotifyBot
                                 new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag();
-                        SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu(resMgr, u));
+                        await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
                     }
                 }
             }

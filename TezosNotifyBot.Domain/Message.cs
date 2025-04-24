@@ -2,7 +2,8 @@ using System;
 
 namespace TezosNotifyBot.Domain
 {
-    public class Message
+#nullable disable
+	public class Message
     {
         public int Id { get; set; }
         public User User { get; set; }
@@ -26,7 +27,7 @@ namespace TezosNotifyBot.Domain
                 Kind = MessageKind.Push,
                 UserId = userId,
                 FromUser = false,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 Text = text,
                 Status = MessageStatus.Sending,
             };

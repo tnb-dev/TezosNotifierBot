@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "TezosNotifyBot": {
+      "commandName": "Project",
+      "commandLineArgs": "--migrate",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

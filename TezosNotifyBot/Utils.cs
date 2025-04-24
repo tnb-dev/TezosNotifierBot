@@ -56,7 +56,7 @@ namespace TezosNotifyBot
             zipStream.SetLevel(9); //0-9, 9 being the highest level of compression
 
             ZipEntry newEntry = new ZipEntry(zipEntryName);
-            newEntry.DateTime = DateTime.Now;
+            newEntry.DateTime = DateTime.UtcNow;
 
             zipStream.PutNextEntry(newEntry);
 

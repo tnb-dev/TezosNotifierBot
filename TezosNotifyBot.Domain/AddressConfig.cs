@@ -6,11 +6,13 @@ namespace TezosNotifyBot.Domain
 
         public string Icon { get; set; }
 
-        private AddressConfig()
-        {
-        }
+		public AddressConfig()
+		{
+            Id = string.Empty;
+            Icon = string.Empty;
+		}
 
-        public AddressConfig(string address, string icon)
+		public AddressConfig(string address, string icon)
         {
             Id = address;
             Icon = icon;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace TezosNotifyBot.Domain
 {
+#nullable disable
 	public class WhaleTransaction
 	{
 		public int Id { get; set; }

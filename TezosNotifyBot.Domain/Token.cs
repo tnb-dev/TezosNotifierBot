@@ -4,6 +4,7 @@ using System.Text;
 
 namespace TezosNotifyBot.Domain
 {
+#nullable disable
 	public class Token
 	{
 		public int Id { get; set; }

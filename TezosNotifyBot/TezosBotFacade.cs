@@ -14,25 +14,23 @@ namespace TezosNotifyBot
 {
     public class TezosBotFacade
     {
-        private readonly TezosDataContext db;
         private readonly IOptions<BotConfig> options;
-        public TelegramBotClient Client { get; }
+        public ITelegramBotClient Client { get; }
 
-        public TezosBotFacade(TezosDataContext db, TelegramBotClient client, IOptions<BotConfig> options)
+        public TezosBotFacade(ITelegramBotClient client, IOptions<BotConfig> options)
         {
-            this.db = db;
             this.options = options;
             Client = client;
         }
 
-        public Task<Message> Reply(Message message, string content)
+        public Task<Message> Reply(long userId, int replyToMessageId, string content)
         {
             return SendText(
-                message.Chat,
+				userId,
                 content,
                 ParseMode.Html,
-                replyToMessageId: message.MessageId
-            );
+                replyToMessageId: replyToMessageId
+			);
         }
 
         public Task<Message> SendText(
@@ -42,16 +40,16 @@ namespace TezosNotifyBot
             bool disableWebPagePreview = false,
             bool disableNotification = false,
             int replyToMessageId = 0,
-            IReplyMarkup replyMarkup = null)
+            ReplyMarkup replyMarkup = null)
         {
             // TODO: Add chunked sending for large texts
-            return Client.SendTextMessageAsync(
+            return Client.SendMessage(
                 chatId,
                 content,
                 parseMode: parseMode,
-                disableWebPagePreview: disableWebPagePreview,
-                disableNotification: disableNotification,
-                replyToMessageId: replyToMessageId,
+				linkPreviewOptions: new LinkPreviewOptions { IsDisabled = disableWebPagePreview },
+				disableNotification: disableNotification,
+                replyParameters: new ReplyParameters { MessageId = replyToMessageId},
                 replyMarkup: replyMarkup
             );
         }
@@ -66,29 +64,14 @@ namespace TezosNotifyBot
             int replyToMessageId = 0,
             InlineKeyboardMarkup replyMarkup = null)
         {
-            return Client.EditMessageTextAsync(
+            return Client.EditMessageText(
                 chatId,
                 messageId,
                 content,
                 parseMode: parseMode,
-                disableWebPagePreview: disableWebPagePreview,
+                linkPreviewOptions: new LinkPreviewOptions { IsDisabled = disableWebPagePreview },
                 replyMarkup: replyMarkup
             );
-        }
-
-        public async Task NotifyAdmins(string content)
-        {
-            // TODO: Replace with telegram admins
-            var nicks = options.Value.Telegram.DevUsers;
-            var users = await db.Set<User>().AsNoTracking()
-                .Where(x => nicks.Contains(x.Username))
-                .Select(x => x.Id)
-                .ToArrayAsync();
-
-            var sent = users.Select(userId => SendText(userId, content))
-                .AsEnumerable();
-
-            await Task.WhenAll(sent);
         }
     }
 }

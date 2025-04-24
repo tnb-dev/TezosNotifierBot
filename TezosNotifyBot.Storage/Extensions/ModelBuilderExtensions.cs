@@ -19,12 +19,6 @@ namespace TezosNotifyBot.Storage.Extensions
                 if (entity.IsOwned())
                     continue;
 
-                // var tableName = entity.GetTableName();
-                // if (tableName == entity.ClrType.Name)
-                // {
-                //     // Replace table names
-                //     entity.SetTableName(tableName.ToSnakeCase());
-                // }
                 entity.SetTableName(entity.ClrType.Name.ToSnakeCase());
 
                 foreach (var key in entity.GetKeys())
@@ -39,13 +33,13 @@ namespace TezosNotifyBot.Storage.Extensions
 
                 foreach (var index in entity.GetIndexes())
                 {
-                    var name = index.GetName();
+                    var name = index.GetDatabaseName();
 
                     // FIXME: Fix issue with not handled IX cases
                     if (name.StartsWith("ix", StringComparison.OrdinalIgnoreCase))
                         name = name.Substring(2);
 
-                    index.SetName($"ix_{name.ToSnakeCase()}");
+                    index.SetDatabaseName($"ix_{name.ToSnakeCase()}");
                 }
             }
         }

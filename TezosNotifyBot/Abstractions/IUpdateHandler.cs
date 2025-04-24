@@ -6,9 +6,9 @@ namespace TezosNotifyBot.Abstractions
 {
     public interface IUpdateHandler
     {
-        Task HandleUpdate(object sender, UpdateEventArgs eventArgs);
+        Task HandleUpdate(TelegramBotHandler.Chat chat, int messageId, string text);
 
-        Task HandleException(Exception exception, UpdateEventArgs eventArgs, object sender)
+        Task HandleException(Exception exception, TelegramBotHandler.Chat chat, int messageId)
         {
             return Task.CompletedTask;
         }

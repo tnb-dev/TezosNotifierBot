@@ -23,14 +23,13 @@ namespace TezosNotifyBot.Commands.Admin
             Config = config.Value;
         }
 
-        public async Task HandleUpdate(object sender, UpdateEventArgs eventArgs)
+        public async Task HandleUpdate(TelegramBotHandler.Chat chat, int messageId, string text)
 		{
-            if (!Config.Telegram.DevUsers.Contains(eventArgs.Update.Message.From.Username))
+            if (!Config.Telegram.DevUsers.Contains(chat.Username))
 				return;
 
-            var addrs = Regex.Matches(eventArgs.Update.Message.Text, "(tz|KT)[a-zA-Z0-9]{34}", RegexOptions.Singleline);
+            var addrs = Regex.Matches(text, "(tz|KT)[a-zA-Z0-9]{34}", RegexOptions.Singleline);
             var result = "";
-            var t = Explorer.FromId(3);
             foreach (Match m in addrs)
 			{
                 var addr = Db.KnownAddresses.FirstOrDefault(x => x.Address == m.Value);
@@ -43,7 +42,7 @@ namespace TezosNotifyBot.Commands.Admin
                 result += $"<a href='{t.account(addr.Address)}'>{addr.Name}</a>\n";
             }
             await Db.SaveChangesAsync();
-            await Bot.Reply(eventArgs.Update.Message, $"Excluded from whale alerts:\n{result}");
+            await Bot.Reply(chat.Id, messageId, $"Excluded from whale alerts:\n{result}");
         }
 	}
 }

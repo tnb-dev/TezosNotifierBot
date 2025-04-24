@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using Gelf.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Caching.InMemory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,13 +17,10 @@ using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
-using TezosNotifyBot.BetterCallDev;
 using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Dialog.Extensions;
-using TezosNotifyBot.Ipfs;
 using TezosNotifyBot.Model;
-//using TezosNotifyBot.Nodes;
 using TezosNotifyBot.Services;
 using TezosNotifyBot.Storage;
 using TezosNotifyBot.Tzkt;
@@ -45,7 +43,7 @@ namespace TezosNotifyBot
                 db.Database.Migrate();
             }
 
-            builder.Run();
+			builder.Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -60,15 +58,14 @@ namespace TezosNotifyBot
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    services.AddSingleton<StatCounter>();
                     services.AddEntityFrameworkNpgsql();
                     services.AddDbContext<TezosDataContext>((sp, builder) => builder
                         .UseNpgsql(context.Configuration.GetConnectionString("Default"), opt => opt.CommandTimeout(600))
                         .UseInternalServiceProvider(sp)
-                    );
+                        .ConfigureWarnings(warnings => warnings.Ignore(RelationalEventId.PendingModelChangesWarning))
+					);
                     
                     services.Configure<BotConfig>(context.Configuration);
-                    services.Configure<TwitterOptions>(context.Configuration.GetSection("Twitter"));
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
                     services.Configure<MediumOptions>(context.Configuration.GetSection("Medium"));
 
@@ -84,7 +81,6 @@ namespace TezosNotifyBot
                             );
                     });
 
-                    //services.AddScoped<TokenService>();
                     services.AddScoped<AddressService>();
                     services.AddSingleton<AddressTransactionsRepository>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
@@ -94,20 +90,16 @@ namespace TezosNotifyBot
                     services.AddTransient<ITzKtClient>(sp =>
                         new TzKtClient(new HttpClient(), sp.GetService<ILogger<TzKtClient>>(),
                         context.Configuration, sp.GetService<IMemoryCache>()));
+
                     services.AddTransient<IMarketDataProvider>(sp => {
                         var config = sp.GetService<IOptions<BotConfig>>();
                         return new CryptoCompareClient(config.Value.CryptoCompareToken, new HttpClient(), sp.GetService<ILogger<CryptoCompareClient>>());
                     });
-                    //services.AddTransient<IBetterCallDevClient>(sp =>
-                    //    new BetterCallDevClient(
-                    //        sp.GetService<ILogger<BetterCallDevClient>>(),
-                    //        context.Configuration.GetValue<string>("BetterCallDevUrl")));
-                    services.AddTransient<Repository>();
-                    services.AddTransient<TezosBot>();
-                    services.AddTransient<TezosBotFacade>();
-                    services.AddTransient<AddressManager>();
+                    services.AddSingleton<TezosBot>();
+                    services.AddSingleton<TezosBotFacade>();
+                    services.AddSingleton<AddressManager>();
 
-                    services.AddSingleton(provider =>
+                    services.AddSingleton<ITelegramBotClient>(provider =>
                     {
                         var config = provider.GetService<IOptions<BotConfig>>();
 
@@ -123,10 +115,13 @@ namespace TezosNotifyBot
                                     new NetworkCredential(config.Value.ProxyLogin, config.Value.ProxyPassword);
                         }
 
-                        return new TelegramBotClient(config.Value.Telegram.BotSecret/*, proxy*/);
+                        return new TelegramBotClient(config.Value.Telegram.BotSecret);
                     });
 
-                    services.AddSingleton(_ =>
+                    services.AddSingleton<TelegramBotInvoker>();
+					services.AddSingleton<TelegramBotHandler>();
+
+					services.AddSingleton(_ =>
                     {
                         var manager = new ResourceManager();
                         manager.LoadResources("res.txt");
@@ -134,23 +129,14 @@ namespace TezosNotifyBot
                         return manager;
                     });
 
-                    //services.AddSingleton(provider => provider.GetService<IOptions<BotConfig>>()?.Value.Nodes);
-                    services.AddTransient(provider => new IpfsClient(new HttpClient(), provider.GetService<ILogger<IpfsClient>>()));
-                    //services.AddHttpClient<NodeManager>(client => { client.Timeout = TimeSpan.FromMinutes(2); })
-                    //    .SetHandlerLifetime(TimeSpan.FromMinutes(1))
-                    //    .AddPolicyHandler(GetRetryPolicy());
-
-                    services.AddSingleton<TwitterClient>();
-
                     services.AddHostedService<Service>();
                     services.AddHostedService<ReleasesWorker>();
                     services.AddHostedService<BroadcastWorker>();
-                    //services.AddHostedService<TokensMonitorWorker>();
                     services.AddHostedService<WhaleMonitorWorker>();
-                    //services.AddHostedService<MediumWorker>();
+                    services.AddHostedService<TezosProcessing>();
 
                     services.Scan(scan => scan
-                        .FromCallingAssembly()
+                        .FromEntryAssembly()
                         .AddClasses(classes => classes
                             .AssignableToAny(
                                 typeof(IUpdateHandler),
@@ -161,14 +147,14 @@ namespace TezosNotifyBot
                         .WithTransientLifetime()
                     );
                     services.Scan(scan => scan
-                        .FromCallingAssembly()
+                        .FromEntryAssembly()
                         .AddClasses(classes => classes.AssignableTo<CommandsProfile>())
                         .As<CommandsProfile>()
                         .WithSingletonLifetime()
                     );
                     
                     services.Scan(scan => scan
-                        .FromCallingAssembly()
+                        .FromEntryAssembly()
                         .AddClasses(classes => classes
                             .AssignableToAny(
                                 typeof(IEventHandler<>),

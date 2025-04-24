@@ -21,18 +21,31 @@ namespace TezosNotifyBot.CryptoCompare
             _cryptoCompareToken = apiKey;
 
         }
-        MarketData IMarketDataProvider.GetMarketData()
+
+		static MarketData md = new MarketData();
+
+		MarketData IMarketDataProvider.GetMarketData()
         {
-            string str =
-                Download(
-                    $"https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key={_cryptoCompareToken}");
-            var dto = JsonConvert.DeserializeObject<CryptoComparePrice>(str);
-            return new MarketData {
-                price_usd = dto.USD,
-                price_btc = dto.BTC,
-                price_eur = dto.EUR
-            };
-        }
+			if (DateTime.UtcNow.Subtract(md.Received).TotalMinutes < 5)
+                return md;
+
+            try
+            {
+                string str =
+                    Download(
+                        $"https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key={_cryptoCompareToken}");
+                var dto = JsonConvert.DeserializeObject<CryptoComparePrice>(str);
+                md.price_eur = dto.EUR;
+                md.price_usd = dto.USD;
+                md.price_btc = dto.BTC;
+                md.Received = DateTime.UtcNow;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Failed to call https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH");
+            }
+            return md;
+		}
         string Download(string addr)
         {
             try

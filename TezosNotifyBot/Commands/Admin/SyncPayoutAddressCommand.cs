@@ -22,13 +22,13 @@ namespace TezosNotifyBot.Commands.Admin
             Bot = botClient;
         }
 
-        public async Task HandleUpdate(object sender, UpdateEventArgs eventArgs)
+        public async Task HandleUpdate(TelegramBotHandler.Chat chat, int messageId, string text)
         {
             var baseAddressList = await DbContext.Set<KnownAddress>().AsNoTracking()
                 .Where(x => !EF.Functions.Like(x.Name, "%payout%") && x.Name.Length > 0)
                 .ToListAsync();
 
-            await Bot.Reply(eventArgs.Update.Message, $"Starting to sync {baseAddressList.Count} base addresses");
+            await Bot.Reply(chat.Id, messageId, $"Starting to sync {baseAddressList.Count} base addresses");
 
             var updated = 0;
             foreach (var knownAddress in baseAddressList)
@@ -40,13 +40,12 @@ namespace TezosNotifyBot.Commands.Admin
                 updated += await DbContext.Database.ExecuteSqlRawAsync(sql);
             }
 
-            await Bot.Reply(eventArgs.Update.Message, $"Updated {updated} payouts addresses");
+            await Bot.Reply(chat.Id, messageId, $"Updated {updated} payouts addresses");
         }
 
-        public async Task HandleException(Exception exception, UpdateEventArgs eventArgs, object sender)
+        public async Task HandleException(Exception exception, TelegramBotHandler.Chat chat, int messageId)
         {
-            await Bot.Reply(eventArgs.Update.Message, "Failed to process sync.\n\n" +
-                                                      $"Error message: <b>{exception.Message}</b>\n");
+            await Bot.Reply(chat.Id, messageId, $"Failed to process sync.\n\nError message: <b>{exception.Message}</b>\n");
         }
     }
 }

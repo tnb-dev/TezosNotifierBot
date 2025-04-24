@@ -13,7 +13,6 @@ namespace TezosNotifyBot.Commands.Addresses
 {
     public class AddressInfoHandler : BaseHandler, ICallbackHandler
     {
-        //private readonly Repository _repo;
         private readonly ResourceManager _lang;
 
         public AddressInfoHandler(ResourceManager lang, TezosDataContext db,
@@ -23,14 +22,12 @@ namespace TezosNotifyBot.Commands.Addresses
             _lang = lang;
         }
 
-        public async Task Handle(string[] args, CallbackQuery query)
+        public async Task Handle(string[] args, long userId, int messageId)
         {
-            var user = await Db.Users
-                .SingleOrDefaultAsync(x => x.Id == query.From.Id);
-            var address = await Db.UserAddresses
-                .SingleOrDefaultAsync(x => x.Id == args.GetInt(0));
+            var user = await Db.Users.SingleOrDefaultAsync(x => x.Id == userId);
+            var address = await Db.UserAddresses.SingleOrDefaultAsync(x => x.Id == args.GetInt(0));
 
-            if (address is null || address.UserId != query.From.Id)
+            if (address is null || address.UserId != userId)
             {
                 // TODO: Throw an error
                 return;
@@ -52,7 +49,6 @@ namespace TezosNotifyBot.Commands.Addresses
 
             if (isDelegate)
             {
-                message.AddLine(_lang.Get(Res.AddressLinkTezosNode, lang, linkData));
                 message.AddLine(_lang.Get(Res.AddressLinkTzKt, lang, linkData));
             }
             else
@@ -68,7 +64,7 @@ namespace TezosNotifyBot.Commands.Addresses
             );
 
             await Bot.SendText(
-                query.From.Id,
+				userId,
                 message.Build(!user.HideHashTags),
                 ParseMode.Html,
                 disableWebPagePreview: true,

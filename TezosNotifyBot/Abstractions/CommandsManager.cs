@@ -23,26 +23,23 @@ namespace TezosNotifyBot.Abstractions
             this.profiles = profiles;
         }
 
-        public bool HasUpdateHandler(UpdateEventArgs eventArgs)
+        public bool HasUpdateHandler(string text)
         {
-            if (eventArgs.Update.Type != UpdateType.Message)
-                return false;
-
             return profiles.Any(profile => profile.UpdateHandlers
-                .Keys.Any(command => eventArgs.Update.Message.Text.StartsWith(command))
+                .Keys.Any(command => text.StartsWith(command))
             );
         }
         
-        public bool HasCallbackHandler(CallbackQueryEventArgs eventArgs)
+        public bool HasCallbackHandler(string callbackData)
         {
             return profiles.Any(profile => profile.CallbackHandlers
-                .Keys.Any(command => eventArgs.CallbackQuery.Data.StartsWith(command))
+                .Keys.Any(command => callbackData.StartsWith(command))
             );
         }
 
-        public async Task ProcessCallbackHandler(object sender, CallbackQueryEventArgs eventArgs)
+        public async Task ProcessCallbackHandler(long userId, int messageId, string callbackData)
         {
-            var data = eventArgs.CallbackQuery.Data.Split(' ');
+            var data = callbackData.Split(' ');
             var name = data.First();
             var args = data.Skip(1).ToArray();
             
@@ -68,32 +65,27 @@ namespace TezosNotifyBot.Abstractions
             try
             {
                 // step 4: awaiting handler result
-                await handlerInstance.Handle(args, eventArgs.CallbackQuery);
+                await handlerInstance.Handle(args, userId, messageId);
             }
             catch (Exception e)
             {
-                await handlerInstance.HandleException(e, sender, eventArgs.CallbackQuery);
+                await handlerInstance.HandleException(e);
                 
                 logger.LogError($"Failed to process callback handler for message: {name}\n" +
                                 $"With exception message: {e.Message}", e);
             }
         }
 
-        public async Task ProcessUpdateHandler(object sender, UpdateEventArgs eventArgs)
+        public async Task ProcessUpdateHandler(TelegramBotHandler.Chat chat, int messageId, string text)
         {
-            if (eventArgs.Update.Type != UpdateType.Message)
-                return;
-
-            var message = eventArgs.Update.Message.Text;
             // step 1: find handler
-            var profile = profiles.FirstOrDefault(p =>
-                p.UpdateHandlers.Keys.Any(c => message.StartsWith(c)));
+            var profile = profiles.FirstOrDefault(p => p.UpdateHandlers.Keys.Any(c => text.StartsWith(c)));
 
-            var handler = profile?.UpdateHandlers.FirstOrDefault(pair => message.StartsWith(pair.Key));
+            var handler = profile?.UpdateHandlers.FirstOrDefault(pair => text.StartsWith(pair.Key));
 
             if (handler is null)
                 throw new Exception("Handler for update event not found.\n" +
-                                    $"Message to handle: {message}");
+                                    $"Message to handle: {text}");
 
             // step 2: create scope for using scoped services in handlers
             using var scope = provider.CreateScope();
@@ -105,14 +97,13 @@ namespace TezosNotifyBot.Abstractions
             try
             {
                 // step 4: awaiting handler result
-                await handlerInstance.HandleUpdate(sender, eventArgs);
+                await handlerInstance.HandleUpdate(chat, messageId, text);
             }
             catch (Exception e)
             {
-                await handlerInstance.HandleException(e, eventArgs, sender);
+                await handlerInstance.HandleException(e, chat, messageId);
                 
-                logger.LogError($"Failed to process update handler for message: {message}\n" +
-                                $"With exception message: {e.Message}", e);
+                logger.LogError($"Failed to process update handler for message: {text}\nWith exception message: {e.Message}", e);
             }
         }
     }

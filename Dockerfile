@@ -5,7 +5,7 @@ ARG configuration=Release
 # Runtime container build
 #
 ###########################
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-bionic AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ EXPOSE 80
 # Build container
 #
 ###########################
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 ARG version=0.0.0-dev
 

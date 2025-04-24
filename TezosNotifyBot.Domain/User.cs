@@ -6,7 +6,8 @@ using TezosNotifyBot.Shared.Extensions;
 
 namespace TezosNotifyBot.Domain
 {
-    public class User: IHasId<long>
+#nullable disable
+	public class User: IHasId<long>
     {
         public long Id { get; set; }
         public string Title { get; set; }
@@ -58,7 +59,7 @@ namespace TezosNotifyBot.Domain
         {
             return new User
             {
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 Firstname = firstName,
                 Lastname = lastName,
                 Id = id,

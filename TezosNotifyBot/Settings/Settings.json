@@ -2,19 +2,14 @@
     "Logging": {
         "LogLevel": {
             "Default": "Warning",
-            "TezosNotifyBot": "Debug"
+            "TezosNotifyBot": "Debug",
+            "System": "Information",
+            "Microsoft": "Error",
+            "Microsoft.EntityFrameworkCore": "Error"
         }
     },
     "ConnectionStrings": {
         "Default": "User ID=keepscan;Host=keepscan.com;Password=L9cZA9npgWEr94QpqgwyaQ73;Port=49000;Database=keepscan;Pooling=true;"
-    },
-    "Twitter": {
-        "ConsumerKey": "",
-        "ConsumerKeySecret": "",
-        "AccessToken": "",
-        "AccessTokenSecret": "",
-        "ChatId": -1001482752306,
-        "NetworkIssueNotify": 20
     },
     "Telegram": {
         "BotSecret": "",
@@ -28,42 +23,11 @@
     },
     "CarthageStart": 38913,
     "TzKtUrl": "https://api.tzkt.io/",
-    "BetterCallDevUrl": "https://api.better-call.dev/",
     "WhaleSeriesLength": 3,
     
     "DelegateInactiveTime": "180.00:00:00",
     "CryptoCompareToken": "",
     
-    "Nodes": [
-        {
-            "Name": "TezosUA",
-            "Url": "https://mainnet-tezos.giganode.io"
-        },
-        {
-            "Name": "TezRPC",
-            "Url": "https://rpc.tezrpc.me"
-        },
-        {
-            "Name": "Cryptonomic",
-            "Url": "https://tezos-prod.cryptonomic-infra.tech"
-        },
-        {
-            "Name": "LetzBake!",
-            "Url": "https://teznode.letzbake.com"
-        },
-        {
-            "Name": "SmartPy",
-            "Url": "https://mainnet.smartpy.io"
-        },
-        {
-            "Name": "Blockscale",
-            "Url": "https://rpc.tzbeta.net"
-        },
-        {
-            "Name": "ECAD Labs",
-            "Url": "https://api.tez.ie/rpc/mainnet"
-        }
-    ],
     "Medium": 
     {
       "ApiUrl": "https://api.medium.com/",

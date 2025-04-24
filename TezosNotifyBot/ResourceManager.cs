@@ -99,9 +99,9 @@ namespace TezosNotifyBot
 
 	public class ContextObject
 	{
+		public t1 t => new t1();
 		public User u { get; set; }
 		public UserAddress ua { get; set; }
-		public Explorer t => (u != null ? Explorer.FromId(u.Explorer) : Explorer.FromId(0));
 		public Tezos.MarketData md { get; set; } = new Tezos.MarketData();
 		public Proposal p { get; set; }
 

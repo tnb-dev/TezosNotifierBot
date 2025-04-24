@@ -3,7 +3,16 @@
         "LogLevel": {
             "Default": "Debug",
             "System": "Information",
-            "Microsoft": "Information"
+            "Microsoft": "Error"
         }
+    },
+    "ConnectionStrings": {
+        "Default": "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=tezos;SslMode=Disable;Pooling=true"
+    },
+    "Telegram": {
+        "BotSecret": "612398675:AAH5vH03WSwDXFjc5sllxHGzhgWJyZFATww",
+        "DevUsers": ["mksmfd","tonoff"],
+        "ActivityChat": [ -1001482752306 ],
+        "VotingChat": -1001546962198
     }
 }

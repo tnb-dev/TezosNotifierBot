@@ -18,9 +18,7 @@ namespace TezosNotifyBot.Storage
         public DbSet<Delegate> Delegates { get; set; }
         public DbSet<Proposal> Proposals { get; set; }
         public DbSet<KnownAddress> KnownAddresses { get; set; }
-        public DbSet<ProposalVote> ProposalVotes { get; set; }
-        
-        public DbSet<TwitterMessage> TwitterMessages { get; set; }
+        public DbSet<ProposalVote> ProposalVotes { get; set; }        
         public DbSet<Token> Tokens { get; set; }
         public DbSet<WhaleTransaction> WhaleTransactions { get; set; }
         #endregion
@@ -76,7 +74,6 @@ namespace TezosNotifyBot.Storage
                 builder.HasKey(x => x.Address);
                 builder.HasIndex(x => x.PayoutFor);
             });
-            modelBuilder.Entity<TwitterMessage>();
             modelBuilder.Entity<Proposal>();
             modelBuilder.Entity<ProposalVote>();
             modelBuilder.Entity<Token>();

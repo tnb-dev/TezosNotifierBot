@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Humanizer;
-using Humanizer.Localisation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using TezosNotifyBot.Abstractions;
@@ -79,11 +77,9 @@ namespace TezosNotifyBot.Events.Handlers
                 var user = delegator.User;
                 var text = _lang.Get(Res.DelegateInactive, user.Language, new
                 {
-                    t = Explorer.FromId(user.Explorer), // TODO: Fix it
                     delegateName = @delegate.DisplayName(),
                     delegateAddress,
-                    inactiveTime = inactiveBound.Humanize(culture: new CultureInfo(user.Language), toWords: false,
-                        maxUnit: TimeUnit.Day),
+                    inactiveTime = inactiveBound.ToString(),
                     delegatorName = delegator.DisplayName(),
                     delegatorAddress = delegator.Address
                 });

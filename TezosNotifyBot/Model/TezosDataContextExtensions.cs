@@ -118,7 +118,7 @@ namespace TezosNotifyBot.Model
         {
             var msg = new Message {
                 CallbackQueryData = data,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 FromUser = true,
                 UserId = fromId,
                 TelegramMessageId = messageId,
@@ -129,12 +129,12 @@ namespace TezosNotifyBot.Model
         }
         public static User GetUser(this TezosDataContext db, long id) => db.Users.SingleOrDefault(x => x.Id == id);
         public static List<User> GetVotingNotifyUsers(this TezosDataContext db) => db.Users.Where(o => !o.Inactive && o.VotingNotify).ToList();
-        public static void LogMessage(this TezosDataContext db, Telegram.Bot.Types.User from, int messageId, string text, string data)
+        public static void LogMessage(this TezosDataContext db, TelegramBotHandler.User from, int messageId, string text, string data)
         {
 
             var msg = new Message {
                 CallbackQueryData = data,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 FromUser = true,
                 UserId = db.GetUser(from).Id,
                 TelegramMessageId = messageId,
@@ -143,12 +143,12 @@ namespace TezosNotifyBot.Model
             db.Add(msg);
             db.SaveChanges();
         }
-        public static void LogMessage(this TezosDataContext db, Telegram.Bot.Types.Chat from, int messageId, string text, string data)
+        public static void LogMessage(this TezosDataContext db, TelegramBotHandler.Chat from, int messageId, string text, string data)
         {
 
             var msg = new Message {
                 CallbackQueryData = data,
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 FromUser = true,
                 UserId = db.GetUser(from).Id,
                 TelegramMessageId = messageId,
@@ -157,7 +157,7 @@ namespace TezosNotifyBot.Model
             db.Add(msg);
             db.SaveChanges();
         }
-        public static User GetUser(this TezosDataContext _db, Telegram.Bot.Types.User u)
+        public static User GetUser(this TezosDataContext _db, TelegramBotHandler.User u)
         {
             var user = _db.Set<User>().SingleOrDefault(x => x.Id == u.Id);
             if (user != null)
@@ -183,7 +183,7 @@ namespace TezosNotifyBot.Model
 
             return user;
         }
-        public static User GetUser(this TezosDataContext _db, Telegram.Bot.Types.Chat c)
+        public static User GetUser(this TezosDataContext _db, TelegramBotHandler.Chat c)
         {
             var user = _db.Set<User>().SingleOrDefault(x => x.Id == c.Id);
             if (user != null)
@@ -260,7 +260,7 @@ namespace TezosNotifyBot.Model
                 ua = new UserAddress();
                 ua.UserId = user.Id;
                 ua.Address = addr;
-                ua.CreateDate = DateTime.Now;
+                ua.CreateDate = DateTime.UtcNow;
                 ua.NotifyBakingRewards = user.Type == 0;
                 ua.NotifyDelegatorsBalance = user.Type == 0;
                 ua.ChatId = chatId;
@@ -268,7 +268,7 @@ namespace TezosNotifyBot.Model
             }
 
             ua.IsDeleted = false;
-            ua.LastUpdate = DateTime.Now;
+            ua.LastUpdate = DateTime.UtcNow;
             ua.Balance = bal;
             ua.Name = name;
             ua.AmountThreshold = 0;
@@ -278,7 +278,7 @@ namespace TezosNotifyBot.Model
         public static void LogOutMessage(this TezosDataContext db, long to, int messageId, string text)
         {
             var msg = new Message {
-                CreateDate = DateTime.Now,
+                CreateDate = DateTime.UtcNow,
                 FromUser = false,
                 UserId = to,
                 TelegramMessageId = messageId,

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 using Telegram.Bot.Exceptions;
-using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using TezosNotifyBot.Abstractions;
@@ -35,20 +34,17 @@ namespace TezosNotifyBot.Commands.Addresses
             TezosDataContext db,
             TezosBotFacade botClient,
             ResourceManager lang,
-            //TokenService tokenService,
             AddressTransactionsRepository transactionsRepository
         )
             : base(db, botClient)
         {
-            //TokenService = tokenService;
             TransactionsRepository = transactionsRepository;
             this.lang = lang;
         }
 
-        public async Task Handle(string[] args, CallbackQuery query)
+        public async Task Handle(string[] args, long userId, int messageId)
         {
             var page = args.GetInt(1);
-            var userId = query.From.Id;
             var address = args[0];
 
             var userAddress = await Db.Set<UserAddress>()
@@ -79,13 +75,13 @@ namespace TezosNotifyBot.Commands.Addresses
                 var txAddress = isReceive ? tx.Sender : tx.Target;
                 var data = new TemplateData
                 {
+                    t = new t1(),
                     Hash = tx.Hash,
                     Icon = BuildIcon(tx),
                     Amount = Utils.AmountToString(tx.Amount / TezosDecimals, null),
                     AddressName = txAddress.DisplayName(),
                     Address = txAddress.address,
-                    Timestamp = tx.Timestamp.ToLocaleString(user.Language),
-                    Explorer = Explorer.FromId(user.Explorer),
+                    Timestamp = tx.Timestamp.ToLocaleString(),
                     IsReceive = isReceive,
                 };
 
@@ -97,17 +93,7 @@ namespace TezosNotifyBot.Commands.Addresses
                         {
                             var tokenId = param[0]["txs"]?[0]?["token_id"]?.Value<int>();
                             if (tokenId is null)
-                                continue;/*
-                            var token = await TokenService.GetToken(tx.Target.address, (int)tokenId);
-                            var amount = param[0]["txs"]?[0]?["amount"]?.Value<decimal>();
-                            var target = param[0]["txs"]?[0]?["to_"]?.Value<string>();
-
-                            if (token != null && amount != null && target != null)
-                            {
-                                data.AddressName = target.ShortAddr();
-                                data.Address = target;
-                                data.Amount = Utils.AmountToString((decimal)amount, token);
-                            }*/
+                                continue;
                         }
                     }
                     else
@@ -121,8 +107,8 @@ namespace TezosNotifyBot.Commands.Addresses
             }
 
             await Bot.EditText(
-                query.From.Id,
-                query.Message.MessageId,
+                userId,
+                messageId,
                 message.Build(!userAddress.User.HideHashTags),
                 parseMode: ParseMode.Html,
                 disableWebPagePreview: true,
@@ -164,12 +150,10 @@ namespace TezosNotifyBot.Commands.Addresses
             }
         }
 
-        public async Task HandleException(Exception exception, object sender, CallbackQuery query)
+        public async Task HandleException(Exception exception)
         {
-            if (exception is MessageIsNotModifiedException)
+            if (exception.Message.ToLower().Contains("message is not modified"))
                 return;
-            
-            await Bot.NotifyAdmins(exception.Message);
         }
     }
 
@@ -202,7 +186,7 @@ namespace TezosNotifyBot.Commands.Addresses
 
     public class TemplateData
     {
-        public Explorer Explorer { get; set; }
+        public t1 t { get; set; }
         public string Hash { get; set; }
         public string Icon { get; set; }
         public string Amount { get; set; }
