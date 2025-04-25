@@ -14,3 +14,4 @@ deploy/compose.local.env
 /.vs/TezosNotifyBot
 /.vs/tezos-bot/v16/.suo
 /.vs
+/TezosNotifyBot/Settings/Settings.Development.json
