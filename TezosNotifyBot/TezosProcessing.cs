@@ -840,7 +840,11 @@ namespace TezosNotifyBot
 		{
 			logger.LogDebug($"ProcessBlockMetadata {block.Level}");
 			var cycles = tzKtClient.GetCycles();
-			var cycle = cycles.Single(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+			var cycle = cycles.SingleOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
+			if (cycle == null)
+			{
+				cycle = tzKtClient.GetCycle(block.Cycle);
+			}
 			currentCycle = cycle;
 			/*if (cycle.lastLevel == block.Level)
             {
