@@ -12,8 +12,8 @@ namespace TezosNotifyBot
 {
 	partial class TezosProcessing
 	{
-        public string PeriodStatus { get; private set; }
-        public string VotingStatus { get; private set; }
+        public static string PeriodStatus { get; private set; }
+        public static string VotingStatus { get; private set; }
 
 		async Task VotingNotify(Storage.TezosDataContext db, Block block, Cycle cycle, ITzKtClient tzKtClient)
         {

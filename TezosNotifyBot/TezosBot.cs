@@ -98,10 +98,9 @@ namespace TezosNotifyBot
                 var provider = scope.ServiceProvider;
                 using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 				var md = scope.ServiceProvider.GetRequiredService<IMarketDataProvider>().GetMarketData();
-                var tezosProcessing = _serviceProvider.GetRequiredService<TezosProcessing>();
 				try
                 {
-                    await OnGroupOrChannelMessage(db, md, tezosProcessing, chat, from, id, text);
+                    await OnGroupOrChannelMessage(db, md, chat, from, id, text);
                 }
                 catch (Exception e)
                 {
@@ -123,7 +122,6 @@ namespace TezosNotifyBot
 			var provider = scope.ServiceProvider;
 			using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 			var md = scope.ServiceProvider.GetRequiredService<IMarketDataProvider>().GetMarketData();
-            var tezosProcessing = _serviceProvider.GetRequiredService<TezosProcessing>();
 
 			var q = query.Trim().ToLower();
 			q = q.Replace("'", "").Replace("`", "").Replace(" ", "").Replace("а", "a").Replace("б", "b")
@@ -136,8 +134,8 @@ namespace TezosNotifyBot
             if (q.Length < 3)
             {
                 string result = $"1 ꜩ = ${1M.TezToUsd(md)} ({md.Received.ToString("dd.MM.yyyy HH:mm")} UTC)";
-                var results_info = ("info", result, "<b>Tezos blockchain info</b>\n\n" + result + tezosProcessing.PeriodStatus + tezosProcessing.VotingStatus +
-                              "\n\n@TezosNotifierBot notifies users about transactions and other events in the Tezos blockchain", (tezosProcessing.PeriodStatus + tezosProcessing.VotingStatus).Trim());
+                var results_info = ("info", result, "<b>Tezos blockchain info</b>\n\n" + result + TezosProcessing.PeriodStatus + TezosProcessing.VotingStatus +
+                              "\n\n@TezosNotifierBot notifies users about transactions and other events in the Tezos blockchain", (TezosProcessing.PeriodStatus + TezosProcessing.VotingStatus).Trim());
                 await telegramBotInvoker.AnswerInlineQuery(id, new List<(string id, string title, string content, string description)> { results_info });
             }
             else
@@ -173,7 +171,6 @@ namespace TezosNotifyBot
 			var provider = scope.ServiceProvider;
 			using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 			var md = scope.ServiceProvider.GetRequiredService<IMarketDataProvider>().GetMarketData();
-            var tezosProcessing = _serviceProvider.GetRequiredService<TezosProcessing>();
 			try
 			{
 				if (callbackData.StartsWith("_"))
@@ -274,7 +271,7 @@ namespace TezosNotifyBot
 					{
 						var cycles = _serviceProvider.GetService<ITzKtClient>().GetCycles();
 						if (ua.IsOwner && !user.IsAdmin(Config.Telegram) &&
-							cycles.Single(c => c.firstLevel <= tezosProcessing.PrevBlockLevel && tezosProcessing.PrevBlockLevel <= c.lastLevel) ==
+							cycles.Single(c => c.firstLevel <= TezosProcessing.PrevBlockLevel && TezosProcessing.PrevBlockLevel <= c.lastLevel) ==
 							cycles.Single(c => c.firstLevel <= ua.LastMessageLevel && ua.LastMessageLevel <= c.lastLevel))
 						{
 							await SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
@@ -666,7 +663,6 @@ namespace TezosNotifyBot
 			var provider = scope.ServiceProvider;
 			using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 			var md = scope.ServiceProvider.GetRequiredService<IMarketDataProvider>().GetMarketData();
-            var tezosProcessing = _serviceProvider.GetRequiredService<TezosProcessing>();
 
 			try
             {
@@ -683,7 +679,7 @@ namespace TezosNotifyBot
 						users = GetFollowers(db, ua.Address);
 						if (!user.IsAdmin(Config.Telegram))
 						{
-							ua.LastMessageLevel = tezosProcessing.PrevBlockLevel;
+							ua.LastMessageLevel = TezosProcessing.PrevBlockLevel;
 							db.SaveChanges();
 						}
 					}
@@ -893,7 +889,7 @@ namespace TezosNotifyBot
 					}
 					else if (text == "/info" || text == "info")
 					{
-						await Info(chat.Id, md, tezosProcessing);
+						await Info(chat.Id, md);
 					}
 					else if (text == "/stat")
 					{
@@ -904,13 +900,13 @@ namespace TezosNotifyBot
 						int l = db.GetLastBlockLevel().Item1;
 						//int c = (l - 1) / 4096;
 						//int p = l - c * 4096 - 1;
-						var avg = tezosProcessing.GetAvgProcessingTime();
+						var avg = TezosProcessing.GetAvgProcessingTime();
 						var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
 						await SendTextMessage(db, user.Id, $"Last block processed: {l}, msh sent: {msgSent}\nAvg. processing time: {avg}\nCache size: {cs}", ReplyKeyboards.MainMenu);
 					}
 					else if (text.StartsWith("/setblock") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
-						if (int.TryParse(text.Substring("/setblock ".Length), out int num))
+						if (int.TryParse(text.Substring("/setblock ".Length).Replace(",", "").Replace(" ", ""), out int num))
 						{
 							var tzKt = _serviceProvider.GetService<ITzKtClient>();
 							var b = tzKt.GetBlock(num);
@@ -919,6 +915,7 @@ namespace TezosNotifyBot
 							lbl.Priority = b.blockRound;
 							lbl.Hash = b.Hash;
 							db.SaveChanges();
+                            TezosProcessing.SetLastBlock(tzKt.GetBlock(num));
 							var c = tzKt.GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
 							await NotifyDev(db,
 								$"Last block processed changed: {db.GetLastBlockLevel().Item1}, {db.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, totalStaking: {c.totalStaking}",
@@ -1133,7 +1130,7 @@ namespace TezosNotifyBot
 							var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
 							if (!user.IsAdmin(Config.Telegram))
 							{
-								ua.LastMessageLevel = tezosProcessing.PrevBlockLevel;
+								ua.LastMessageLevel = TezosProcessing.PrevBlockLevel;
 								db.SaveChanges();
 								text = resMgr.Get(Res.DelegateMessage, ua) + "\n\n" + text;
 							}
@@ -1172,7 +1169,7 @@ namespace TezosNotifyBot
 
                 if (!isPrivate)
                 {
-                    await OnGroupOrChannelMessage(db, md, tezosProcessing, chat, from, id, text);
+                    await OnGroupOrChannelMessage(db, md, chat, from, id, text);
                 }
 			}
             catch(Exception e)
@@ -1188,7 +1185,7 @@ namespace TezosNotifyBot
 			}
 		}
 
-        async Task OnGroupOrChannelMessage(Storage.TezosDataContext db, MarketData md, TezosProcessing tezosProcessing, TelegramBotHandler.Chat chat, TelegramBotHandler.User from, int messageId, string text)
+        async Task OnGroupOrChannelMessage(Storage.TezosDataContext db, MarketData md, TelegramBotHandler.Chat chat, TelegramBotHandler.User from, int messageId, string text)
         {
             var chatUser = db.GetUser(chat.Id);
             bool newChat = chatUser == null;
@@ -1211,7 +1208,7 @@ namespace TezosNotifyBot
 
             if (text.StartsWith("/info"))
             {
-                await Info(chat.Id, md, tezosProcessing);
+                await Info(chat.Id, md);
                 return;
             }
 
@@ -1318,9 +1315,9 @@ namespace TezosNotifyBot
             return result;
         }
 
-		async Task Info(long chatId, MarketData md, TezosProcessing tezosProcessing)
+		async Task Info(long chatId, MarketData md)
         {
-            string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({md.Received.ToString("dd.MM.yyyy HH:mm")})" + tezosProcessing.PeriodStatus + tezosProcessing.VotingStatus;
+            string result = $"1 <b>ꜩ</b> = ${1M.TezToUsd(md)} ({md.Received.ToString("dd.MM.yyyy HH:mm")})" + TezosProcessing.PeriodStatus + TezosProcessing.VotingStatus;
 
 			await telegramBotInvoker.SendMessage(chatId, result);			
         }

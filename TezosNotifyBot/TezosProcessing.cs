@@ -31,7 +31,7 @@ namespace TezosNotifyBot
 		readonly AddressManager addrMgr;
 		readonly ResourceManager resMgr;
 		readonly BotConfig config;
-		readonly Queue<DateTime> blockProcessings = new Queue<DateTime>();
+		static readonly Queue<DateTime> blockProcessings = new Queue<DateTime>();
 
 		public TezosProcessing(ILogger<TezosProcessing> logger, TelegramBotInvoker telegramBotInvoker, IServiceProvider serviceProvider, TezosBot tezosBot, AddressManager addrMgr, ResourceManager resMgr, IOptions<BotConfig> config)
 		{
@@ -77,7 +77,7 @@ namespace TezosNotifyBot
 		DateTime lastReceived = DateTime.UtcNow; //Дата и время получения последнего блока
 		DateTime lastWebExceptionNotify = DateTime.MinValue;
 		DateTime lastWarn = DateTime.UtcNow;
-		Block prevBlock;
+		static Block prevBlock;
 		Constants _currentConstants;
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -130,6 +130,11 @@ namespace TezosNotifyBot
 					Thread.Sleep(10000);
 				}
 			}
+		}
+
+		public static void SetLastBlock(Block block)
+		{
+			prevBlock = block;
 		}
 
 		async Task<bool> Client_BlockReceived(Storage.TezosDataContext db, ITzKtClient tzKt, int blockLevel, MarketData md)
@@ -582,7 +587,7 @@ namespace TezosNotifyBot
 				}
 			}
 
-			if (prevBlock == null || prevBlock.Level == block.Level + 1)
+			if (prevBlock == null || prevBlock.Level + 1 == block.Level)
 				db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
 			logger.LogInformation($"Block {block.Level} processed");
 			//lastHeader = header;
@@ -1070,12 +1075,12 @@ namespace TezosNotifyBot
 			}
 		}
 
-		public double GetAvgProcessingTime()
+		public static double GetAvgProcessingTime()
 		{
 			var dtlist = blockProcessings.ToList();
 			return dtlist.Count > 1 ? (int)dtlist.Skip(1).Select((o, i) => o.Subtract(dtlist[i]).TotalSeconds).Average() : double.NaN;
 		}
 
-		public int PrevBlockLevel => prevBlock?.Level ?? 0;
+		public static int PrevBlockLevel => prevBlock?.Level ?? 0;
 	}
 }
