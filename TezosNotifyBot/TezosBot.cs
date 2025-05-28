@@ -915,7 +915,7 @@ namespace TezosNotifyBot
 							lbl.Priority = b.blockRound;
 							lbl.Hash = b.Hash;
 							db.SaveChanges();
-                            TezosProcessing.SetLastBlock(tzKt.GetBlock(num));
+                            TezosProcessing.SetLastBlock(db, tzKt.GetBlock(num));
 							var c = tzKt.GetCycles().Single(c => c.firstLevel <= num && num <= c.lastLevel);
 							await NotifyDev(db,
 								$"Last block processed changed: {db.GetLastBlockLevel().Item1}, {db.GetLastBlockLevel().Item3}\nCurrent cycle: {c.index}, totalStaking: {c.totalStaking}",

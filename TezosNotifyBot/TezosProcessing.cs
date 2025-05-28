@@ -132,9 +132,10 @@ namespace TezosNotifyBot
 			}
 		}
 
-		public static void SetLastBlock(Block block)
+		public static void SetLastBlock(Storage.TezosDataContext db, Block block)
 		{
 			prevBlock = block;
+			db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
 		}
 
 		async Task<bool> Client_BlockReceived(Storage.TezosDataContext db, ITzKtClient tzKt, int blockLevel, MarketData md)
