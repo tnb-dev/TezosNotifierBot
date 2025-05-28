@@ -21,8 +21,8 @@ namespace TezosNotifyBot.Domain
         public decimal AmountThreshold { get; set; }
 
         public bool NotifyPayout { get; set; } = true;
-        public bool NotifyTransactions { get; set; }
-        public bool NotifyCycleCompletion { get; set; }
+        public bool NotifyTransactions { get; set; } = true;
+		public bool NotifyCycleCompletion { get; set; }
         public bool NotifyDelegations { get; set; }
         
         /// <summary>

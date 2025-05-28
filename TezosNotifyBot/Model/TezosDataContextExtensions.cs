@@ -272,6 +272,8 @@ namespace TezosNotifyBot.Model
             ua.Balance = bal;
             ua.Name = name;
             ua.AmountThreshold = 0;
+            ua.NotifyTransactions = true;
+            ua.NotifyPayout = true;
             _db.SaveChanges();
             return ua;
         }
