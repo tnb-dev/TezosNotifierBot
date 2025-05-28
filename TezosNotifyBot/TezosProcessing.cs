@@ -98,8 +98,8 @@ namespace TezosNotifyBot
 				try
 				{
 					var block = db.GetLastBlockLevel();
-
-					if (!await Client_BlockReceived(db, tzkt, block.Item1 + 1, md))
+					var blockNum = prevBlock?.Level ?? block.Item1;
+					if (!await Client_BlockReceived(db, tzkt, blockNum + 1, md))
 						Thread.Sleep(5000);
 
 					if (DateTime.UtcNow.Subtract(lastReceived).TotalMinutes > 5 &&
