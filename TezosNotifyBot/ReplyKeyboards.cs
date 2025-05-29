@@ -121,7 +121,7 @@ namespace TezosNotifyBot
                             $"{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion", (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon"));
                     buttons.Add2(u, id,
 							$"{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Out of free space", (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon"),
-                            $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses", (ua.NotifyMisses ? "missesoff" : "misseson"));
+                            $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses", "tunemisses");
                     buttons.Add2(u, id,
 							 "📝 Rename", "setname",
 							 "🗑 Delete", "deleteaddress");
@@ -146,7 +146,22 @@ namespace TezosNotifyBot
             return KeyboardMarkup.InlineKeyboard(buttons);
         }
 
-        public static KeyboardMarkup AdminAddressMenu(UserAddress ua)
+        public static KeyboardMarkup MissesMenu(User u, int id, UserAddress ua, TelegramOptions options)
+		{
+			var buttons = new List<List<(string Text, string Callback)>>();
+			buttons.Add(u, id, "🔙 Back", "manageaddress");
+			buttons.Add(u, id, $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses "+(ua.NotifyMisses ? "On" : "Off"), (ua.NotifyMisses ? "missesoff" : "misseson"));
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " No threshold", "set_misses_0");
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Threshold 30 min", "set_misses_30");
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Threshold 1 hour", "set_misses_60");
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Threshold 2 hours", "set_misses_120");
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Threshold 4 hours", "set_misses_240");
+
+			return KeyboardMarkup.InlineKeyboard(buttons);
+		}
+
+
+		public static KeyboardMarkup AdminAddressMenu(UserAddress ua)
         {
 			var buttons = new List<List<(string Text, string Callback)>>();
             buttons.Add(ua.User, ua.Id, $"{(ua.IsOwner ? "☑️" : "🔲")} Address owner", (ua.IsOwner ? "owneroff" : "owneron"));

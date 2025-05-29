@@ -37,7 +37,9 @@ namespace TezosNotifyBot.Domain
         public decimal DelegatorsBalanceThreshold { get; set; }
         
         public decimal DelegationAmountThreshold { get; set; }
-        public bool NotifyMisses { get; set; }
+		public decimal MissesThreshold { get; set; }
+
+		public bool NotifyMisses { get; set; }
         public long ChatId { get; set; }
         public bool NotifyAwardAvailable { get; set; }
         public bool NotifyRightsAssigned { get; set; }

@@ -392,6 +392,16 @@ namespace TezosNotifyBot
 					else
 						await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
 				}
+                if (callbackData.StartsWith("tunemisses"))
+                {
+					var ua = useraddr();
+					if (ua != null)
+					{
+						await ViewAddress(db, md, user.Id, ua, messageId, true)();
+					}
+					else
+						await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
+				}
 
 				Action<string, Action<UserAddress>> editUA = async (cmd, action) => {
 					if (callbackData.StartsWith(cmd))
@@ -1447,7 +1457,7 @@ namespace TezosNotifyBot
             }
         }
 
-        Func<Task> ViewAddress(Storage.TezosDataContext db, MarketData md, long chatId, UserAddress ua, int msgid)
+        Func<Task> ViewAddress(Storage.TezosDataContext db, MarketData md, long chatId, UserAddress ua, int msgid, bool tuneMisses = false)
         {
             var user = ua.User;
             var culture = new CultureInfo(user.Language);
@@ -1619,8 +1629,8 @@ namespace TezosNotifyBot
                     // One new line for `address tune` and two for `inline mode`
                     // TODO: Change `result` from string to StringBuilder
                     result += new string('\n', msgid == 0 ? 2 : 1) + ua.HashTag();
-                return () => SendTextMessage(db, chatId, result,
-                    chatId == ua.UserId
+                return () => SendTextMessage(db, chatId, result, tuneMisses ? ReplyKeyboards.MissesMenu(ua.User, ua.Id, ua, Config.Telegram) :
+					chatId == ua.UserId
                         ? ReplyKeyboards.AddressMenu(ua.User, ua.Id, msgid == 0 ? null : ua, Config.Telegram)
                         : ReplyKeyboards.AdminAddressMenu(ua), msgid);
             }

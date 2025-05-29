@@ -61,7 +61,8 @@ namespace TezosNotifyBot.Storage
                 builder.Property(x => x.NotifyRightsAssigned).HasDefaultValue(true);
                 builder.Property(x => x.NotifyDelegateStatus).HasDefaultValue(true);
                 builder.Property(x => x.NotifyOutOfFreeSpace).HasDefaultValue(true);
-            });
+                builder.Property(x => x.MissesThreshold).HasDefaultValue(0);
+			});
             modelBuilder.Entity<Message>(builder =>
             {
                 builder.Property(x => x.Status)
