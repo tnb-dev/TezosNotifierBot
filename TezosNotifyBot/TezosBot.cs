@@ -246,8 +246,33 @@ namespace TezosNotifyBot
 					else
 						await SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,	messageId);
 				}
-
-                if (callbackData.StartsWith("set_misses_"))
+				if (callbackData.StartsWith("misseson"))
+				{
+					var ua = useraddr();
+					if (ua != null)
+					{
+                        ua.NotifyMisses = true;
+						db.SaveChanges();
+                        await ViewAddress(db, md, user.Id, ua, messageId, true)();
+					}
+					else
+						await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
+                    return;
+				}
+				if (callbackData.StartsWith("missesoff"))
+				{
+					var ua = useraddr();
+					if (ua != null)
+					{
+						ua.NotifyMisses = false;
+						db.SaveChanges();
+						await ViewAddress(db, md, user.Id, ua, messageId, true)();
+					}
+					else
+						await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
+					return;
+				}
+				if (callbackData.StartsWith("set_misses_"))
                 {
 					var ua = useraddr();
 					if (ua != null)
@@ -440,8 +465,6 @@ namespace TezosNotifyBot
 				editUA("awardoff", ua => ua.NotifyAwardAvailable = false);
 				editUA("dlgon", ua => ua.NotifyDelegations = true);
 				editUA("dlgoff", ua => ua.NotifyDelegations = false);
-				editUA("misseson", ua => ua.NotifyMisses = true);
-				editUA("missesoff", ua => ua.NotifyMisses = false);
 				editUA("toggle-delegate-status", ua => ua.NotifyDelegateStatus = !ua.NotifyDelegateStatus);
 
 				if (callbackData.StartsWith("hidehashtags"))
@@ -1621,7 +1644,7 @@ namespace TezosNotifyBot
                     }
                     result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
-                    result += resMgr.Get(Res.MissesNotifications, ua) + "\n";
+                    result += resMgr.Get(Res.MissesNotifications, ua) + ua.MissesThresholdText + "\n";
                     result += resMgr.Get(Res.DelegateRightsAssigned, ua) + "\n";
                     result += resMgr.Get(Res.DelegateOutOfFreeSpace, ua) + "\n";
                     result += resMgr.Get(Res.Watchers, ua) + db.GetUserAddresses(ua.Address).Count + "\n";

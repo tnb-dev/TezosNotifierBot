@@ -82,5 +82,26 @@ namespace TezosNotifyBot.Domain
         public decimal Performance;
 
         public decimal InflationValue => Balance * 7 / 128 / 100;
-    }
+
+        public string MissesThresholdText
+        {
+            get
+            {
+                if (NotifyMisses)
+                {
+                    if (MissesThreshold == 0)
+                        return ", No threshold";
+                    if (MissesThreshold == 30)
+                        return ", 30 min threshold";
+                    if (MissesThreshold == 60)
+                        return ", 1 hour threshold";
+                    if (MissesThreshold == 120)
+                        return ", 2 hours threshold";
+                    if (MissesThreshold == 240)
+                        return ", 4 hours threshold";
+                }
+                return "";
+            }
+        }
+	}
 }
