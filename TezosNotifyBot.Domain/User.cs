@@ -15,6 +15,7 @@ namespace TezosNotifyBot.Domain
         public string Lastname { get; set; }
         public string Username { get; set; }
         public DateTime CreateDate { get; set; }
+        [Obsolete]
         public string Language { get; set; }
         public bool Inactive { get; set; }
         public UserState UserState { get; set; }
@@ -36,8 +37,8 @@ namespace TezosNotifyBot.Domain
         public int NetworkIssueNotify { get; set; }
         public int Explorer { get; set; } = 3;
         public bool SmartWhaleAlerts { get; set; }
-
-        public CultureInfo Culture => new CultureInfo(Language);
+		[Obsolete]
+		public CultureInfo Culture => new CultureInfo("en");
 
         public override string ToString()
         {
@@ -64,7 +65,7 @@ namespace TezosNotifyBot.Domain
                 Lastname = lastName,
                 Id = id,
                 Username = username,
-                Language = languageCode,
+                Language = "",//languageCode,
                 // Enable release notifications only for new users
                 ReleaseNotify = true,
                 WhaleAlertThreshold = type == 0 ? 1000000 : 0,

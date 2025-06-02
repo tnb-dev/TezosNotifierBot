@@ -47,6 +47,11 @@ namespace TezosNotifyBot.Domain
         public bool IsOwner { get; set; }
         public int LastMessageLevel { get; set; }
         public bool NotifyOutOfFreeSpace { get; set; }
+
+        public DateTime? DownStart { get; set; }
+        public DateTime? DownEnd { get; set; }
+        public int? DownMessageId { get; set; }
+
         public string HashTag()
         {
             if (String.IsNullOrEmpty(Name))

@@ -260,6 +260,7 @@ namespace TezosNotifyBot
 					}
 					else
 						await SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null, messageId);
+                    return;
 				}
 				if (callbackData.StartsWith("setname"))
 				{
@@ -388,13 +389,6 @@ namespace TezosNotifyBot
 					db.SaveChanges();
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(user), messageId);
 				}
-				else if (callbackData.StartsWith("set_"))
-				{
-					user.Language = callbackData.Substring("set_".Length);
-					db.SaveChanges();
-					await SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(user, Config.Telegram), messageId);
-					await SendTextMessage(db, user.Id, resMgr.Get(Res.Welcome, user), ReplyKeyboards.MainMenu);
-				}
 
 				if (callbackData.StartsWith("manageaddress"))
 				{
@@ -511,7 +505,7 @@ namespace TezosNotifyBot
 					if (callbackData.StartsWith("broadcast"))
 					{
 						user.UserState = UserState.Broadcast;
-						await SendTextMessage(db, user.Id, $"Enter your message for [{user.Language}] bot users", ReplyKeyboards.BackMenu);
+						await SendTextMessage(db, user.Id, $"Enter your message for bot users", ReplyKeyboards.BackMenu);
 					}
 
 					if (callbackData.StartsWith("getuseraddresses"))
@@ -696,7 +690,7 @@ namespace TezosNotifyBot
 				{
 					var count = 0;
 					
-					var users = db.Users.Where(o => !o.Inactive && o.Language == user.Language).ToList();
+					var users = db.Users.Where(o => !o.Inactive).ToList();
 					if (user.UserState == UserState.NotifyFollowers)
 					{
 						var ua = db.GetUserAddresses(user.Id).FirstOrDefault(o => o.Id == user.EditUserAddressId);
@@ -1072,7 +1066,7 @@ namespace TezosNotifyBot
 							user.UserState = UserState.Default;
 
 							var dialog = _serviceProvider.GetRequiredService<DialogService>();
-							var (action, answer) = dialog.Intent(user.Id.ToString(), text, user.Culture);
+							var (action, answer) = dialog.Intent(user.Id.ToString(), text, CultureInfo.GetCultureInfo("en"));
 							// TODO: Add `action == input.unknown` handling
 							await SendTextMessage(db, user.Id, answer, ReplyKeyboards.MainMenu);
 
@@ -1170,14 +1164,11 @@ namespace TezosNotifyBot
 						else if (user.UserState == UserState.Broadcast)
 						{
 							int count = 0;
-							foreach (var user1 in db.Users.Where(o => !o.Inactive).ToList())
-							{
-								if (user1.Language == user.Language)
-								{
-									await CopyMessage(db, user1.Id, chat.Id, id, text);
-									count++;
-								}
-							}
+                            foreach (var user1 in db.Users.Where(o => !o.Inactive).ToList())
+                            {
+                                await CopyMessage(db, user1.Id, chat.Id, id, text);
+                                count++;
+                            }
 
 							user.UserState = UserState.Default;
 							await SendTextMessage(db, user.Id, resMgr.Get(Res.MessageDelivered, user) + "(" + count.ToString() + ")", ReplyKeyboards.MainMenu);
@@ -1473,9 +1464,6 @@ namespace TezosNotifyBot
 
         Func<Task> ViewAddress(Storage.TezosDataContext db, MarketData md, long chatId, UserAddress ua, int msgid, bool tuneMisses = false)
         {
-            var user = ua.User;
-            var culture = new CultureInfo(user.Language);
-
             var isDelegate = db.Delegates.Any(o => o.Address == ua.Address);
             var result = chatId == ua.UserId ? "" : $"ℹ️User {ua.User} [{ua.UserId}] address\n";
             var config = db.Set<AddressConfig>().AsNoTracking().FirstOrDefault(x => x.Id == ua.Address);
