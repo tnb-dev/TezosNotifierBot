@@ -247,6 +247,20 @@ namespace TezosNotifyBot
 						await SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null,	messageId);
 				}
 
+                if (callbackData.StartsWith("set_misses_"))
+                {
+					var ua = useraddr();
+					if (ua != null)
+					{
+						var cd = callbackData.Split(' ').First();
+						int mt = int.Parse(cd.Substring("set_misses_".Length));
+						ua.MissesThreshold = mt;
+						db.SaveChanges();
+						await ViewAddress(db, md, user.Id, ua, messageId, true)();
+					}
+					else
+						await SendTextMessage(db, user.Id, resMgr.Get(Res.AddressNotExist, user), null, messageId);
+				}
 				if (callbackData.StartsWith("setname"))
 				{
 					var ua = useraddr();
