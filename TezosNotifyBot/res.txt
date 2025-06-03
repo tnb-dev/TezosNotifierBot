@@ -263,8 +263,6 @@ Or use the search:
 #TestingVoteSuccess;en;✌️ Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> approved. Testing period begins.
 #TestingVoteFailed;ru;😐 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
 #TestingVoteFailed;en;😐 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> declined. The proposal period begins.
-#PromotionVoteSuccess;ru;🥳 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> одобрено. Начинается период адаптации.
-#PromotionVoteSuccess;en;🥳 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> approved. The adoption period begins.
 #PromotionVoteFailed;ru;🚽 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> отклонено. Начинается период подачи предложений.
 #PromotionVoteFailed;en;🚽 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> declined. The proposal period begins.
 #DelegateDidNotVoted;ru;😴 Делегат <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> не проголосовал по предложению <a href='{t.url_vote(Period)}'>{p.Name}</a>
@@ -478,19 +476,3 @@ Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
 #DelegateOutOfFreeSpace;en;🙅 Out of free space: {(ua.NotifyOutOfFreeSpace ? "🔔 on" : "🔕 off")}
 #OutOfFreeSpace;en;🙅 Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has run out of free space. Misses expected during cycle {Cycle} (starting {NextEnd.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC).
 #OutOfFreeSpace;ru;🙅 У делегата <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> закончилось свободное место. Пропуски ожидаются в течение цикла {Cycle} (начинается {RusDT(NextEnd)} UTC).
-#AddressTransactionListTitle;en;Transaction list of {addressName}
-#AddressTransactionListTitle;ru;Transaction list of {addressName}
-#AddressTransactionListItem;en;{Icon} <a href='{t.op(Hash)}'>{Amount}</a> {(IsReceive ? "from" : "to")} <a href='{t.account(Address)}'>{AddressName}</a> on {Timestamp}
-#AddressTransactionListItem;ru;{Icon} <a href='{t.op(Hash)}'>{Amount}</a> {(IsReceive ? "от" : "к")} <a href='{t.account(Address)}'>{AddressName}</a> {Timestamp}
-#AddressTransactionListLink;en;📄 Transaction list
-#AddressTransactionListLink;ru;📄 Список транзакций
-#AddressTransactionListOlder;en;Older ➡️
-#AddressTransactionListOlder;ru;Далее ➡️
-#AddressTransactionListNewer;en;Newer ⬅️
-#AddressTransactionListNewer;ru;Назад ⬅️
-#AddressTransactionListLatest;en;Latest ⏺
-#AddressTransactionListLatest;ru;В начало ⏺
-#AddressTransactionListRefresh;en;Refresh ⏺
-#AddressTransactionListRefresh;ru;Обновить ⏺
-#AdoptionFinished;en;🚀 Proposal <a href='{t.url_vote(Period)}'>{p.Name}</a> implemented. The proposal period begins.
-#AdoptionFinished;ru;🚀 Предложение <a href='{t.url_vote(Period)}'>{p.Name}</a> внедрено. Начинается период подачи предложений.

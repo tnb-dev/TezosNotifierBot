@@ -1,5 +1,4 @@
 using TezosNotifyBot.Abstractions;
-using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.Commands.Admin;
 
 namespace TezosNotifyBot.Commands
@@ -11,10 +10,6 @@ namespace TezosNotifyBot.Commands
             // Commands
             AddCommand<SyncPayoutAddressCommand>("/sync-payout");
             AddCommand<ExcludeWhaleCommand>("/exclude-whale");
-            
-            // Callbacks
-            AddCallback<AddressInfoHandler>("address-links");
-            AddCallback<AddressTransactionListHandler>("address-transaction-list");
         }
     }
 }

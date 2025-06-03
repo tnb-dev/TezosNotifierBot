@@ -327,10 +327,8 @@ namespace TezosNotifyBot
                     foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = period.kind == "adoption"
-							? resMgr.Get(Res.PromotionVoteSuccess,
-								new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index })
-							: resMgr.Get(Res.PromotionVoteFailed,
-								new ContextObject { p = p, u = u, Block = prevPeriod.index });
+							? $"🥳 Proposal <a href='{t.url_vote(prevPeriod.index)}'>{p.Name}</a> approved. The adoption period begins."
+							: $"🚽 Proposal <a href='{t.url_vote(prevPeriod.index)}'>{p.Name}</a> declined. The proposal period begins.";
 						if (!u.HideHashTags)
 							result += "\n\n#proposal" + p.HashTag();
 						await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
@@ -342,8 +340,7 @@ namespace TezosNotifyBot
                     var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
                     foreach (var u in db.GetVotingNotifyUsers())
                     {
-                        var result = resMgr.Get(Res.AdoptionFinished,
-                                new ContextObject { p = p, u = u, Block = block.Level, Period = prevPeriod.index });
+                        var result = $"🚀 Proposal <a href='{t.url_vote(prevPeriod.index)}'>{p.Name}</a> implemented. The proposal period begins.";
                         if (!u.HideHashTags)
                             result += "\n\n#proposal" + p.HashTag();
                         await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);

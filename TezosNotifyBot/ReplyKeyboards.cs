@@ -60,8 +60,7 @@ namespace TezosNotifyBot
         {
 			var buttons = new List<List<(string Text, string Callback)>>();
 			if (ua == null)
-				buttons.Add3(u, id,
-					"ℹ️ Info", "address-links",
+				buttons.Add2(u, id,
 					"🗑 Delete", "deleteaddress",
 					"🛠 Tune", "manageaddress");
 			else
@@ -99,8 +98,7 @@ namespace TezosNotifyBot
         {
 			var buttons = new List<List<(string Text, string Callback)>>();
             if (ua == null)
-                buttons.Add3(u, id,
-					"ℹ️ Info", "address-links",
+                buttons.Add2(u, id,
 					"🗑 Delete", "deleteaddress",
 					"🛠 Tune", "manageaddress");
             else

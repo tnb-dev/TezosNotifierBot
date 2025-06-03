@@ -17,7 +17,6 @@ using Polly;
 using Polly.Extensions.Http;
 using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
-using TezosNotifyBot.Commands.Addresses;
 using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Dialog.Extensions;
 using TezosNotifyBot.Model;
@@ -82,7 +81,6 @@ namespace TezosNotifyBot
                     });
 
                     services.AddScoped<AddressService>();
-                    services.AddSingleton<AddressTransactionsRepository>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
                     services.AddHttpClient<ReleasesClient>();                   
                     
