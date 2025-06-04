@@ -132,9 +132,11 @@ namespace TezosNotifyBot
 			}
 		}
 
+		static bool lastBlockChanged;
 		public static void SetLastBlock(Storage.TezosDataContext db, Block block)
 		{
 			prevBlock = block;
+			lastBlockChanged = true;
 			db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
 		}
 
@@ -593,7 +595,14 @@ namespace TezosNotifyBot
 			logger.LogInformation($"Block {block.Level} processed");
 			//lastHeader = header;
 			//lastHash = header.hash;
-			prevBlock = block;
+			if (lastBlockChanged)
+			{
+				lastBlockChanged = false;
+				await tezosBot.NotifyDev(db, $"Switched to block {prevBlock.Level} ({prevBlock.Timestamp})", 0);
+				logger.LogInformation($"Switched to block {prevBlock.Level} ({prevBlock.Timestamp})");
+			}
+			else
+				prevBlock = block;
 			blockProcessings.Enqueue(DateTime.UtcNow);
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
