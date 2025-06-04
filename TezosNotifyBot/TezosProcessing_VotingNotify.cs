@@ -281,7 +281,7 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "exploration" && period.kind == "testing")
 				{
                     var proposal = tzKtClient.GetProposals(period.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash) ?? db.AddProposal(proposal.hash, null, prevPeriod.index);
                     foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = resMgr.Get(Res.TestingVoteSuccess,
@@ -309,7 +309,7 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "exploration" && period.kind == "proposal")
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash) ?? db.AddProposal(proposal.hash, null, prevPeriod.index);
                     foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = resMgr.Get(Res.TestingVoteFailed,
@@ -323,8 +323,8 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "promotion")
 				{
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
-                    foreach (var u in db.GetVotingNotifyUsers())
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash) ?? db.AddProposal(proposal.hash, null, prevPeriod.index);
+					foreach (var u in db.GetVotingNotifyUsers())
 					{
 						var result = period.kind == "adoption"
 							? $"🥳 Proposal <a href='{t.url_vote(prevPeriod.index)}'>{p.Name}</a> approved. The adoption period begins."
@@ -337,7 +337,7 @@ namespace TezosNotifyBot
                 if (prevPeriod.kind == "adoption")
                 {
                     var proposal = tzKtClient.GetProposals(prevPeriod.epoch).OrderByDescending(p => p.rolls).First();
-                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash);
+                    var p = db.Proposals.FirstOrDefault(o => o.Hash == proposal.hash) ?? db.AddProposal(proposal.hash, null, prevPeriod.index);
                     foreach (var u in db.GetVotingNotifyUsers())
                     {
                         var result = $"🚀 Proposal <a href='{t.url_vote(prevPeriod.index)}'>{p.Name}</a> implemented. The proposal period begins.";
