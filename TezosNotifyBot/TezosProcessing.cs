@@ -19,6 +19,7 @@ using TezosNotifyBot.Domain;
 using TezosNotifyBot.Events;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.CryptoCompare;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TezosNotifyBot
 {
@@ -156,7 +157,7 @@ namespace TezosNotifyBot
 			if (prevBlock == null)
 				prevBlock = tzKt.GetBlock(blockLevel - 1);
 
-			ProcessBlockBakingData(db, block, tzKt);
+			await ProcessBlockBakingData(db, block, tzKt);
 
 			await ProcessBlockMetadata(db, block, tzKt);
 
@@ -793,7 +794,7 @@ namespace TezosNotifyBot
 			}
 		}
 
-		void ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
+		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
 		{
 			logger.LogDebug($"ProcessBlockBakingData {block.Level}");
 
@@ -801,44 +802,58 @@ namespace TezosNotifyBot
 			foreach (var right in missedRights)
 			{
 				var uaddrs = db.GetUserAddresses(right.baker.address);
-				ContractInfo info = null;
-				if (uaddrs.Count > 0)
-					info = addrMgr.GetContract(right.baker.address);
 
-				if (right.type == "baking")
+				foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 				{
-					foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
+					if (ua.DownStart == null)
 					{
-						ua.Balance = info.balance / 1000000M;
-						var result = resMgr.Get(Res.MissedBaking,
-							new ContextObject {
-								u = ua.User,
-								ua = ua,
-								Block = block.Level
-							});
+						ua.DownStart = DateTime.UtcNow;
+						ua.DownEnd = null;
+					}
 
-						if (!ua.User.HideHashTags)
-							result += "\n\n#missed_baking" + ua.HashTag();
-						tezosBot.PushTextMessage(db, ua, result);
-					}
-				}
-				if (right.type == "endorsing")
-				{
-					foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
+					if (DateTime.UtcNow > ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						ua.Balance = info.balance / 1000000M;
-						var result = resMgr.Get(Res.MissedEndorsing,
-							new ContextObject {
-								u = ua.User,
-								ua = ua,
-								Block = block.Level
-							});
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at " + DateTime.UtcNow.ToString("MMM dd, hh:mm t") + " since " + ua.DownStart.Value.ToString("MMM dd, hh:mm t");
 						if (!ua.User.HideHashTags)
-							result += "\n\n#missed_endorsing" + ua.HashTag();
-						tezosBot.PushTextMessage(db, ua, result);
+							result += "\n\n#missed_" + ua.HashTag();
+						if (!ua.DownMessageId.HasValue || DateTime.UtcNow.Subtract(ua.LastUpdate).TotalMinutes > 4)
+							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);
+						ua.LastUpdate = DateTime.UtcNow;
 					}
+					await db.SaveChangesAsync();
 				}
 			}
+
+			var activeDelegates = block.Endorsements.Select(o => o.@delegate.address).ToList();
+			activeDelegates.Add(block.producer.address);
+			foreach(var addr in activeDelegates)
+			{
+				var uaddrs = db.UserAddresses.Include(x => x.User).Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive && o.NotifyMisses && o.DownStart.HasValue).ToList();
+				foreach (var ua in uaddrs)
+				{
+					if (ua.DownEnd == null)
+						ua.DownEnd = DateTime.UtcNow;
+
+					if (DateTime.UtcNow > ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
+					{
+						if (!ua.DownMessageId.HasValue)
+						{
+							ua.DownStart = null;
+							ua.DownEnd = null;
+						}
+						else
+						{
+							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is back online at " + DateTime.UtcNow.ToString("MMM dd, hh:mm t");
+							if (!ua.User.HideHashTags)
+								result += "\n\n#missed_" + ua.HashTag();
+							ua.DownMessageId = null;
+							await tezosBot.SendTextMessageUA(db, ua, result);
+						}
+					}
+					await db.SaveChangesAsync();
+				}
+			}
+
 			logger.LogInformation($"Block {block.Level} baking data processed");
 		}
 

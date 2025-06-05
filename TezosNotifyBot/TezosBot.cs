@@ -265,6 +265,9 @@ namespace TezosNotifyBot
 					if (ua != null)
 					{
 						ua.NotifyMisses = false;
+                        ua.DownStart = null;
+                        ua.DownEnd = null;
+                        ua.DownMessageId = null;
 						db.SaveChanges();
 						await ViewAddress(db, md, user.Id, ua, messageId, true)();
 					}
@@ -1752,17 +1755,14 @@ namespace TezosNotifyBot
             }
         }
 
-        async Task SendTextMessage(long chatId, string text)
+        async Task<int> SendTextMessage(long chatId, string text, int replaceId = 0)
         {
-            try
-            {                
-                await telegramBotInvoker.SendMessage(chatId, text);                
-            }
-            catch (Exception ex)
-            {
-                LogError(ex);
-            }
-        }
+            if (replaceId == 0)
+                return await telegramBotInvoker.SendMessage(chatId, text);
+            else
+				await telegramBotInvoker.EditMessage(chatId, replaceId, text);
+            return replaceId;
+		}
 
 		public void PushTextMessage(Storage.TezosDataContext db, UserAddress ua, string text)
         {
@@ -1773,12 +1773,12 @@ namespace TezosNotifyBot
             db.Add(Domain.Message.Push(userId, text));
             db.SaveChanges();
         }
-        public async Task SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text)
+        public async Task<int> SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text, int replaceId = 0)
         {
             if (ua.ChatId == 0)
-                await SendTextMessage(db, ua.UserId, text, ReplyKeyboards.MainMenu);
+                return await SendTextMessage(db, ua.UserId, text, ReplyKeyboards.MainMenu, replaceId);
             else
-                await SendTextMessage(ua.ChatId, text);
+				return await SendTextMessage(ua.ChatId, text, replaceId);
         }
 
         int msgSent = 0;
