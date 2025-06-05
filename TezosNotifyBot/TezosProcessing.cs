@@ -813,12 +813,16 @@ namespace TezosNotifyBot
 
 					if (DateTime.UtcNow >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")} since {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")}";
 						if (!ua.User.HideHashTags)
 							result += "\n\n#missed" + ua.HashTag();
 						if (!ua.DownMessageId.HasValue || DateTime.UtcNow.Subtract(ua.LastUpdate).TotalMinutes > 4)
+						{
+							if (ua.DownMessageId.HasValue)
+								result += $" since {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
 							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);
-						ua.LastUpdate = DateTime.UtcNow;
+							ua.LastUpdate = DateTime.UtcNow;
+						}
 					}
 					await db.SaveChangesAsync();
 				}
