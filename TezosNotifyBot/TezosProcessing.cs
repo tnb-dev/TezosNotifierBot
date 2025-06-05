@@ -811,11 +811,11 @@ namespace TezosNotifyBot
 						ua.DownEnd = null;
 					}
 
-					if (DateTime.UtcNow > ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
+					if (DateTime.UtcNow >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at " + DateTime.UtcNow.ToString("MMM dd, hh:mm t") + " since " + ua.DownStart.Value.ToString("MMM dd, hh:mm t");
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")} since {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
 						if (!ua.User.HideHashTags)
-							result += "\n\n#missed_" + ua.HashTag();
+							result += "\n\n#missed" + ua.HashTag();
 						if (!ua.DownMessageId.HasValue || DateTime.UtcNow.Subtract(ua.LastUpdate).TotalMinutes > 4)
 							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);
 						ua.LastUpdate = DateTime.UtcNow;
@@ -834,7 +834,7 @@ namespace TezosNotifyBot
 					if (ua.DownEnd == null)
 						ua.DownEnd = DateTime.UtcNow;
 
-					if (DateTime.UtcNow > ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
+					if (DateTime.UtcNow >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
 					{
 						if (!ua.DownMessageId.HasValue)
 						{
@@ -843,9 +843,9 @@ namespace TezosNotifyBot
 						}
 						else
 						{
-							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is back online at " + DateTime.UtcNow.ToString("MMM dd, hh:mm t");
+							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is back online at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")}, block {block.Level}";
 							if (!ua.User.HideHashTags)
-								result += "\n\n#missed_" + ua.HashTag();
+								result += "\n\n#missed" + ua.HashTag();
 							ua.DownMessageId = null;
 							await tezosBot.SendTextMessageUA(db, ua, result);
 						}
