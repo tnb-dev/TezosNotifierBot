@@ -190,7 +190,6 @@ namespace TezosNotifyBot
 		AddressRenamed,
 		NewAddressHint,
 		AddressAdded,
-		StakingInfo,
 		Delegate,
 		DelegateStatusToggle,
 		IncorrectTezosAddress,

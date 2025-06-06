@@ -1438,7 +1438,7 @@ namespace TezosNotifyBot
                         result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                         ua.StakingBalance = di.staking_balance / 1000000;
                         ua.Delegators = di.NumDelegators;
-                        result += resMgr.Get(Res.StakingInfo, ua) + "\n";
+                        result += $"Staking Balance: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> delegators)\n";
                     }
 
                     if (ci.@delegate != null && di == null)
@@ -1517,7 +1517,7 @@ namespace TezosNotifyBot
                     result += resMgr.Get(Res.ActualBalance, (ua, md)) + "\n";
                     ua.StakingBalance = di.staking_balance / 1000000;
                     ua.Delegators = di.NumDelegators;
-                    result += resMgr.Get(Res.StakingInfo, ua) + "\n";
+                    result += $"Staking Balance: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> delegators)\n";
                     var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
                     /*todo
                     if (currentCycle != null)

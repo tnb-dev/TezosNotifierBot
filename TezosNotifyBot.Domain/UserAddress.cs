@@ -90,15 +90,15 @@ namespace TezosNotifyBot.Domain
                 if (NotifyMisses)
                 {
                     if (MissesThreshold == 0)
-                        return ", Notify immediately after miss";
+                        return "";
                     if (MissesThreshold == 30)
-                        return ", After 30 minutes of misses";
+                        return ", after 30 min";
                     if (MissesThreshold == 60)
-                        return ", After 1 hour of misses";
+                        return ", after 1 hr";
                     if (MissesThreshold == 120)
-                        return ", After 2 hours of misses";
+                        return ", after 2 hrs";
                     if (MissesThreshold == 240)
-                        return ", After 4 hours of misses";
+                        return ", after 4 hrs";
                 }
                 return "";
             }

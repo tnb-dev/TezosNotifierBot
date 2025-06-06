@@ -806,22 +806,20 @@ namespace TezosNotifyBot
 				foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 				{
 					if (ua.DownStart == null)
-					{
-						ua.DownStart = DateTime.UtcNow;
-						ua.DownEnd = null;
-					}
+						ua.DownStart = block.Timestamp;
+					ua.DownEnd = null;
 
-					if (DateTime.UtcNow >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
+					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is down at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")}";
-						if (!ua.User.HideHashTags)
-							result += "\n\n#missed" + ua.HashTag();
-						if (!ua.DownMessageId.HasValue || DateTime.UtcNow.Subtract(ua.LastUpdate).TotalMinutes > 4)
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}";
+						if (!ua.DownMessageId.HasValue || block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4 || block.Timestamp < ua.LastUpdate)
 						{
 							if (ua.DownMessageId.HasValue)
-								result += $" since {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
+								result += $"Continues missing a of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
+							if (!ua.User.HideHashTags)
+								result += "\n\n#missed" + ua.HashTag();
 							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);
-							ua.LastUpdate = DateTime.UtcNow;
+							ua.LastUpdate = block.Timestamp;
 						}
 					}
 					await db.SaveChangesAsync();
@@ -836,9 +834,9 @@ namespace TezosNotifyBot
 				foreach (var ua in uaddrs)
 				{
 					if (ua.DownEnd == null)
-						ua.DownEnd = DateTime.UtcNow;
+						ua.DownEnd = block.Timestamp;
 
-					if (DateTime.UtcNow >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
+					if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
 					{
 						if (!ua.DownMessageId.HasValue)
 						{
@@ -847,11 +845,16 @@ namespace TezosNotifyBot
 						}
 						else
 						{
-							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> is back online at {DateTime.UtcNow.ToString("MMM dd, hh:mm tt")}, block {block.Level}";
+							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}, at block #{block.Level}";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
+							if (block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes < 4)
+							{
+								result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}\n\n" +
+									result;
+							}
+							await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId.Value);
 							ua.DownMessageId = null;
-							await tezosBot.SendTextMessageUA(db, ua, result);
 						}
 					}
 					await db.SaveChangesAsync();

@@ -237,8 +237,6 @@ Or use the search:
 #TokenBalance;en;Balance: <b>{Amount.AmountToString(Token)}</b>
 #ActualBalance;ru;Полный баланс: <b>{ua.FullBalance.TezToString()}</b>
 #ActualBalance;en;Full Balance: <b>{ua.FullBalance.TezToString()}</b>
-#StakingInfo;ru;Выпекающий капитал: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> делегаторов, <b>{ua.Rolls}</b> роллов)
-#StakingInfo;en;Staking Balance: <b>{ua.StakingBalance.TezToString()}</b> (<b>{ua.Delegators}</b> delegators, <b>{ua.Rolls}</b> rolls)
 #NotifyIn;ru;Группа: 
 #NotifyIn;en;Group: 
 #FreeSpace;ru;Доступно для делегирования: <b>{ua.FreeSpace.TezToString()}{(ua.FreeSpace <= 0 ? " (переделегировано❗️)" : "")}</b>

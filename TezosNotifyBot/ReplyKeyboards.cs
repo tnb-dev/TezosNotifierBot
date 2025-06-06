@@ -148,12 +148,12 @@ namespace TezosNotifyBot
 		{
 			var buttons = new List<List<(string Text, string Callback)>>();
 			buttons.Add(u, id, "🔙 Back", "manageaddress");
-			buttons.Add(u, id, $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses "+(ua.NotifyMisses ? "On" : "Off"), (ua.NotifyMisses ? "missesoff" : "misseson"));
-			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " No threshold", "set_misses_0");
-			buttons.Add(u, id, (ua.MissesThreshold == 30 ? "☑️" : "") + " Threshold 30 min", "set_misses_30");
-			buttons.Add(u, id, (ua.MissesThreshold == 60 ? "☑️" : "") + " Threshold 1 hour", "set_misses_60");
-			buttons.Add(u, id, (ua.MissesThreshold == 120 ? "☑️" : "") + " Threshold 2 hours", "set_misses_120");
-			buttons.Add(u, id, (ua.MissesThreshold == 240 ? "☑️" : "") + " Threshold 4 hours", "set_misses_240");
+			buttons.Add(u, id, $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses Notification " +(ua.NotifyMisses ? "On" : "Off"), (ua.NotifyMisses ? "missesoff" : "misseson"));
+			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Notify immediately after miss", "set_misses_0");
+			buttons.Add(u, id, (ua.MissesThreshold == 30 ? "☑️" : "") + " After 30 min of misses", "set_misses_30");
+			buttons.Add(u, id, (ua.MissesThreshold == 60 ? "☑️" : "") + " After 1 hour of misses", "set_misses_60");
+			buttons.Add(u, id, (ua.MissesThreshold == 120 ? "☑️" : "") + " After 2 hours of misses", "set_misses_120");
+			buttons.Add(u, id, (ua.MissesThreshold == 240 ? "☑️" : "") + " After 4 hours of misses", "set_misses_240");
 
 			return KeyboardMarkup.InlineKeyboard(buttons);
 		}
