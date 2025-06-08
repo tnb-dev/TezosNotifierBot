@@ -72,8 +72,8 @@ namespace TezosNotifyBot
 		//	this.telegramBotHandler.OnMessage = OnMessage;
 		//}
 
-		bool paused = false;
-		public bool Paused { set { paused = value; } }
+		static bool paused = false;
+		public static bool Paused { set { paused = value; } }
 
 		DateTime lastReceived = DateTime.UtcNow; //Дата и время получения последнего блока
 		DateTime lastWebExceptionNotify = DateTime.MinValue;
@@ -811,11 +811,11 @@ namespace TezosNotifyBot
 
 					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}";
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
 						if (!ua.DownMessageId.HasValue || block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4 || block.Timestamp < ua.LastUpdate)
 						{
 							if (ua.DownMessageId.HasValue)
-								result += $"Continues missing a of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
+								result += $"\nContinues missing as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
 							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);

@@ -55,7 +55,7 @@ namespace TezosNotifyBot
         private readonly CommandsManager commandsManager;
         private readonly TezosBotFacade botClient;
         
-        bool paused = false;
+        //bool paused = false;
         string botUserName;
 
         TelegramBotInvoker telegramBotInvoker;
@@ -574,14 +574,14 @@ namespace TezosNotifyBot
 
                 do
                 {
-                    using var scope = _serviceProvider.CreateScope();
-                    var provider = scope.ServiceProvider;
-                    using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
-                    if (paused)
-					{
-                        Thread.Sleep(5000);
-                        continue;
-					}
+     //               using var scope = _serviceProvider.CreateScope();
+     //               var provider = scope.ServiceProvider;
+     //               using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
+     //               if (paused)
+					//{
+                        Thread.Sleep(1000);
+     //                   continue;
+					//}
                     
                 } while (cancelToken.IsCancellationRequested is false);
             }
@@ -850,12 +850,12 @@ namespace TezosNotifyBot
 					}
 					else if (text == "/stop" && user.IsAdmin(Config.Telegram))
 					{
-						paused = true;
+						TezosProcessing.Paused = true;
 						await NotifyDev(db, "Blockchain processing paused", 0);
 					}
 					else if (text == "/resume" && user.IsAdmin(Config.Telegram))
 					{
-						paused = false;
+						TezosProcessing.Paused = false;
 						await NotifyDev(db, "Blockchain processing resumed", 0);
 					}
 					else if (text.StartsWith("/help") && Config.Telegram.DevUsers.Contains(from.Username))
@@ -1826,7 +1826,7 @@ namespace TezosNotifyBot
    //         }
             catch (ApiRequestException are)
             {
-				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message, userId);
+				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, userId);
                 if (are.Message.StartsWith("Forbidden"))
                 {
                     u.Inactive = true;
