@@ -1760,8 +1760,7 @@ namespace TezosNotifyBot
             if (replaceId == 0)
                 return await telegramBotInvoker.SendMessage(chatId, text);
             else
-				await telegramBotInvoker.EditMessage(chatId, replaceId, text);
-            return replaceId;
+				return await telegramBotInvoker.EditMessage(chatId, replaceId, text);
 		}
 
 		public void PushTextMessage(Storage.TezosDataContext db, UserAddress ua, string text)
@@ -1799,9 +1798,9 @@ namespace TezosNotifyBot
                 }
                 else
                 {
-					await telegramBotInvoker.EditMessage(userId, replaceId, text, keyboard);
+					var msgId = await telegramBotInvoker.EditMessage(userId, replaceId, text, keyboard);
 					db.LogOutMessage(userId, replaceId, text);
-                    return replaceId;
+                    return msgId;
                 }
             }
    //         catch (MessageIsNotModifiedException)
@@ -1826,7 +1825,7 @@ namespace TezosNotifyBot
    //         }
             catch (ApiRequestException are)
             {
-				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, userId);
+				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, 0);
                 if (are.Message.StartsWith("Forbidden"))
                 {
                     u.Inactive = true;

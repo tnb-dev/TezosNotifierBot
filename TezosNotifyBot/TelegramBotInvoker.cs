@@ -37,10 +37,13 @@ namespace TezosNotifyBot
 			return msg.Id;
 		}
 		
-		public async Task EditMessage(long chatId, int messageId, string text, KeyboardMarkup keyboardMarkup = null)
+		public async Task<int> EditMessage(long chatId, int messageId, string text, KeyboardMarkup keyboardMarkup = null)
 		{
-			await bot.EditMessageText(chatId, messageId, text, ParseMode.Html, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true }, replyMarkup: keyboardMarkup);
+			if ((InlineKeyboardMarkup)keyboardMarkup == null)
+				keyboardMarkup = null;
+			var msg = await bot.EditMessageText(chatId, messageId, text, ParseMode.Html, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true }, replyMarkup: keyboardMarkup);
 			Thread.Sleep(50);
+			return msg.Id;
 		}
 
 		public async Task<IEnumerable<long>> GetChatAdministrators(long chatId)
