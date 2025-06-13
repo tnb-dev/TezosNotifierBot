@@ -121,8 +121,9 @@ Check out the <a href='{release.AnnounceUrl}'>announcement</a>";
                     Url = json.announcement,
                     Name = $"v{json.major}.{json.minor}",
                     AnnounceUrl = json.announcement,
-                    ReleasedAt = DateTime.Now
-                };
+                    ReleasedAt = DateTime.Now,
+                    Tag = $"v{json.major}.{json.minor}"
+				};
             }).ToArray();
         }
 
