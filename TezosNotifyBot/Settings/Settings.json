@@ -18,8 +18,9 @@
         "VotingChat": -1001546962198
     },
     "ReleasesWorker": {
+        "Url": "https://octez.tezos.com/releases/versions.json",
         "ProjectId": 3836952,
-        "RefreshInterval": "00:30:00"
+        "RefreshInterval": "00:05:00"
     },
     "CarthageStart": 38913,
     "TzKtUrl": "https://api.tzkt.io/",

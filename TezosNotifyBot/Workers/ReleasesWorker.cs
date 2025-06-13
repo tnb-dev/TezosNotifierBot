@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
@@ -51,16 +51,10 @@ namespace TezosNotifyBot.Workers
 
                     foreach (var release in releases)
                     {
-                        var exists = await db.Set<TezosRelease>().AnyAsync(x => x.Tag == release.Tag);
+                        var exists = await db.Set<TezosRelease>().AnyAsync(x => x.Name == release.Name);
                         if (exists is false)
                         {
                             await db.AddAsync(release);
-
-                            if (IsFakeRelease(release.Tag))
-                            {
-                                // Skip release notifications
-                                continue;
-                            }
 
                             await BroadcastRelease(db, release);
                         }
@@ -83,8 +77,9 @@ namespace TezosNotifyBot.Workers
 
                     var messages = subscribers.Select(user =>
                     {
-                        var type = release.AnnounceUrl is null ? Res.TezosRelease : Res.TezosReleaseWithLink;
-                        var message = _resourceManager.Get(type, (user, release));
+                        var message = @$"🦊 Tezos software update {release.Name} released.
+
+Check out the <a href='{release.AnnounceUrl}'>announcement</a>";
                         return Message.Push(user.Id, message);
                     });
 
@@ -93,24 +88,11 @@ namespace TezosNotifyBot.Workers
                 }
             }
         }
-    
-        protected static bool IsFakeRelease(string tag) {
-            var parts = tag.Trim('v').Split('.', '~', '-').Select(str =>
-            {
-                if (int.TryParse(str, out var num))
-                {
-                    return num;
-                }
-                return int.MinValue;
-            }).ToArray<int>();
-
-            return parts[0] >= 100;
-        }
     }
 
     public class ReleasesWorkerOptions
     {
-        public string ProjectId { get; set; }
+        public string Url { get; set; }
 
         public TimeSpan RefreshInterval { get; set; }
     }
@@ -123,63 +105,34 @@ namespace TezosNotifyBot.Workers
         public ReleasesClient(HttpClient client, IOptions<ReleasesWorkerOptions> options)
         {
             _client = client;
-            _client.BaseAddress = new Uri("https://gitlab.com");
             _options = options;
         }
 
         public async Task<TezosRelease[]> GetAll()
         {
-            var projectId = _options.Value.ProjectId;
-            var responseStream = await _client.GetStreamAsync($"/api/v4/projects/{projectId}/releases");
+            var responseStream = await _client.GetStreamAsync(_options.Value.Url);
 
             var results = await JsonSerializer.DeserializeAsync<ReleaseItem[]>(responseStream);
 
-            return results.Select(json =>
+            return results.Where(r => r.latest == true).Select(json =>
             {
-                var announce = json.Assets.Links.FirstOrDefault(x =>
-                    x.Url.StartsWith("https://tezos.gitlab.io/releases") || x.Name == "Announcement");
-
                 return new TezosRelease
                 {
-                    Tag = json.Tag,
-                    Url = json.Links.Self,
-                    Name = json.Name,
-                    Description = json.Description,
-                    AnnounceUrl = announce?.Url,
-                    ReleasedAt = json.ReleasedAt
+                    Url = json.announcement,
+                    Name = $"v{json.major}.{json.minor}",
+                    AnnounceUrl = json.announcement,
+                    ReleasedAt = DateTime.Now
                 };
             }).ToArray();
         }
 
         private class ReleaseItem
         {
-            [JsonPropertyName("tag_name")] public string Tag { get; set; }
-
-            [JsonPropertyName("name")] public string Name { get; set; }
-
-            [JsonPropertyName("description")] public string Description { get; set; }
-
-            [JsonPropertyName("released_at")] public DateTime ReleasedAt { get; set; }
-
-            [JsonPropertyName("_links")] public ReleaseLinks Links { get; set; }
-
-            [JsonPropertyName("assets")] public ReleaseAssets Assets { get; set; }
-        }
-
-        private class ReleaseLinks
-        {
-            [JsonPropertyName("self")] public string Self { get; set; }
-        }
-
-        private class ReleaseAssets
-        {
-            [JsonPropertyName("links")] public AssetsLink[] Links { get; set; }
-        }
-
-        private class AssetsLink
-        {
-            [JsonPropertyName("url")] public string Url { get; set; }
-            [JsonPropertyName("name")] public string Name { get; set; }
-        }
+			public int major { get; set; }
+			public int minor { get; set; }
+			public int rc { get; set; }
+			public string announcement { get; set; }
+			public bool? latest { get; set; }
+		}
     }
 }

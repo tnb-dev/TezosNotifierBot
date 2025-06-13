@@ -19,6 +19,10 @@
         "DevUsers": [ "mksmfd", "tonoff", "emerido", "maurotalevi" ]
     },
     "TzKtUrl": "https://api.tzkt.io/",
+    "ReleasesWorker": {
+        "Url": "https://gitlab.com/fedorov-m/tnb-versions/-/raw/main/versions.json",
+        "RefreshInterval": "00:01:00"
+    },
     "Medium": 
     {
       "ApiUrl": "https://api.medium.com/",

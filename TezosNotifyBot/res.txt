@@ -390,22 +390,6 @@ Our XTZ address: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 #Donate;en;🎁 Donate
 #Donate;ru;🎁 Поддержать
 #TwitterQuorumReached;en;🎉 Quorum on the proposal {p.Name} reached!
-#TezosReleaseWithLink;ru;🦊 Выпущено обновление программного обеспечения Tezos <a href='{r.Url}'>{r.Tag}</a>{(r.Description != null ? $": {r.Description}" : ".")}
-
-Ознакомьтесь с <a href='{r.AnnounceUrl}'>анонсом</a>.
-
- #gitlab
-#TezosReleaseWithLink;en;🦊 Tezos software update <a href='{r.Url}'>{r.Tag}</a> released{(r.Description != null ? $": {r.Description}" : ".")}
-
-Check out the <a href='{r.AnnounceUrl}'>announcement</a>.
-
- #gitlab
-#TezosRelease;ru;🦊 Выпущено обновление программного обеспечения Tezos <a href='{r.Url}'>{r.Tag}</a>{(r.Description != null ? $": {r.Description}" : ".")}
-
- #gitlab
-#TezosRelease;en;🦊 Tezos software update <a href='{r.Url}'>{r.Tag}</a> released{(r.Description != null ? $": {r.Description}" : ".")}
-
- #gitlab
 #Tokens;en;Tokens: 
 #Tokens;ru;Токены: 
 #LastSeen;en;Last seen

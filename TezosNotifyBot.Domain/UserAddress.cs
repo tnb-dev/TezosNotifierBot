@@ -51,6 +51,8 @@ namespace TezosNotifyBot.Domain
         public DateTime? DownStart { get; set; }
         public DateTime? DownEnd { get; set; }
         public int? DownMessageId { get; set; }
+        public int? DownStartLevel { get; set; }
+        public int? DownEndLevel { get; set; }
 
         public string HashTag()
         {

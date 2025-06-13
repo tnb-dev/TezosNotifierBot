@@ -806,12 +806,15 @@ namespace TezosNotifyBot
 				foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 				{
 					if (ua.DownStart == null)
+					{
 						ua.DownStart = block.Timestamp;
+						ua.DownStartLevel = block.Level;
+					}
 					ua.DownEnd = null;
 
 					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}";
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block #" + t.block(ua.DownStartLevel.Value);
 						if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
 						{
 							//if (ua.DownMessageId.HasValue)
@@ -836,7 +839,10 @@ namespace TezosNotifyBot
 				foreach (var ua in uaddrs)
 				{
 					if (ua.DownEnd == null)
+					{
 						ua.DownEnd = block.Timestamp;
+						ua.DownEndLevel = block.Level;
+					}
 
 					if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
 					{
@@ -847,7 +853,7 @@ namespace TezosNotifyBot
 						}
 						else
 						{
-							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}, at block #{block.Level}";
+							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {ua.DownEnd.Value.ToString("MMM dd, hh:mm tt")}, at block #{t.block(ua.DownEndLevel.Value)}";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
 							//if (block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes < 4)
