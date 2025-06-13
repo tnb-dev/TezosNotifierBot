@@ -814,7 +814,7 @@ namespace TezosNotifyBot
 
 					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
 					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block #<a href='{t.block(ua.DownStartLevel.Value)}>{ua.DownStartLevel}</a>";
+						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block #<a href='{t.block(ua.DownStartLevel.Value)}'>{ua.DownStartLevel}</a>";
 						if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
 						{
 							//if (ua.DownMessageId.HasValue)
