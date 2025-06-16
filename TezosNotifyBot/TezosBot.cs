@@ -768,8 +768,7 @@ namespace TezosNotifyBot
 					await SendTextMessage(db, user.Id, $"Message delivered ({count})", ReplyKeyboards.MainMenu);
 					user.UserState = UserState.Default;
 				}
-
-                if (isPrivate)
+                else if (isPrivate)
                 {
 					bool newUser = user == null;
 
@@ -1207,6 +1206,7 @@ namespace TezosNotifyBot
 
 					user.UserState = UserState.Default;
 				}
+                await db.SaveChangesAsync();
 
                 if (!isPrivate)
                 {
