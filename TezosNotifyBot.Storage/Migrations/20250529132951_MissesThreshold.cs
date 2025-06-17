@@ -69,15 +69,7 @@ namespace TezosNotifyBot.Storage.Migrations
                 nullable: false,
                 oldClrType: typeof(DateTime),
                 oldType: "timestamp without time zone");
-
-            migrationBuilder.AlterColumn<DateTime>(
-                name: "create_date",
-                table: "message",
-                type: "timestamp with time zone",
-                nullable: false,
-                oldClrType: typeof(DateTime),
-                oldType: "timestamp without time zone");
-
+            
             migrationBuilder.AlterColumn<string>(
                 name: "icon",
                 table: "address_config",
