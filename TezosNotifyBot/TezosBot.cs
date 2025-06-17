@@ -743,7 +743,7 @@ namespace TezosNotifyBot
 						//}
 						catch (ApiRequestException are)
 						{
-							await NotifyUserActivity(db, "🐞 Error while sending message for " + UserLink(user) + ": " + are.Message);
+							await NotifyUserActivity(db, "🐞 Error while sending message for " + UserLink(user1) + ": " + are.Message);
 							if (are.Message.StartsWith("Forbidden"))
 							{
 								user.Inactive = true;
@@ -758,7 +758,7 @@ namespace TezosNotifyBot
 							{
 								user.Inactive = true;
 								db.SaveChanges();
-								await NotifyUserActivity(db, "😕 Bot was blocked by the user " + UserLink(user));
+								await NotifyUserActivity(db, "😕 Bot was blocked by the user " + UserLink(user1));
 							}
 							else
 								LogError(ex);
