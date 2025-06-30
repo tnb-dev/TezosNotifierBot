@@ -211,6 +211,7 @@ namespace TezosNotifyBot.Model
 
             var cmd = conn.CreateCommand();
             cmd.CommandText = sql;
+            cmd.CommandTimeout = 600;
             var result = new List<string[]>();
             try
             {

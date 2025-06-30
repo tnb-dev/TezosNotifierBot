@@ -1401,6 +1401,7 @@ namespace TezosNotifyBot
             }
             catch (Exception e)
             {
+                Logger.LogError(e, e.Message);
 				await SendTextMessage(db, u.Id, e.Message, ReplyKeyboards.MainMenu);
             }
         }
