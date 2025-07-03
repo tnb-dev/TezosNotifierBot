@@ -126,8 +126,6 @@ Donate XTZ to support us: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 #DelegatorsBalanceThresholdButton;ru;✂️ Порог баланса
 #RewardNotify;ru;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Вознаграждения
 #RewardNotify;en;{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards
-#CycleNotify;ru;{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Завершение цикла
-#CycleNotify;en;{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion
 #MissesNotify;ru;{(ua.NotifyMisses ? "☑️" : "🔲")} Пропуски
 #MissesNotify;en;{(ua.NotifyMisses ? "☑️" : "🔲")} Misses
 #TransactionNotify;ru;{(ua.NotifyTransactions ? "☑️" : "🔲")} Транзакции
@@ -219,8 +217,6 @@ Or use the search:
 #DelegationNotifications;en;🤝 Delegations: {(ua.NotifyDelegations ? "🔔 on" : "🔕 off")}
 #RewardNotifications;ru;💰 Вознаграждения пекаря: {(ua.NotifyBakingRewards ? "🔔 вкл" : "🔕 выкл")}
 #RewardNotifications;en;💰 Baker rewards: {(ua.NotifyBakingRewards ? "🔔 on" : "🔕 off")}
-#CycleCompletionNotifications;ru;🏁 Завершения циклов: {(ua.NotifyCycleCompletion ? "🔔 вкл" : "🔕 выкл")}
-#CycleCompletionNotifications;en;🏁 Cycle completions: {(ua.NotifyCycleCompletion ? "🔔 on" : "🔕 off")}
 #MissesNotifications;ru;🤷🏻‍♂️ Пропуски пекаря: {(ua.NotifyMisses ? "🔔 вкл" : "🔕 выкл")}
 #MissesNotifications;en;🤷🏻‍♂️ Missed baking/endorsing: {(ua.NotifyMisses ? "🔔 on" : "🔕 off")}
 #PayoutNotifyStatus;en;🤑 Payouts: {(ua.NotifyPayout ? "🔔 on" : "🔕 off")}
@@ -323,10 +319,6 @@ Or use the search:
 Last block <a href='{t.block(Block)}'>{Block}</a> baked {Minutes} minutes ago.
 
 All bakers need to check their software
-#CycleCompleted;ru;🏁 Цикл {Cycle} завершен за {CycleLength.Days} дня, {CycleLength.Hours} часов, {CycleLength.Minutes} минут!
-Следующий {(Cycle + 1)} цикл закончится {RusDT(NextEnd)} UTC.
-#CycleCompleted;en;🏁 Cycle {Cycle} is completed in {CycleLength.Days} days, {CycleLength.Hours} hours, {CycleLength.Minutes} minutes!
-Next {(Cycle + 1)} cycle will end on {NextEnd.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en"))} UTC.
 #RewardDelivered;ru;💰 Награды за цикл {Cycle} выплачены делегатам!
 #RewardDelivered;en;💰 Rewards for cycle {Cycle} delivered to delegates!
 #Accrued;ru;Начислено за цикл {Cycle}: <b>{Amount.TezToString()}</b>

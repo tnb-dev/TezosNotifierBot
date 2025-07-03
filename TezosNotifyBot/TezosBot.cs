@@ -9,6 +9,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -1595,9 +1596,11 @@ namespace TezosNotifyBot
             }
             else
             {
-                result += resMgr.Get(Res.TransactionNotifications, ua) + "\n";
-                result += resMgr.Get(Res.AmountThreshold, ua) + "\n";
-
+                result += resMgr.Get(Res.TransactionNotifications, ua);
+                if (ua.NotifyTransactions && ua.AmountThreshold > 0)
+                    result += ", > " + ua.AmountThreshold.TezToString();
+                result += "\n";
+                
                 if (!isDelegate)
                     result += resMgr.Get(Res.PayoutNotifyStatus, ua) + "\n";
                 //if (!isDelegate)
@@ -1629,14 +1632,18 @@ namespace TezosNotifyBot
                 }
                 else
                 {
-                    result += resMgr.Get(Res.DelegationNotifications, ua) + "\n";
-                    result += resMgr.Get(Res.DelegationAmountThreshold, ua) + "\n";
+                    result += resMgr.Get(Res.DelegationNotifications, ua);
+					if (ua.NotifyDelegations && ua.DelegationAmountThreshold > 0)
+						result += ", > " + ua.DelegationAmountThreshold.TezToString();
+					result += "\n";
+
                     if (ua.User.Type == 0)
                     {
                         result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
-                        result += resMgr.Get(Res.DelegatorsBalanceThreshold, ua) + "\n";
+						if (ua.NotifyDelegatorsBalance && ua.DelegatorsBalanceThreshold > 0)
+							result += ", > " + ua.DelegatorsBalanceThreshold.TezToString();
+						result += "\n";
                     }
-                    result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + ua.MissesThresholdText + "\n";
                     result += resMgr.Get(Res.DelegateOutOfFreeSpace, ua) + "\n";
                     result += resMgr.Get(Res.Watchers, ua) + db.GetUserAddresses(ua.Address).Count + "\n";

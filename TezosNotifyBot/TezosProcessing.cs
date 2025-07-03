@@ -1009,34 +1009,7 @@ namespace TezosNotifyBot
 				Dictionary<string, Rewards> rewards = new Dictionary<string, Rewards>();
 				foreach (var d in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => o.Address))
 					rewards.Add(d.Key, tzKtClient.GetBakerRewards(d.Key, cyclePast.index));
-				foreach (var usr in uad.Where(o => o.NotifyCycleCompletion).GroupBy(o => new { o.UserId, o.ChatId }))
-				{
-					string perf = resMgr.Get(Res.CycleCompleted,
-						new ContextObject { u = usr.First().User, Cycle = cycle.index - 1, CycleLength = cyclePast.Length, NextEnd = cycle.endTime });
-					foreach (var dr in usr)
-					{
-						var r = rewards[dr.Address];
-						var rew = r?.TotalBakerRewards ?? 0;
-						var rewPlan = r?.TotalBakerRewardsPlan ?? 0;
-						var rewMax = rewPlan + r?.TotalBakerLoss ?? 0;
-						if (rewMax > 0)
-						{
-							dr.Performance = 100M * rew / rewMax;
-							perf += "\n\n" + resMgr.Get(Res.Performance, dr);
-							perf += "\n" + resMgr.Get(Res.Accrued,
-								new ContextObject {
-									u = usr.First().User,
-									Cycle = cycle.index - 1,
-									Amount = rew / 1000000M
-								});
-						}
-					}
-
-					if (!usr.First().User.HideHashTags)
-						perf += "\n\n#cycle" + String.Join("", usr.Select(o => o.HashTag()));
-					//SendTextMessageUA(usr.First(), perf);
-					tezosBot.PushTextMessage(db, usr.First(), perf);
-				}
+				
 				logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
 				// TODO: TNB-22
 
