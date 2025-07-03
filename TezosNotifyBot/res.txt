@@ -410,22 +410,6 @@ Our XTZ address: tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry
 #AwardAvailableNotifyStatus;ru;🧊 Вознаграждения: {(ua.NotifyPayout ? "🔔 вкл" : "🔕 выкл")}
 #Mint;en;🔨 <b>{Amount.AmountToString(Token)}</b> <a href='{t.op(OpHash)}'>minted</a> for <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
 #Mint;ru;🔨 <b>{Amount.AmountToString(Token)}</b> <a href='{t.op(OpHash)}'>отчеканено</a> для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>
-#RightsAssigned;en;👉 In the current {Cycle} cycle, baking and endorsing rights have been assigned.
-#RightsAssigned;ru;👉 В текущем {Cycle} цикле назначены права на выпечку и подтверждение блоков.
-#RightsAssignedItem;en;For <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:{
-(Rights.BakingCount > 0 ? "\n - baking of " + Rights.BakingCount.ToString() + " blocks, the nearest " + Rights.FirstBakingLevel.ToString() + " block on " + Rights.FirstBakingTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en")) + " UTC" : "")+
-(Rights.EndorsingCount > 0 ? "\n - endorsing of " + Rights.EndorsingCount.ToString() + " blocks (" + Rights.EndorsingSlotsCount.ToString() + " slots), the nearest " + Rights.FirstEndorsingLevel.ToString() + " block on " + Rights.FirstEndorsingTime.ToString("MMMMM d a\\t HH:mm", CultureInfo.GetCultureInfo("en")) + " UTC" : "")+
-(Rights.Count == 0 ? "\n - nothing assigned 👃" : "")
-}
-#RightsAssignedItem;ru;Для <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a>:{
-(Rights.BakingCount > 0 ? "\n - на выпечку " + Rights.BakingCount.ToString() + " блоков, ближайший " + Rights.FirstBakingLevel.ToString() + " блок " + RusDT(Rights.FirstBakingTime) + " UTC" : "")+
-(Rights.EndorsingCount > 0 ? "\n - на подтверждение " + Rights.EndorsingCount.ToString() + " блоков (" + Rights.EndorsingSlotsCount.ToString() + " слотов), ближайший " + Rights.FirstEndorsingLevel.ToString() + " блок " + RusDT(Rights.FirstEndorsingTime) + " UTC" : "")+
-(Rights.Count == 0 ? "\n - ничего не назначено 👃" : "")
-}
-#NotifyRightsAssigned;ru;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Назначенные права
-#NotifyRightsAssigned;en;{(ua.NotifyRightsAssigned ? "☑️" : "🔲")} Rights assigned
-#DelegateRightsAssigned;ru;👉 Назначенные права: {(ua.NotifyRightsAssigned ? "🔔 вкл" : "🔕 выкл")}
-#DelegateRightsAssigned;en;👉 Rights assigned: {(ua.NotifyRightsAssigned ? "🔔 on" : "🔕 off")}
 #IsAddressOwner;ru;{(ua.IsOwner ? "☑️" : "🔲")} Владелец адреса
 #IsAddressOwner;en;{(ua.IsOwner ? "☑️" : "🔲")} Address owner
 #OwnerLimitReached;en;🧘‍♂️ Sorry, you’ve reached the limit of outgoing messages in this cycle. Please, try in the next cycle.

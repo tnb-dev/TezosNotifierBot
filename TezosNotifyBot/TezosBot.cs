@@ -1617,12 +1617,6 @@ namespace TezosNotifyBot
                             result += "✂️";
                     }
 
-                    if (ua.NotifyBakingRewards)
-                        result += "💰";
-
-                    if (ua.NotifyCycleCompletion)
-                        result += "🏁";
-
                     if (ua.NotifyMisses)
                         result += "🤷🏻‍♂️";
 
@@ -1632,10 +1626,6 @@ namespace TezosNotifyBot
                         if (ua.DelegatorsBalanceThreshold > 0)
                             result += "✂️";
                     }
-                    if (ua.NotifyRightsAssigned)
-                        result += "👉";
-                    if (ua.NotifyOutOfFreeSpace)
-                        result += "🙅";
                 }
                 else
                 {
@@ -1646,10 +1636,8 @@ namespace TezosNotifyBot
                         result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
                         result += resMgr.Get(Res.DelegatorsBalanceThreshold, ua) + "\n";
                     }
-                    result += resMgr.Get(Res.RewardNotifications, ua) + "\n";
                     result += resMgr.Get(Res.CycleCompletionNotifications, ua) + "\n";
                     result += resMgr.Get(Res.MissesNotifications, ua) + ua.MissesThresholdText + "\n";
-                    result += resMgr.Get(Res.DelegateRightsAssigned, ua) + "\n";
                     result += resMgr.Get(Res.DelegateOutOfFreeSpace, ua) + "\n";
                     result += resMgr.Get(Res.Watchers, ua) + db.GetUserAddresses(ua.Address).Count + "\n";
                 }

@@ -114,9 +114,9 @@ namespace TezosNotifyBot
                     buttons.Add2(u, id,
 							$"{(ua.NotifyDelegatorsBalance ? "☑️" : "🔲")} Delegators balance", $"toggle_delegators_balance",
 							"✂️ Balance Threshold", "change_delegators_balance_threshold");
-                    buttons.Add2(u, id,
-							$"{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards", (ua.NotifyBakingRewards ? "bakingoff" : "bakingon"),
-                            $"{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion", (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon"));
+       //             buttons.Add2(u, id,
+							//$"{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards", (ua.NotifyBakingRewards ? "bakingoff" : "bakingon"),
+       //                     $"{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion", (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon"));
                     buttons.Add2(u, id,
 							$"{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Out of free space", (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon"),
                             $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses", "tunemisses");
@@ -131,9 +131,9 @@ namespace TezosNotifyBot
                     buttons.Add2(u, id,
 							$"{(ua.NotifyTransactions ? "☑️" : "🔲")} Transactions", (ua.NotifyTransactions ? "tranoff" : "tranon"),
 							$"{(ua.NotifyDelegations ? "☑️" : "🔲")} Delegations", (ua.NotifyDelegations ? "dlgoff" : "dlgon"));
-                    buttons.Add2(u, id,
-							$"{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards", (ua.NotifyBakingRewards ? "bakingoff" : "bakingon"),
-							$"{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion", (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon"));
+       //             buttons.Add2(u, id,
+							//$"{(ua.NotifyBakingRewards ? "☑️" : "🔲")} Rewards", (ua.NotifyBakingRewards ? "bakingoff" : "bakingon"),
+							//$"{(ua.NotifyCycleCompletion ? "☑️" : "🔲")} Cycle completion", (ua.NotifyCycleCompletion ? "cycleoff" : "cycleon"));
                     buttons.Add2(u, id,
 							$"{(ua.NotifyOutOfFreeSpace ? "☑️" : "🔲")} Out of free space", (ua.NotifyOutOfFreeSpace ? "outoffreespaceoff" : "outoffreespaceon"),
 							$"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses", (ua.NotifyMisses ? "missesoff" : "misseson"));

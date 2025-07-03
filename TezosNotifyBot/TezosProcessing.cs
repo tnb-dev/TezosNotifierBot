@@ -1040,10 +1040,6 @@ namespace TezosNotifyBot
 				logger.LogDebug($"Calc delegates performance on {block.Level - 1} finished");
 				// TODO: TNB-22
 
-				NotifyAssignedRights(db, tzKtClient, uad, cycle.index);
-
-				//NotifyOutOfFreeSpace(block, tzKtClient, uad, cycle.index, cycles);
-
 				await tezosBot.LoadAddressList(tzKtClient, db);
 				/*
                 Logger.LogDebug($"Calc delegators awards on {block.Level - 1}");
@@ -1080,41 +1076,6 @@ namespace TezosNotifyBot
 			await VotingNotify(db, block, cycle, tzKtClient);
 
 			logger.LogDebug($"ProcessBlockMetadata {block.Level} completed");
-		}
-
-		void NotifyAssignedRights(Storage.TezosDataContext db, ITzKtClient tzKtClient, List<UserAddress> userAddresses, int cycle)
-		{
-			var delegates = userAddresses.Where(ua => ua.NotifyCycleCompletion).Select(ua => ua.Address).Distinct();
-			Dictionary<string, RightsInfo> rights = new Dictionary<string, RightsInfo>();
-			foreach (var addr in delegates)
-			{
-				var r = tzKtClient.GetRights(addr, cycle);
-				rights.Add(addr, new RightsInfo(r));
-			}
-
-			foreach (var u in userAddresses.Where(ua => ua.NotifyCycleCompletion).GroupBy(ua => ua.User))
-			{
-				var message = resMgr.Get(Res.RightsAssigned, new ContextObject {
-					u = u.Key,
-					Cycle = cycle
-				}) + "\n\n";
-				string tags = "";
-				foreach (var ua in u)
-				{
-					var r = rights[ua.Address];
-					message += resMgr.Get(Res.RightsAssignedItem, new ContextObject {
-						ua = ua,
-						u = u.Key,
-						Rights = r
-					}) + "\n\n";
-
-					tags += ua.HashTag();
-				}
-				if (!u.Key.HideHashTags)
-					message += "#rights_assigned" + tags;
-				
-				tezosBot.PushTextMessage(db, u.Key.Id, message);
-			}
 		}
 
 		public static double GetAvgProcessingTime()
