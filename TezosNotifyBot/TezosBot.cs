@@ -1639,7 +1639,7 @@ namespace TezosNotifyBot
 
                     if (ua.User.Type == 0)
                     {
-                        result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua) + "\n";
+                        result += resMgr.Get(Res.DelegatorsBalanceNotifyStatus, ua);
 						if (ua.NotifyDelegatorsBalance && ua.DelegatorsBalanceThreshold > 0)
 							result += ", > " + ua.DelegatorsBalanceThreshold.TezToString();
 						result += "\n";
