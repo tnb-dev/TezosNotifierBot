@@ -1821,6 +1821,7 @@ namespace TezosNotifyBot
    //         }
             catch (ApiRequestException are)
             {
+                Thread.Sleep(1000);
 				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, 0);
                 if (are.Message.StartsWith("Forbidden"))
                 {
