@@ -68,6 +68,7 @@ namespace TezosNotifyBot.Workers
                             var id = await Bot.SendMessage(new ChatId(message.UserId), message.Text, parseMode: ParseMode.Html, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true });
 
                             message.Sent(id.MessageId);
+                            Thread.Sleep(50);
                         }
                         catch (ApiRequestException)
                         {
