@@ -1821,8 +1821,11 @@ namespace TezosNotifyBot
    //         }
             catch (ApiRequestException are)
             {
+                LogError(are);
                 Thread.Sleep(1000);
-				await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, 0);
+                if (Config.Telegram.DevUsers.Contains(u.Username) && are.Message.Contains("Too Many Requests") && text.Contains("Too Many Requests"))
+                    return 0;
+                await NotifyDev(db, "🐞 Error while sending message for " + UserLink(u) + ": " + are.Message + $"\n\n/{replaceId}/\n" + text, 0);
                 if (are.Message.StartsWith("Forbidden"))
                 {
                     u.Inactive = true;
@@ -1833,8 +1836,6 @@ namespace TezosNotifyBot
                     u.Inactive = true;
                     db.SaveChanges();
                 }
-                else
-                    LogError(are);
             }
             catch (Exception ex)
             {
