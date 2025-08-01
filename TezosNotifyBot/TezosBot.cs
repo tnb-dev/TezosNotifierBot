@@ -1201,7 +1201,7 @@ namespace TezosNotifyBot
 						}
 						else
 						{
-							await SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user) + ": " + text, ReplyKeyboards.MainMenu);
+							await SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user), ReplyKeyboards.MainMenu);
 						}
 					}
 
