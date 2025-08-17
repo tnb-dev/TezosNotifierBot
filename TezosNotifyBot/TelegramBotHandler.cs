@@ -50,7 +50,10 @@ namespace TezosNotifyBot
 				if (!update.Message.From.IsBot && OnMessage != null)
 				{
 					if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
-						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text);
+					{
+						var replyToUserId = update.Message.ReplyToMessage?.Entities?.FirstOrDefault()?.User?.Id;
+						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
+					}
 				}
 			}
 		}
@@ -69,7 +72,7 @@ namespace TezosNotifyBot
 		public delegate Task ChosenInlineResultDelegate(long chatId, string resultId);
 		public delegate Task CallbackQueryDelegate(string id, long chatId, int messageId, string data);
 		public delegate Task InlineQueryDelegate(string id, string query);
-		public delegate Task MessageDelegate(Chat chat, bool isPrivate, int id, User from, string text);
+		public delegate Task MessageDelegate(Chat chat, bool isPrivate, int id, User from, string text, long? replyToUserId);
 		public delegate Task ChannelPostDelegate(Chat chat, int id, User from, string text);
 
 		public class User

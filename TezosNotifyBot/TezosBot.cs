@@ -702,7 +702,7 @@ namespace TezosNotifyBot
         }
 
 
-		private async Task OnMessage(TelegramBotHandler.Chat chat, bool isPrivate, int id, TelegramBotHandler.User from, string text)
+		private async Task OnMessage(TelegramBotHandler.Chat chat, bool isPrivate, int id, TelegramBotHandler.User from, string text, long? replyToUserId)
 		{
 			using var scope = _serviceProvider.CreateScope();
 			var provider = scope.ServiceProvider;
@@ -805,20 +805,17 @@ namespace TezosNotifyBot
 					{
 						return;
 					}
-					//else if (Config.Telegram.DevUsers.Contains(from.Username) &&
-					//		 message.ReplyToMessage != null &&
-					//		 message.ReplyToMessage.Entities.Length > 0 &&
-					//		 message.ReplyToMessage.Entities[0].User != null)
-					//{
-					//	var replyUser = db.GetUser(message.ReplyToMessage.Entities[0].User.Id);
-					//	await SendTextMessage(db, replyUser.Id, resMgr.Get(Res.SupportReply, replyUser) + "\n\n" + text, ReplyKeyboards.MainMenu);
-					//	await NotifyDev(db,
-					//		"📤 Message for " + UserLink(replyUser) + " from " + UserLink(user) + ":\n\n" +
-					//		text.Replace("_", "__").Replace("`", "'").Replace("*", "**").Replace("[", "(")
-					//			.Replace("]", ")") + "\n\n#outgoing", user.Id);
-					//}
+                    else if (Config.Telegram.DevUsers.Contains(from.Username) && replyToUserId.HasValue)
+                    {
+                        var replyUser = db.GetUser(replyToUserId.Value);
+                        await SendTextMessage(db, replyUser.Id, resMgr.Get(Res.SupportReply, replyUser) + "\n\n" + text, ReplyKeyboards.MainMenu);
+                        await NotifyDev(db,
+                            "📤 Message for " + UserLink(replyUser) + " from " + UserLink(user) + ":\n\n" +
+                            text.Replace("_", "__").Replace("`", "'").Replace("*", "**").Replace("[", "(")
+                                .Replace("]", ")") + "\n\n#outgoing", user.Id);
+                    }
 
-					else if (text == ReplyKeyboards.CmdNewAddress)
+                    else if (text == ReplyKeyboards.CmdNewAddress)
 					{
 						await OnNewAddress(db, user);
 					}
