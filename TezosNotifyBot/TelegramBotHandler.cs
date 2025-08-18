@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,11 +15,14 @@ namespace TezosNotifyBot
     public class TelegramBotHandler
     {
 		TelegramBotClient client;
-		public TelegramBotHandler(ITelegramBotClient client)
+		private ILogger<TelegramBotHandler> logger { get; }
+
+		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger)
 		{
 			this.client = client as TelegramBotClient;
 			this.client.OnUpdate += Client_OnUpdate;
 			this.client.OnError += Client_OnError;
+			this.logger = logger;
 		}
 
 		async Task Client_OnUpdate(Telegram.Bot.Types.Update update)
@@ -52,6 +56,7 @@ namespace TezosNotifyBot
 				{
 					if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
 					{
+						logger.LogInformation("MessageUpdate: " + Newtonsoft.Json.JsonConvert.SerializeObject(update.Message));
 						var replyToUserId = update.Message.ReplyToMessage?.Entities?.FirstOrDefault()?.User?.Id;
 						if (replyToUserId == null && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.Text.Contains("["))
 						{
