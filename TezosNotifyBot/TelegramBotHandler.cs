@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -52,6 +53,12 @@ namespace TezosNotifyBot
 					if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
 					{
 						var replyToUserId = update.Message.ReplyToMessage?.Entities?.FirstOrDefault()?.User?.Id;
+						if (replyToUserId == null && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.Text.Contains("["))
+						{
+							var m = Regex.Match(update.Message.ReplyToMessage.Text, @"\[(-?\d+)\]");
+							if (m.Success)
+								replyToUserId = long.Parse(m.Groups[1].Value);
+						}
 						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
 					}
 				}
