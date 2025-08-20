@@ -36,27 +36,18 @@ namespace TezosNotifyBot
         private BotConfig Config { get; set; }
         private ILogger<TezosBot> Logger { get; }
                 
-        //MarketData md = new MarketData();
-
-        //public MarketData MarketData => md;
-
-        //DateTime mdReceived;
-
-        //DateTime bakersReceived;
+        
         public static List<Command> Commands;
 
         
         
         AddressManager addrMgr;
         private readonly ResourceManager resMgr;
-		//string lastHash;
-
 		
                 
         private readonly CommandsManager commandsManager;
         private readonly TezosBotFacade botClient;
         
-        //bool paused = false;
         string botUserName;
 
         TelegramBotInvoker telegramBotInvoker;
@@ -591,11 +582,6 @@ namespace TezosNotifyBot
                 Logger.LogCritical(fe, "Fatal error");
             }
         }
-
-        //BlockHeader lastHeader;
-        //BlockMetadata lastMetadata;
-        
-
         
         public async Task LoadAddressList(ITzKtClient tzKt, Storage.TezosDataContext db)
         {
@@ -1862,26 +1848,6 @@ namespace TezosNotifyBot
                 msgSent++;
                 return msgId;
             }
-            //         catch (MessageIsNotModifiedException)
-            //         {
-            //         }
-            //         catch (ChatNotFoundException)
-            //         {
-            //             u.Inactive = true;
-            //             db.SaveChanges();
-            //             await NotifyDev(db, "😕 User " + UserLink(u) + " not started chat with bot", userId);
-            //         }
-            //         catch (BadRequestException bre)
-            //{
-            //             if(bre.Message.Contains("no rights to send"))
-            //	{
-            //                 u.Inactive = true;
-            //                 db.SaveChanges();
-            //		await NotifyDev(db, "😕 Bot have no rights to send a message for " + UserLink(u), userId);
-            //             }
-            //             else
-            //                 LogError(bre);
-            //         }
             catch (ApiRequestException are)
             {
                 await NotifyDev(db, "🐞 Error while copying message for " + UserLink(u) + ": " + are.Message, userId);
@@ -1979,48 +1945,6 @@ namespace TezosNotifyBot
             stream.Position = 0;
             return stream;
         }
-
-        /*async void Upload(Storage.TezosDataContext db, Message message, User user)
-        {
-            try
-            {
-                using (var fileStream = new MemoryStream())
-                {
-                    var fileInfo = await Bot.GetInfoAndDownloadFileAsync(
-                        fileId: message.Document.FileId,
-                        destination: fileStream
-                    );
-                    var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, Config.UploadPath ?? "Upload");
-                    Directory.CreateDirectory(path);
-                    // Распаковать архив
-                    if (message.Document.FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
-                    {
-                        string result = "";
-                        using (ZipArchive archive = new ZipArchive(fileStream, ZipArchiveMode.Read))
-                        {
-                            foreach (ZipArchiveEntry entry in archive.Entries)
-                            {
-                                var destination = Path.Combine(path, entry.FullName);
-                                entry.ExtractToFile(destination);
-                                result += "\n🔹 " + destination;
-                            }
-
-                            NotifyDev(db, "🖇 Files uploaded by " + UserLink(user) + ":" + result, 0);
-                        }
-                    }
-                    else
-                    {
-                        var destination = Path.Combine(path, message.Document.FileName);
-                        File.WriteAllBytes(destination, fileStream.GetBuffer());
-                        NotifyDev(db, "📎 File uploaded by " + UserLink(user) + ": " + destination, 0);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                await telegramBotDispatcher.SendMessage(message.Chat.Id, "Данные не загружены: " + e.Message);
-            }
-        }*/
 
         private T GetService<T>()
         {
