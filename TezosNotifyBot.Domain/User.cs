@@ -42,7 +42,7 @@ namespace TezosNotifyBot.Domain
 
         public override string ToString()
         {
-            return (string.IsNullOrEmpty(Title) ? Firstname + " " + Lastname : Title) + (Username != "" ? " @" + Username : "");
+            return (string.IsNullOrEmpty(Title) ? Firstname.Replace("<", "").Replace(">", "") + " " + Lastname.Replace("<", "").Replace(">", "") : Title.Replace("<", "").Replace(">", "")) + (Username != "" ? " @" + Username : "");
         }
 
         public int WhaleThreshold

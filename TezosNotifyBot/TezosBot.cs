@@ -1962,12 +1962,12 @@ namespace TezosNotifyBot
 
         string UserLink(User u)
         {
-            return $"<a href='tg://user?id={u.Id}'>{(u.Firstname + " " + u.Lastname).Trim()}</a> [{u.Id}]";
+            return $"<a href='tg://user?id={u.Id}'>{(u.Firstname.Replace("<", "").Replace(">", "") + " " + u.Lastname.Replace("<", "").Replace(">", "")).Trim()}</a> [{u.Id}]";
         }
 
         string ChatLink(User c)
         {
-            return $"{c.Title} [[{c.Id}]]";
+            return $"{c.Title.Replace("<", "").Replace(">", "")} [[{c.Id}]]";
 		}
 
         Stream GenerateStreamFromString(string s)
