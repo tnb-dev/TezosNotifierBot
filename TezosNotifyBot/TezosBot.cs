@@ -1951,7 +1951,7 @@ namespace TezosNotifyBot
 
         string UserTitle(TelegramBotHandler.User u)
         {
-            return (u.FirstName + " " + u.LastName).Trim() +
+            return (u.FirstName?.Replace("<", "")?.Replace(">", "") + " " + u.LastName?.Replace("<", "")?.Replace(">", "")).Trim() +
                    (!String.IsNullOrEmpty(u.Username) ? " @" + u.Username + "" : "");
         }
         //string ChatTitle(Telegram.Bot.Types.Chat c)
@@ -1962,7 +1962,7 @@ namespace TezosNotifyBot
 
         string UserLink(User u)
         {
-            return $"<a href='tg://user?id={u.Id}'>{(u.Firstname.Replace("<", "").Replace(">", "") + " " + u.Lastname.Replace("<", "").Replace(">", "")).Trim()}</a> [{u.Id}]";
+            return $"<a href='tg://user?id={u.Id}'>{(u.Firstname?.Replace("<", "")?.Replace(">", "") + " " + u.Lastname?.Replace("<", "")?.Replace(">", "")).Trim()}</a> [{u.Id}]";
         }
 
         string ChatLink(User c)
