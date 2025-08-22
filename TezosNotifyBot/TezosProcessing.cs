@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.InMemory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Caching.InMemory;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +14,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TezosNotifyBot.Abstractions;
-using TezosNotifyBot.Model;
-using TezosNotifyBot.Tzkt;
-using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json.Linq;
+using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Events;
+using TezosNotifyBot.Model;
 using TezosNotifyBot.Tezos;
-using TezosNotifyBot.CryptoCompare;
-using Microsoft.AspNetCore.Mvc;
+using TezosNotifyBot.Tzkt;
+using TzKt_;
 
 namespace TezosNotifyBot
 {
@@ -238,7 +239,7 @@ namespace TezosNotifyBot
 			foreach (var t in fromToAmountHash.Where(o => o.amount >= 10000 && o.token == null))
 				db.AddWhaleTransaction(t.from, t.to, block.Level, block.Timestamp, t.amount, t.hash);
 
-			await ProcessDelegations(db, block.Delegations);
+			await ProcessDelegations(db, block.Delegations, allUsers, md);
 			await ProcessOriginations(db, block.Originations);
 
 			var fromGroup = fromToAmountHash.Where(o => o.from != "").GroupBy(o => new { o.from, o.token });
@@ -688,7 +689,7 @@ namespace TezosNotifyBot
 			}
 		}
 
-		async Task ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops)
+		async Task ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops, List<Domain.User> allUsers, MarketData md)
 		{
 			foreach (var op in ops)
 			{
@@ -697,6 +698,7 @@ namespace TezosNotifyBot
 				var from = op.Sender.address;
 				var to = op.NewDelegate?.address;
 				var fromAddresses = db.GetUserAddresses(from);
+				var amount = op.Amount / 1000000M;
 				if (to != null)
 				{
 					var toAddresses = db.GetUserAddresses(to);
@@ -732,6 +734,24 @@ namespace TezosNotifyBot
 						if (!ua.User.HideHashTags)
 							result += "\n\n#delegation" + sourceAddr.HashTag() + ua.HashTag();
 						await tezosBot.SendTextMessageUA(db, ua, result);
+					}
+
+					var ka_from = db.KnownAddresses.SingleOrDefault(x => x.Address == from) ?? new KnownAddress(from, null);
+					var ka_to = db.KnownAddresses.SingleOrDefault(x => x.Address == to) ?? new KnownAddress(to, null);
+					if (!ka_from.ExcludeWhaleAlert && !ka_to.ExcludeWhaleAlert)
+					{
+						foreach (var u in allUsers.Where(o => !o.Inactive && o.WhaleStakeAlertThreshold > 0 && o.WhaleStakeAlertThreshold <= amount))
+						{
+							var ua_from = db.GetUserTezosAddress(u.Id, from);
+							var ua_to = db.GetUserTezosAddress(u.Id, to);
+							string result = $"🥩 Whale <a href='{t.op(op.Hash)}'>delegation</a> of <b>{amount.TezToString()} ({amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>";
+							if (!u.HideHashTags)
+							{
+								result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+							}
+
+							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+						}
 					}
 				}
 

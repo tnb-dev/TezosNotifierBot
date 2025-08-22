@@ -390,12 +390,23 @@ namespace TezosNotifyBot
 				{
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(user), messageId);
 				}
+				else if (callbackData.StartsWith("set_whalestakealert"))
+				{
+					await SendTextMessage(db, user.Id, "Choose whale delegation threshold", ReplyKeyboards.StakeAlertSettings(user), messageId);
+				}
 				else if (callbackData.StartsWith("set_wa_"))
 				{
 					int wat = int.Parse(callbackData.Substring("set_wa_".Length));
 					user.WhaleAlertThreshold = wat * 1000;
 					db.SaveChanges();
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, messageId);
+				}
+				else if (callbackData.StartsWith("set_wsa_"))
+				{
+					int wsat = int.Parse(callbackData.Substring("set_wsa_".Length));
+					user.WhaleStakeAlertThreshold = wsat * 1000;
+					db.SaveChanges();
+					await SendTextMessage(db, user.Id, $"🥩 Whale delegations threshold set to {((decimal)user.WhaleAlertThreshold).TezToString()}", null, messageId);
 				}
 				else if (callbackData.StartsWith("set_swa_off"))
 				{

@@ -20,6 +20,7 @@ namespace TezosNotifyBot
             buttons.Add(u, 0, $"Rate: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}", "change_currency");
 			buttons.Add(u, 0, $"#️⃣ Hashtags: {(u.HideHashTags ? "Off" : "On")}", u.HideHashTags ? "showhashtags" : "hidehashtags");
 			buttons.Add(u, 0, $"🐋 Whale alerts", "set_whalealert");
+			buttons.Add(u, 0, $"🥩 Stake alerts", "set_whalestakealert");
 			buttons.Add(u, 0, $"🔈 Voting: {(u.VotingNotify ? "On" : "Off")}", u.VotingNotify ? "hidevotingnotify" : "showvotingnotify");
 			buttons.Add(u, 0, $"🦊 Software releases: {(u.ReleaseNotify ? "On" : "Off")}", u.ReleaseNotify ? "tezos_release_off" : "tezos_release_on");
 
@@ -46,7 +47,22 @@ namespace TezosNotifyBot
 			return KeyboardMarkup.InlineKeyboard(buttons);
 		}
 
-        public static KeyboardMarkup ExplorerSettings(User u)
+		public static KeyboardMarkup StakeAlertSettings(User u)
+		{
+			var buttons = new List<List<(string Text, string Callback)>>();
+			buttons.Add(u, 0,
+				(u.WhaleStakeAlertThreshold == 0 ? "☑️" : "") + " Off", "set_wsa_0");
+			buttons.Add2(u, 0,
+				(u.WhaleStakeAlertThreshold == 250000 ? "☑️" : "") + " 250 000 XTZ", "set_wsa_250",
+				(u.WhaleStakeAlertThreshold == 500000 ? "☑️" : "") + " 500 000 XTZ", "set_wsa_500");
+			buttons.Add2(u, 0,
+				(u.WhaleStakeAlertThreshold == 750000 ? "☑️" : "") + " 750 000 XTZ", "set_wsa_750",
+				(u.WhaleStakeAlertThreshold == 1000000 ? "☑️" : "") + " 1 000 000 XTZ", "set_wsa_1000");
+
+			return KeyboardMarkup.InlineKeyboard(buttons);
+		}
+
+		public static KeyboardMarkup ExplorerSettings(User u)
         {
 			var buttons = new List<List<(string Text, string Callback)>>();
             buttons.Add(u, 3, (u.Explorer == 3 ? "☑️" : "") + " tzkt.io", "set_explorer");

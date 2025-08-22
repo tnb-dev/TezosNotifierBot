@@ -22,7 +22,8 @@ namespace TezosNotifyBot.Domain
         public int EditUserAddressId { get; set; }
         public bool HideHashTags { get; set; }
         public int WhaleAlertThreshold { get; set; }
-        public bool VotingNotify { get; set; }
+		public int WhaleStakeAlertThreshold { get; set; }
+		public bool VotingNotify { get; set; }
         public int Type { get; set; }
 
         public UserCurrency Currency { get; set; } = UserCurrency.Usd;
