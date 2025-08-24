@@ -744,10 +744,10 @@ namespace TezosNotifyBot
 						{
 							var ua_from = db.GetUserTezosAddress(u.Id, from);
 							var ua_to = db.GetUserTezosAddress(u.Id, to);
-							string result = $"🥩 Whale <a href='{t.op(op.Hash)}'>delegation</a> of <b>{amount.TezToString()} ({amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>";
+							string result = $"🥩 Stake <a href='{t.op(op.Hash)}'>delegation</a> of <b>{amount.TezToString()} ({amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>";
 							if (!u.HideHashTags)
 							{
-								result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
+								result += "\n\n#stake" + ua_from.HashTag() + ua_to.HashTag();
 							}
 
 							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);

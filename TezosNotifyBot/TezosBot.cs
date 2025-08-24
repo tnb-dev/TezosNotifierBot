@@ -406,7 +406,7 @@ namespace TezosNotifyBot
 					int wsat = int.Parse(callbackData.Substring("set_wsa_".Length));
 					user.WhaleStakeAlertThreshold = wsat * 1000;
 					db.SaveChanges();
-					await SendTextMessage(db, user.Id, $"🥩 Whale delegations threshold set to {((decimal)user.WhaleAlertThreshold).TezToString()}", null, messageId);
+					await SendTextMessage(db, user.Id, $"🥩 Stake threshold set to {((decimal)user.WhaleStakeAlertThreshold).TezToString()}", null, messageId);
 				}
 				else if (callbackData.StartsWith("set_swa_off"))
 				{
