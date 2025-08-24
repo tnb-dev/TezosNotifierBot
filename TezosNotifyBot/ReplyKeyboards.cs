@@ -19,8 +19,8 @@ namespace TezosNotifyBot
 			var buttons = new List<List<(string Text, string Callback)>>();
             buttons.Add(u, 0, $"Rate: {(u.CurrencyCode == "USD" ? "💵" : "💶")} {u.CurrencyCode}", "change_currency");
 			buttons.Add(u, 0, $"#️⃣ Hashtags: {(u.HideHashTags ? "Off" : "On")}", u.HideHashTags ? "showhashtags" : "hidehashtags");
-			buttons.Add(u, 0, $"🐋 Whale alerts", "set_whalealert");
-			buttons.Add(u, 0, $"🥩 Stake alerts", "set_whalestakealert");
+			buttons.Add(u, 0, $"🐋 Whale alerts: " + u.WhaleAlertThresholdText, "set_whalealert");
+			buttons.Add(u, 0, $"🥩 Stake alerts: " + u.StakeAlertThresholdText, "set_whalestakealert");
 			buttons.Add(u, 0, $"🔈 Voting: {(u.VotingNotify ? "On" : "Off")}", u.VotingNotify ? "hidevotingnotify" : "showvotingnotify");
 			buttons.Add(u, 0, $"🦊 Software releases: {(u.ReleaseNotify ? "On" : "Off")}", u.ReleaseNotify ? "tezos_release_off" : "tezos_release_on");
 

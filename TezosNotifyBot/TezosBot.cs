@@ -399,26 +399,30 @@ namespace TezosNotifyBot
 					int wat = int.Parse(callbackData.Substring("set_wa_".Length));
 					user.WhaleAlertThreshold = wat * 1000;
 					db.SaveChanges();
-					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, messageId);
+					//await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertSet, user), null, messageId);
+					await SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(user, Config.Telegram), messageId);
 				}
 				else if (callbackData.StartsWith("set_wsa_"))
 				{
 					int wsat = int.Parse(callbackData.Substring("set_wsa_".Length));
 					user.WhaleStakeAlertThreshold = wsat * 1000;
 					db.SaveChanges();
-					await SendTextMessage(db, user.Id, $"🥩 Stake threshold set to {((decimal)user.WhaleStakeAlertThreshold).TezToString()}", null, messageId);
+					//await SendTextMessage(db, user.Id, $"🥩 Stake threshold set to {((decimal)user.WhaleStakeAlertThreshold).TezToString()}", null, messageId);
+					await SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(user, Config.Telegram), messageId);
 				}
 				else if (callbackData.StartsWith("set_swa_off"))
 				{
 					user.SmartWhaleAlerts = false;
 					db.SaveChanges();
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(user), messageId);
+					await SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(user, Config.Telegram), messageId);
 				}
 				else if (callbackData.StartsWith("set_swa_on"))
 				{
 					user.SmartWhaleAlerts = true;
 					db.SaveChanges();
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleAlertsTip, user), ReplyKeyboards.WhaleAlertSettings(user), messageId);
+					await SendTextMessage(db, user.Id, "Settings", ReplyKeyboards.Settings(user, Config.Telegram), messageId);
 				}
 
 				if (callbackData.StartsWith("manageaddress"))

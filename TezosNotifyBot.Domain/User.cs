@@ -51,7 +51,12 @@ namespace TezosNotifyBot.Domain
             get { return WhaleAlertThreshold; }
         }
 
-        public bool NetworkIssueNotified;
+        public string WhaleAlertThresholdText => WhaleAlertThreshold == 0 ? "Off" : $"{WhaleAlertThreshold / 1000}K";
+
+		public string StakeAlertThresholdText => WhaleStakeAlertThreshold == 0 ? "Off" : $"{WhaleStakeAlertThreshold / 1000}K";
+
+
+		public bool NetworkIssueNotified;
 
         private User()
         {
