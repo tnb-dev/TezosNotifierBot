@@ -622,7 +622,10 @@ namespace TezosNotifyBot
 					kn.Name = name;
 			}
 			else
+			{
 				db.KnownAddresses.Add(new KnownAddress(addr, name));
+				db.SaveChanges();
+			}
 		}
 
 		async Task ProcessTransactions(Storage.TezosDataContext db, List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<Domain.User> allUsers, MarketData md)
