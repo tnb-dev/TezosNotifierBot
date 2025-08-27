@@ -872,11 +872,15 @@ namespace TezosNotifyBot
 /userinfo {userid} - view user info and settings
 /stop - stop processing blockchain
 /resume - resume processing blockchain
-/medium {cycle} - post medium article about cycle {cycle}", ReplyKeyboards.MainMenu);
+/ka - known addresses count", ReplyKeyboards.MainMenu);
 					}
 					else if (text.StartsWith("/sql") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
 						await OnSql(db, user, text.Substring("/sql".Length));
+					}
+					else if (text.StartsWith("/ka") && Config.Telegram.DevUsers.Contains(from.Username))
+					{
+						await SendTextMessage(db, user.Id, "Total known addresses: " + db.KnownAddresses.Count().ToString(), ReplyKeyboards.MainMenu);
 					}
 					else if (text == ReplyKeyboards.CmdMyAddresses || text.StartsWith("/list"))
 					{

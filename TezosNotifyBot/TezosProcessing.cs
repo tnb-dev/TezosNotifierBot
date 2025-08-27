@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Management;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -612,12 +613,29 @@ namespace TezosNotifyBot
 			return true;
 		}
 
+		void StoreName(Storage.TezosDataContext db, string addr, string name)
+		{
+			var kn = db.KnownAddresses.FirstOrDefault(o => o.Address == addr);
+			if (kn != null)
+			{
+				if (kn.Name != name)
+					kn.Name = name;
+			}
+			else
+				db.KnownAddresses.Add(new KnownAddress(addr, name));
+		}
+
 		async Task ProcessTransactions(Storage.TezosDataContext db, List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<Domain.User> allUsers, MarketData md)
 		{
 			foreach (var op in ops)
 			{
 				if (op.Status != "applied")
 					continue;
+
+				if (op.Sender.alias != null)
+					StoreName(db, op.Sender.address, op.Sender.alias);
+				if (op.Target.alias != null)
+					StoreName(db, op.Target.address, op.Target.alias);
 
 				var from = op.Sender.address;
 				var to = op.Target.address;
@@ -687,6 +705,7 @@ namespace TezosNotifyBot
 					}
 				}
 			}
+			db.SaveChanges();
 		}
 
 		async Task ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops, List<Domain.User> allUsers, MarketData md)
@@ -744,7 +763,7 @@ namespace TezosNotifyBot
 						{
 							var ua_from = db.GetUserTezosAddress(u.Id, from);
 							var ua_to = db.GetUserTezosAddress(u.Id, to);
-							string result = $"🥩 Stake <a href='{t.op(op.Hash)}'>delegation</a> of <b>{amount.TezToString()} ({amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>";
+							string result = $"🥩 Major stake <a href='{t.op(op.Hash)}'>delegation</a> of <b>{amount.TezToString()} ({amount.TezToCurrency(md, u)})</b> from <a href='{t.account(ua_from.Address)}'>{ua_from.DisplayName()}</a> to <a href='{t.account(ua_to.Address)}'>{ua_to.DisplayName()}</a>";
 							if (!u.HideHashTags)
 							{
 								result += "\n\n#stake" + ua_from.HashTag() + ua_to.HashTag();
