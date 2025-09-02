@@ -392,7 +392,7 @@ namespace TezosNotifyBot
 				}
 				else if (callbackData.StartsWith("set_whalestakealert"))
 				{
-					await SendTextMessage(db, user.Id, "Choose stake delegation threshold", ReplyKeyboards.StakeAlertSettings(user), messageId);
+					await SendTextMessage(db, user.Id, "Choose major stake delegation threshold", ReplyKeyboards.StakeAlertSettings(user), messageId);
 				}
 				else if (callbackData.StartsWith("set_wa_"))
 				{
