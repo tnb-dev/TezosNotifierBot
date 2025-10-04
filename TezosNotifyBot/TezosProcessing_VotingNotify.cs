@@ -22,6 +22,7 @@ namespace TezosNotifyBot
             PeriodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" period ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
             if (period.kind != "promotion" && period.kind != "exploration")
                 VotingStatus = "";
+            return;
             // Proposals
             foreach (var proposal in block.Proposals)
             {
@@ -70,7 +71,7 @@ namespace TezosNotifyBot
                                     p = p,
                                     u = ua.User,
                                     OpHash = proposal.Hash,
-                                    TotalRolls = period.totalRolls.Value,
+                                    TotalRolls = 0,
                                     Block = block.Level,
                                     Period = proposal.Period.Index
                                 });
@@ -90,7 +91,7 @@ namespace TezosNotifyBot
                                 ua = ua,
                                 p = p,
                                 OpHash = proposal.Hash,
-                                TotalRolls = period.totalRolls.Value,
+                                TotalRolls = 0,
                                 Block = block.Level,
                                 Period = proposal.Period.Index
                             });
@@ -107,7 +108,7 @@ namespace TezosNotifyBot
 
                 //var listings = _nodeManager.Client.GetVoteListings(header.hash);
                 //int rolls = listings.Single(o => o.pkh == from).rolls;
-                int allrolls = period.totalRolls.Value;
+                int allrolls = 0;// period.totalRolls.Value;
 
                 var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                 if (p == null)
