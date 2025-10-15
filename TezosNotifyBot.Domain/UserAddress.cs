@@ -72,7 +72,7 @@ namespace TezosNotifyBot.Domain
 
         public string DisplayName()
         {
-            return String.IsNullOrEmpty(Name) ? ShortAddr() : Name;
+            return String.IsNullOrEmpty(Name) ? ShortAddr() : System.Net.WebUtility.HtmlEncode(Name);
         }
 
         public decimal FullBalance;
