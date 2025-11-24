@@ -826,26 +826,6 @@ namespace TezosNotifyBot
 						db.SaveChanges();
 						await SendTextMessage(db, user.Id, resMgr.Get(Res.WhaleOutflowOff, user), ReplyKeyboards.MainMenu);
 					}
-					else if (text.StartsWith("/medium ") && user.IsAdmin(Config.Telegram))
-					{
-						var str = text.Substring("/medium ".Length);
-						var tzKtClient = _serviceProvider.GetService<ITzKtClient>();
-						var mw = new Workers.MediumWorker(tzKtClient, _serviceProvider.GetService<IOptions<MediumOptions>>(),
-							_serviceProvider.GetService<IOptions<BotConfig>>(),
-							_serviceProvider.GetService<ILogger<Workers.MediumWorker>>(), _serviceProvider);
-						var cycles = tzKtClient.GetCycles();
-						var currentCycle = cycles.FirstOrDefault(c => c.index.ToString() == str);
-						var prevCycle = cycles.FirstOrDefault(c => c.index == currentCycle.index - 1);
-						try
-						{
-							var result = mw.CreatePost(db, prevCycle, currentCycle);
-							await NotifyUserActivity(db, $"New Medium post: [{result.data.title}]({result.data.url})");
-						}
-						catch (Exception e)
-						{
-							await NotifyDev(db, "Failed to create medium post: " + e.Message + "\nAuth token:" + _serviceProvider.GetService<IOptions<MediumOptions>>().Value.AuthToken + "\n" + e.StackTrace, user.Id);
-						}
-					}
 					else if (text == "/stop" && user.IsAdmin(Config.Telegram))
 					{
 						TezosProcessing.Paused = true;

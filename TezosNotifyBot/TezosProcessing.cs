@@ -21,7 +21,6 @@ using TezosNotifyBot.Events;
 using TezosNotifyBot.Model;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
-using TzKt_;
 
 namespace TezosNotifyBot
 {
@@ -1089,7 +1088,7 @@ namespace TezosNotifyBot
 			}
 
 			await VotingNotify(db, block, cycle, tzKtClient);
-
+			
 			logger.LogDebug($"ProcessBlockMetadata {block.Level} completed");
 		}
 

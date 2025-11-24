@@ -96,8 +96,8 @@ namespace TezosNotifyBot
 			public User(Telegram.Bot.Types.User u)
 			{
 				Id = u.Id;
-				FirstName = u.FirstName;
-				LastName = u.LastName;
+				FirstName = u.FirstName?.Replace("<","").Replace(">", "").Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "");
+				LastName = u.LastName?.Replace("<", "").Replace(">", "").Replace("(", "").Replace(")", "").Replace("[", "").Replace("]", "");
 				Username = u.Username;
 			}
 		}

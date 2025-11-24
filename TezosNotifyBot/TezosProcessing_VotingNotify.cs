@@ -22,7 +22,7 @@ namespace TezosNotifyBot
             PeriodStatus = "\n\n" + period.kind[0].ToString().ToUpper() + period.kind.Substring(1) + $" period ends {period.endTime.ToString("MMMMM d a\\t HH:mm")} UTC";
             if (period.kind != "promotion" && period.kind != "exploration")
                 VotingStatus = "";
-            return;
+            
             // Proposals
             foreach (var proposal in block.Proposals)
             {
@@ -71,7 +71,7 @@ namespace TezosNotifyBot
                                     p = p,
                                     u = ua.User,
                                     OpHash = proposal.Hash,
-                                    TotalRolls = 0,
+                                    TotalRolls = period.totalVotingPower.Value,
                                     Block = block.Level,
                                     Period = proposal.Period.Index
                                 });
@@ -91,7 +91,7 @@ namespace TezosNotifyBot
                                 ua = ua,
                                 p = p,
                                 OpHash = proposal.Hash,
-                                TotalRolls = 0,
+                                TotalRolls = period.totalVotingPower.Value,
                                 Block = block.Level,
                                 Period = proposal.Period.Index
                             });
@@ -108,7 +108,7 @@ namespace TezosNotifyBot
 
                 //var listings = _nodeManager.Client.GetVoteListings(header.hash);
                 //int rolls = listings.Single(o => o.pkh == from).rolls;
-                int allrolls = 0;// period.totalRolls.Value;
+                int allrolls = period.totalVotingPower.Value;
 
                 var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                 if (p == null)
@@ -162,12 +162,12 @@ namespace TezosNotifyBot
                 }
                 // Check quorum
 
-                var participation = period.yayRolls + period.nayRolls + period.passRolls;
+                var participation = period.yayVotingPower + period.nayVotingPower + period.passVotingPower;
 
                 var quorum = period.ballotsQuorum;
 
                 var curQuorum = participation.Value * 100M / allrolls;
-                var curSupermajority = period.yayRolls.Value * 100M / (period.yayRolls + period.nayRolls);
+                var curSupermajority = period.yayVotingPower.Value * 100M / (period.yayVotingPower + period.nayVotingPower);
                 VotingStatus = $"\nQuorum: {curQuorum.ToString("0.00")}% / {quorum.Value.ToString("0.00")}%";
                 VotingStatus += $"\nSupermajority: {curSupermajority.Value.ToString("0.00")}% / {period.supermajority}%";
                 

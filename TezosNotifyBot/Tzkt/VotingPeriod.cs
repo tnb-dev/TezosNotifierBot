@@ -14,19 +14,20 @@ namespace TezosNotifyBot.Tzkt
         public DateTime endTime { get; set; }
         public string kind { get; set; }
         public string status { get; set; }
-        public int? totalBakers { get; set; }
-        public int? totalRolls { get; set; }
-        public decimal? ballotsQuorum { get; set; }
-        public int? supermajority { get; set; }
+		public string dictator { get; set; }
+		public int? totalBakers { get; set; }
+		public int? totalVotingPower { get; set; }
+		public decimal? ballotsQuorum { get; set; }
+		public int? supermajority { get; set; }
         public int? yayBallots { get; set; }
-        public int? yayRolls { get; set; }
-        public int? nayBallots { get; set; }
-        public int? nayRolls { get; set; }
-        public int? passBallots { get; set; }
-        public int? passRolls { get; set; }
-        public decimal? upvotesQuorum { get; set; }
+		public int? yayVotingPower { get; set; }
+		public int? nayBallots { get; set; }
+		public int? nayVotingPower { get; set; }
+		public int? passBallots { get; set; }
+		public int? passVotingPower { get; set; }
+		public decimal? upvotesQuorum { get; set; }
         public int? proposalsCount { get; set; }
         public int? topUpvotes { get; set; }
-        public int? topRolls { get; set; }
+        public int? topVotingPower { get; set; }
     }
 }
