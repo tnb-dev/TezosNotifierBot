@@ -106,9 +106,9 @@ namespace TezosNotifyBot
                 var from = ballot.@Delegate.Address;
                 var hash = ballot.Proposal.Hash;
 
-                //var listings = _nodeManager.Client.GetVoteListings(header.hash);
-                //int rolls = listings.Single(o => o.pkh == from).rolls;
-                int allrolls = period.totalVotingPower.Value;
+				//var listings = _nodeManager.Client.GetVoteListings(header.hash);
+				//int rolls = listings.Single(o => o.pkh == from).rolls;
+				long allrolls = period.totalVotingPower.Value;
 
                 var p = db.Proposals.FirstOrDefault(o => o.Hash == hash);
                 if (p == null)

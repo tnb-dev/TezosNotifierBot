@@ -105,7 +105,7 @@ namespace TezosNotifyBot
 		public Tezos.MarketData md { get; set; } = new Tezos.MarketData();
 		public Proposal p { get; set; }		
 		public string OpHash { get; set; }
-		public int TotalRolls { get; set; }
+		public long TotalRolls { get; set; }
 		public int Block { get; set; }
 		public int Period { get; set; }
 		public int Priority { get; set; }

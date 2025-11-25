@@ -16,18 +16,18 @@ namespace TezosNotifyBot.Tzkt
         public string status { get; set; }
 		public string dictator { get; set; }
 		public int? totalBakers { get; set; }
-		public int? totalVotingPower { get; set; }
+		public long? totalVotingPower { get; set; }
 		public decimal? ballotsQuorum { get; set; }
-		public int? supermajority { get; set; }
-        public int? yayBallots { get; set; }
-		public int? yayVotingPower { get; set; }
-		public int? nayBallots { get; set; }
-		public int? nayVotingPower { get; set; }
-		public int? passBallots { get; set; }
-		public int? passVotingPower { get; set; }
+		public long? supermajority { get; set; }
+        public long? yayBallots { get; set; }
+		public long? yayVotingPower { get; set; }
+		public long? nayBallots { get; set; }
+		public long? nayVotingPower { get; set; }
+		public long? passBallots { get; set; }
+		public long? passVotingPower { get; set; }
 		public decimal? upvotesQuorum { get; set; }
-        public int? proposalsCount { get; set; }
-        public int? topUpvotes { get; set; }
-        public int? topVotingPower { get; set; }
+        public long? proposalsCount { get; set; }
+        public long? topUpvotes { get; set; }
+        public long? topVotingPower { get; set; }
     }
 }
