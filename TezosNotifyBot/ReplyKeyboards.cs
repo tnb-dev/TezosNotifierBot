@@ -170,7 +170,6 @@ namespace TezosNotifyBot
 			buttons.Add(u, id, (ua.MissesThreshold == 30 ? "☑️" : "") + " After 30 min of misses", "set_misses_30");
 			buttons.Add(u, id, (ua.MissesThreshold == 60 ? "☑️" : "") + " After 1 hour of misses", "set_misses_60");
 			buttons.Add(u, id, (ua.MissesThreshold == 120 ? "☑️" : "") + " After 2 hours of misses", "set_misses_120");
-			buttons.Add(u, id, (ua.MissesThreshold == 240 ? "☑️" : "") + " After 4 hours of misses", "set_misses_240");
 
 			return KeyboardMarkup.InlineKeyboard(buttons);
 		}
