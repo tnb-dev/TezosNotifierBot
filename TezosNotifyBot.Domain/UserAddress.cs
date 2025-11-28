@@ -93,7 +93,7 @@ namespace TezosNotifyBot.Domain
                 {
                     if (MissesThreshold == 0)
                         return "";
-					if (MissesThreshold == 30)
+					if (MissesThreshold == 10)
 						return ", after 10 min";
 					if (MissesThreshold == 30)
                         return ", after 30 min";
