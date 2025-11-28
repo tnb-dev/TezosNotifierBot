@@ -166,6 +166,7 @@ namespace TezosNotifyBot
 			buttons.Add(u, id, "🔙 Back", "manageaddress");
 			buttons.Add(u, id, $"{(ua.NotifyMisses ? "☑️" : "🔲")} Misses Notification " +(ua.NotifyMisses ? "On" : "Off"), (ua.NotifyMisses ? "missesoff" : "misseson"));
 			buttons.Add(u, id, (ua.MissesThreshold == 0 ? "☑️" : "") + " Notify immediately after miss", "set_misses_0");
+			buttons.Add(u, id, (ua.MissesThreshold == 10 ? "☑️" : "") + " After 10 min of misses", "set_misses_10");
 			buttons.Add(u, id, (ua.MissesThreshold == 30 ? "☑️" : "") + " After 30 min of misses", "set_misses_30");
 			buttons.Add(u, id, (ua.MissesThreshold == 60 ? "☑️" : "") + " After 1 hour of misses", "set_misses_60");
 			buttons.Add(u, id, (ua.MissesThreshold == 120 ? "☑️" : "") + " After 2 hours of misses", "set_misses_120");
