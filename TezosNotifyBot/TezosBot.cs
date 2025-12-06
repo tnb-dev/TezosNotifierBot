@@ -868,7 +868,7 @@ namespace TezosNotifyBot
 					}
 					else if (text.StartsWith("/addrlist") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
-						if (int.TryParse(text.Substring("/addrlist".Length).Trim(), out int userid))
+						if (long.TryParse(text.Substring("/addrlist".Length).Trim(), out long userid))
 						{
 							var u1 = db.GetUser(userid);
 							if (u1 != null)
@@ -883,7 +883,7 @@ namespace TezosNotifyBot
 					}
 					else if (text.StartsWith("/msglist") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
-						if (int.TryParse(text.Substring("/msglist".Length).Trim(), out int userid))
+						if (long.TryParse(text.Substring("/msglist".Length).Trim(), out long userid))
 						{
 							await OnSql(db, user,
 								$"select * from message where user_id = {userid} and create_date >= 'now'::timestamp - '1 month'::interval order by create_date");
@@ -894,7 +894,7 @@ namespace TezosNotifyBot
 					}
 					else if (text.StartsWith("/userinfo") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
-						if (int.TryParse(text.Substring("/userinfo".Length).Trim(), out int userid))
+						if (long.TryParse(text.Substring("/userinfo".Length).Trim(), out long userid))
 						{
 							var u1 = db.GetUser(userid);
 							if (u1 != null)
@@ -911,7 +911,7 @@ namespace TezosNotifyBot
 								await SendTextMessage(db, user.Id, $"User not found: {userid}", ReplyKeyboards.MainMenu);
 						}
 						else
-							await SendTextMessage(db, user.Id, "Command syntax:\n/addrlist {userid}", ReplyKeyboards.MainMenu);
+							await SendTextMessage(db, user.Id, "Command syntax:\n/userinfo {userid}", ReplyKeyboards.MainMenu);
 					}
 					else if (text == "/info" || text == "info")
 					{
