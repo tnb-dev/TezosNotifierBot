@@ -469,12 +469,14 @@ namespace TezosNotifyBot
 				Action<string, Action<UserAddress>> editUAAdm = async (cmd, action) => {
 					if (callbackData.StartsWith(cmd))
 					{
+						Logger.LogInformation("Clicked " + cmd + " button, args: " + string.Join(";", callbackArgs));
 						var ua = useraddradm();
 						if (ua != null)
 						{
 							action(ua);
 							db.SaveChanges();
-							await ViewAddress(db, md, user.Id, ua, messageId)();
+							await telegramBotInvoker.AnswerCallbackQuery(id, "🆗");
+							//await ViewAddress(db, md, user.Id, ua, messageId)();
 						}
 						else
 							await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
