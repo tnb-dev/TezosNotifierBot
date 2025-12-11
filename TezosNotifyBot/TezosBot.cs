@@ -183,6 +183,11 @@ namespace TezosNotifyBot
 					return db.UserAddresses.FirstOrDefault(x => x.UserId == userId && x.Id == addrId);
 				};
 
+				Func<UserAddress> useraddradm = () => {
+					var addrId = int.Parse(callbackArgs[0]);
+					return db.UserAddresses.FirstOrDefault(x => x.Id == addrId);
+				};
+
 				db.LogMessage(userId, messageId, null, callbackData);
 				var user = db.Users.SingleOrDefault(x => x.Id == userId);
 				Logger.LogInformation(user.ToString() + ": button " + callbackData);
@@ -461,12 +466,27 @@ namespace TezosNotifyBot
 					}
 				};
 
+				Action<string, Action<UserAddress>> editUAAdm = async (cmd, action) => {
+					if (callbackData.StartsWith(cmd))
+					{
+						var ua = useraddradm();
+						if (ua != null)
+						{
+							action(ua);
+							db.SaveChanges();
+							await ViewAddress(db, md, user.Id, ua, messageId)();
+						}
+						else
+							await telegramBotInvoker.AnswerCallbackQuery(id, resMgr.Get(Res.AddressNotExist, user));
+					}
+				};
+
 				editUA("bakingon", ua => ua.NotifyBakingRewards = true);
 				editUA("bakingoff", ua => ua.NotifyBakingRewards = false);
 				editUA("cycleon", ua => ua.NotifyCycleCompletion = true);
 				editUA("cycleoff", ua => ua.NotifyCycleCompletion = false);
-				editUA("owneron", ua => ua.IsOwner = true);
-				editUA("owneroff", ua => ua.IsOwner = false);				
+				editUAAdm("owneron", ua => ua.IsOwner = true);
+				editUAAdm("owneroff", ua => ua.IsOwner = false);				
 				editUA("outoffreespaceon", ua => ua.NotifyOutOfFreeSpace = true);
 				editUA("outoffreespaceoff", ua => ua.NotifyOutOfFreeSpace = false);
 				editUA("tranon", ua => ua.NotifyTransactions = true);
