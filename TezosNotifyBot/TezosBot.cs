@@ -1116,12 +1116,6 @@ namespace TezosNotifyBot
 							messageBuilder.AddEmptyLine();
 							messageBuilder.AddLine($"The answer: {answer}");
 
-							if (action == "input.unknown")
-							{
-								messageBuilder.AddEmptyLine();
-								messageBuilder.AddLine(Config.Telegram.DevUsers.Select(x => '@' + x).Join(" "));
-							}
-
 							messageBuilder.WithHashTag("inbox");
 
 							await NotifyDev(db, messageBuilder.Build(), 0);
@@ -1447,7 +1441,7 @@ namespace TezosNotifyBot
 						var limit = user.MaxAddrCount ?? Config.MaxAddressCount;
 						if (addrCount >= limit)
 						{
-							string maxAddrReached = $"👛 You’ve reached the limit of {limit} tracked addresses.\r\n\r\nIf you’d like to increase this limit, please contact our support team.";
+							string maxAddrReached = $"👛 <b>You’ve reached the limit of {limit} tracked addresses.</b>\r\n\r\nIf you’d like to increase this limit, please contact our support team.";
 							if (chat == null)
 								await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.ContactSupport(user));
 							else

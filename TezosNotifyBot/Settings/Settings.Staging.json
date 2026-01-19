@@ -16,7 +16,7 @@
         }
     },
     "Telegram": {
-        "DevUsers": [ "mksmfd", "tonoff", "emerido", "maurotalevi" ]
+        "DevUsers": [ "mksmfd", "tonoff", "emerido" ]
     },
     "TzKtUrl": "https://api.tzkt.io/",
     "ReleasesWorker": {
