@@ -1433,6 +1433,19 @@ namespace TezosNotifyBot
                 var ci = addrMgr.GetContract(addr);
                 if (ci != null)
                 {
+					// Check max user address count
+					var addrCount = db.UserAddresses.Count(x => x.UserId == user.Id);
+					var limit = user.MaxAddrCount ?? Config.MaxAddressCount;
+					if (addrCount >= limit)
+					{
+						string maxAddrReached = $"👛 You’ve reached the limit of {limit} tracked addresses.\r\n\r\nIf you’d like to increase this limit, please contact our support team.";
+						if (chat == null)
+							await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.MainMenu);
+						else
+							await SendTextMessage(chat.Id, maxAddrReached);
+						return;
+					}
+
                     decimal bal = ci.balance / 1000000M;
                     (UserAddress ua, DelegateInfo di) = await NewUserAddress(db, user, addr, name, bal, chat?.Id ?? 0);
                     string result = resMgr.Get(Res.AddressAdded, ua) + "\n";

@@ -26,6 +26,8 @@ namespace TezosNotifyBot.Model
 		public string CryptoCompareToken { get; set; }
 
 		public TimeSpan DelegateInactiveTime { get; set; }
+
+		public int MaxAddressCount { get; set; }
 	}
 
     public class TelegramOptions

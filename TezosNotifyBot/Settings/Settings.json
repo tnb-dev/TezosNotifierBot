@@ -27,13 +27,6 @@
     "WhaleSeriesLength": 3,
     
     "DelegateInactiveTime": "180.00:00:00",
-    "CryptoCompareToken": "",
-    
-    "Medium": 
-    {
-      "ApiUrl": "https://api.medium.com/",
-      "AuthToken": "",
-      "UserId": "",
-      "PublishStatus": "public"
-    }
+    "CryptoCompareToken": "",    
+    "MaxAddressCount": 10
 }

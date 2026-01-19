@@ -25,6 +25,7 @@ namespace TezosNotifyBot.Domain
 		public int WhaleStakeAlertThreshold { get; set; }
 		public bool VotingNotify { get; set; }
         public int Type { get; set; }
+        public int? MaxAddrCount { get; set; }
 
         public UserCurrency Currency { get; set; } = UserCurrency.Usd;
 

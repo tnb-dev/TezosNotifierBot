@@ -23,11 +23,5 @@
         "Url": "https://gitlab.com/fedorov-m/tnb-versions/-/raw/main/versions.json",
         "RefreshInterval": "00:01:00"
     },
-    "Medium": 
-    {
-      "ApiUrl": "https://api.medium.com/",
-      "AuthToken": "",
-      "UserId": "",
-      "PublishStatus": "draft"
-    }
+    "MaxAddressCount": 3
 }

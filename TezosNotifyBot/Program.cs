@@ -66,7 +66,6 @@ namespace TezosNotifyBot
                     
                     services.Configure<BotConfig>(context.Configuration);
                     services.Configure<ReleasesWorkerOptions>(context.Configuration.GetSection("ReleasesWorker"));
-                    services.Configure<MediumOptions>(context.Configuration.GetSection("Medium"));
 
                     services.AddDialogFlow("tnb-utijmv");
                     
