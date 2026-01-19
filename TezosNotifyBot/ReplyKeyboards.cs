@@ -9,7 +9,7 @@ namespace TezosNotifyBot
 {
     public static class ReplyKeyboards
     {
-        public static KeyboardMarkup MainMenu { get; private set; } = KeyboardMarkup.ReplyKeyboard([[CmdNewAddress, CmdMyAddresses], [CmdContacts, CmdSettings]]);
+		public static KeyboardMarkup MainMenu { get; private set; } = KeyboardMarkup.ReplyKeyboard([[CmdNewAddress, CmdMyAddresses], [CmdContacts, CmdSettings]]);
         public static KeyboardMarkup BackMenu { get; private set; } = KeyboardMarkup.ReplyKeyboard([[CmdGoBack]]);
 
         public static KeyboardMarkup Search { get; private set; } = KeyboardMarkup.SearchInlineButton("🔎 Search");
@@ -70,8 +70,16 @@ namespace TezosNotifyBot
 
 			return KeyboardMarkup.InlineKeyboard(buttons);
 		}
-        
-        public static KeyboardMarkup AddressMenu(User u, int id, UserAddress ua,
+
+		public static KeyboardMarkup ContactSupport(User u)
+		{
+			var buttons = new List<List<(string Text, string Callback)>>();
+			buttons.Add(u, 0, "✉️ Contact support", "contact_support");
+
+			return KeyboardMarkup.InlineKeyboard(buttons);
+		}
+
+		public static KeyboardMarkup AddressMenu(User u, int id, UserAddress ua,
             Tuple<string, string> addDelegate)
         {
 			var buttons = new List<List<(string Text, string Callback)>>();

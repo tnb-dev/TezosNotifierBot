@@ -573,6 +573,13 @@ namespace TezosNotifyBot
 						await OnSql(db, user, "select * from message");
 					}
 				}
+
+				if (callbackData == "contact_support")
+				{
+					user.UserState = UserState.Support;
+					await SendTextMessage(db, user.Id, resMgr.Get(Res.WriteHere, user), ReplyKeyboards.BackMenu);
+					return;
+				}
 			}
 			catch (Exception e)
 			{
@@ -1440,7 +1447,7 @@ namespace TezosNotifyBot
 					{
 						string maxAddrReached = $"👛 You’ve reached the limit of {limit} tracked addresses.\r\n\r\nIf you’d like to increase this limit, please contact our support team.";
 						if (chat == null)
-							await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.MainMenu);
+							await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.ContactSupport(user));
 						else
 							await SendTextMessage(chat.Id, maxAddrReached);
 						return;
