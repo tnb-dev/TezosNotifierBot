@@ -23,5 +23,5 @@
         "Url": "https://gitlab.com/fedorov-m/tnb-versions/-/raw/main/versions.json",
         "RefreshInterval": "00:01:00"
     },
-    "MaxAddressCount": 3
+    "MaxAddressCount": 2
 }
