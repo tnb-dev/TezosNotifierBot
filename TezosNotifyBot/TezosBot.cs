@@ -1446,6 +1446,8 @@ namespace TezosNotifyBot
 								await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.ContactSupport(user));
 							else
 								await SendTextMessage(chat.Id, maxAddrReached);
+
+							await NotifyUserActivity(db, $"🚧 User {UserLink(user)} reached the limit of {limit} tracked addresses.\n\n#address_limit");
 							return;
 						}
 					}
