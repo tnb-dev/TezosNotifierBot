@@ -310,13 +310,13 @@ namespace TezosNotifyBot
 					if (ua != null)
 					{
 						var cycles = _serviceProvider.GetService<ITzKtClient>().GetCycles();
-						if (ua.IsOwner && !user.IsAdmin(Config.Telegram) &&
-							cycles.Single(c => c.firstLevel <= TezosProcessing.PrevBlockLevel && TezosProcessing.PrevBlockLevel <= c.lastLevel) ==
-							cycles.Single(c => c.firstLevel <= ua.LastMessageLevel && ua.LastMessageLevel <= c.lastLevel))
-						{
-							await SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
-							return;
-						}
+						//if (ua.IsOwner && !user.IsAdmin(Config.Telegram) &&
+						//	cycles.Single(c => c.firstLevel <= TezosProcessing.PrevBlockLevel && TezosProcessing.PrevBlockLevel <= c.lastLevel) ==
+						//	cycles.Single(c => c.firstLevel <= ua.LastMessageLevel && ua.LastMessageLevel <= c.lastLevel))
+						//{
+						//	await SendTextMessage(user.Id, resMgr.Get(Res.OwnerLimitReached, user));
+						//	return;
+						//}
 						// TODO: Maybe reuse user var? 
 						user.UserState = UserState.NotifyFollowers;
 						user.EditUserAddressId = ua.Id;
