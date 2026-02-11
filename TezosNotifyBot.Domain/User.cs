@@ -39,6 +39,9 @@ namespace TezosNotifyBot.Domain
         public int NetworkIssueNotify { get; set; }
         public int Explorer { get; set; } = 3;
         public bool SmartWhaleAlerts { get; set; }
+
+        public string NotifyStat { get; set; }
+
 		[Obsolete]
 		public CultureInfo Culture => new CultureInfo("en");
 

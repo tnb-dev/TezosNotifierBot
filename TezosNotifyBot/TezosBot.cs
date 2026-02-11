@@ -843,6 +843,7 @@ namespace TezosNotifyBot
                             "📤 Message for " + UserLink(replyUser) + " from " + UserLink(user) + ":\n\n" +
                             text.Replace("_", "__").Replace("`", "'").Replace("*", "**").Replace("[", "(")
                                 .Replace("]", ")") + "\n\n#outgoing", user.Id);
+						return;
                     }
 
                     else if (text == ReplyKeyboards.CmdNewAddress)
