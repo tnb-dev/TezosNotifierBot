@@ -34,7 +34,7 @@ namespace TezosNotifyBot.NotifyStats
 		}
 
 		public static NotifyStatData Load(User user) {
-			var nsd = JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
+			var nsd = user.NotifyStat == null ? new NotifyStatData() : JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
 			if (nsd.Index != nsd.Last)
 				nsd.Count[nsd.Index] = 0;
 			nsd.Last = nsd.Index;
