@@ -22,7 +22,7 @@ namespace TezosNotifyBot.NotifyStats
 			Count[Index]++;
 		}
 
-		public const int MaxCount = 10000;
+		public const int MaxCount = 100;
 
 		public void Store(User user)
 		{

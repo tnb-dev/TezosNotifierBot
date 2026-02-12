@@ -1169,7 +1169,7 @@ namespace TezosNotifyBot
 								await SendTextMessage(db, user.Id, resMgr.Get(Res.ChangedDelegatorsBalanceThreshold, ua), ReplyKeyboards.MainMenu);
 							}
 							else
-								await SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user),	ReplyKeyboards.MainMenu);
+								await SendTextMessage(db, user.Id, resMgr.Get(Res.UnrecognizedCommand, user), ReplyKeyboards.MainMenu);
 						}
 						else if (user.UserState == UserState.SetName)
 						{
@@ -1207,11 +1207,11 @@ namespace TezosNotifyBot
 						else if (user.UserState == UserState.Broadcast)
 						{
 							int count = 0;
-                            foreach (var user1 in db.Users.Where(o => !o.Inactive).ToList())
-                            {
-                                await CopyMessage(db, user1.Id, chat.Id, id, text);
-                                count++;
-                            }
+							foreach (var user1 in db.Users.Where(o => !o.Inactive).ToList())
+							{
+								await CopyMessage(db, user1.Id, chat.Id, id, text);
+								count++;
+							}
 
 							user.UserState = UserState.Default;
 							await SendTextMessage(db, user.Id, resMgr.Get(Res.MessageDelivered, user) + "(" + count.ToString() + ")", ReplyKeyboards.MainMenu);
@@ -1398,8 +1398,10 @@ namespace TezosNotifyBot
         {
             string result = $"Active users: {db.Users.Count(o => !o.Inactive)}\n";
             result += $"Monitored addresses: {db.UserAddresses.Where(o => !o.IsDeleted && !o.User.Inactive).Select(o => o.Address).Distinct().Count()}\n";
-
-            await telegramBotInvoker.SendMessage(chatId, result);
+			var user = db.GetUser(chatId);
+			var nsd = NotifyStatData.Load(user);
+			result += $"30-day message count: {nsd.Total}";
+			await telegramBotInvoker.SendMessage(chatId, result);
         }
 
 
