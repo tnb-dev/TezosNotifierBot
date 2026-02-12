@@ -22,6 +22,7 @@ using TezosNotifyBot.CryptoCompare;
 using TezosNotifyBot.Dialog;
 using TezosNotifyBot.Domain;
 using TezosNotifyBot.Model;
+using TezosNotifyBot.NotifyStats;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
@@ -225,6 +226,15 @@ namespace TezosNotifyBot
 				{
 					var addr = callbackData.Substring("addaddress ".Length);
 					await OnNewAddressEntered(db, md, user, addr);
+				}
+
+				if (callbackData.StartsWith("reply_"))
+				{
+					var replyToUserId = long.Parse(callbackData.Substring("reply_".Length));
+					user.UserState = UserState.ReplyToUser;
+					user.ReplyToUserId = replyToUserId;
+					db.SaveChanges();
+					await SendTextMessage(db, user.Id, "Enter message", ReplyKeyboards.BackMenu);
 				}
 
 				if (callbackData.StartsWith("setthreshold"))
@@ -796,7 +806,7 @@ namespace TezosNotifyBot
 						}
 					}
 
-					await SendTextMessage(db, user.Id, $"Message delivered ({count})", ReplyKeyboards.MainMenu);
+					await SendTextMessage(db, user.Id, $"📬 Message delivered to {count} subscribers of your baker and delegators", ReplyKeyboards.MainMenu);
 					user.UserState = UserState.Default;
 				}
                 else if (isPrivate)
@@ -1085,6 +1095,7 @@ namespace TezosNotifyBot
 					}
 					else if (text == ReplyKeyboards.CmdGoBack)
 					{
+						user.UserState = UserState.Default;  
 						await SendTextMessage(db, user.Id, resMgr.Get(Res.SeeYou, user), ReplyKeyboards.MainMenu);
 					}
 					else if (text == ReplyKeyboards.CmdContacts)
@@ -1119,7 +1130,7 @@ namespace TezosNotifyBot
 
 							messageBuilder.WithHashTag("inbox");
 
-							await NotifyDev(db, messageBuilder.Build(), 0);
+							await NotifyDev(db, messageBuilder.Build(), 0, false, ReplyKeyboards.ReplyToUser(user));
 						}
 						else if (user.UserState == UserState.SetAmountThreshold)
 						{
@@ -1204,6 +1215,19 @@ namespace TezosNotifyBot
 
 							user.UserState = UserState.Default;
 							await SendTextMessage(db, user.Id, resMgr.Get(Res.MessageDelivered, user) + "(" + count.ToString() + ")", ReplyKeyboards.MainMenu);
+						}
+						else if (user.UserState == UserState.ReplyToUser)
+						{
+							if (user.ReplyToUserId.HasValue)
+							{
+								var replyUser = db.GetUser(user.ReplyToUserId.Value);
+								user.UserState = UserState.Default;
+								await SendTextMessage(db, replyUser.Id, resMgr.Get(Res.SupportReply, replyUser) + "\n\n" + text, ReplyKeyboards.MainMenu);
+								await NotifyDev(db,
+									"📤 Message for " + UserLink(replyUser) + " from " + UserLink(user) + ":\n\n" +
+									text.Replace("_", "__").Replace("`", "'").Replace("*", "**").Replace("[", "(")
+										.Replace("]", ")") + "\n\n#outgoing", user.Id);
+							}
 						}
 						else
 						{
@@ -1755,7 +1779,7 @@ namespace TezosNotifyBot
 
         #endregion
 
-        public async Task NotifyDev(Storage.TezosDataContext db, string text, long currentUserID, bool current = false)
+        public async Task NotifyDev(Storage.TezosDataContext db, string text, long currentUserID, bool current = false, KeyboardMarkup keyboard = null)
         {
             foreach (var devUser in Config.Telegram.DevUsers)
             {
@@ -1765,12 +1789,12 @@ namespace TezosNotifyBot
                     while (text.Length > 4096)
                     {
                         int lastIndexOf = text.Substring(0, 4096).LastIndexOf('\n');
-                        await SendTextMessage(db, user.Id, text.Substring(0, lastIndexOf), ReplyKeyboards.MainMenu);
+                        await SendTextMessage(db, user.Id, text.Substring(0, lastIndexOf), keyboard ?? ReplyKeyboards.MainMenu);
                         text = text.Substring(lastIndexOf + 1);
                     };
 
                     if (text != "")
-                        await SendTextMessage(db, user.Id, text, ReplyKeyboards.MainMenu);
+                        await SendTextMessage(db, user.Id, text, keyboard ?? ReplyKeyboards.MainMenu);
                 }
             }
         }
@@ -1792,10 +1816,21 @@ namespace TezosNotifyBot
             db.Add(Domain.Message.Push(userId, text));
             db.SaveChanges();
         }
-        public async Task<int> SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text, int replaceId = 0)
+        public async Task<int?> SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text, int replaceId = 0)
         {
-            if (ua.ChatId == 0)
-                return await SendTextMessage(db, ua.UserId, text, ReplyKeyboards.MainMenu, replaceId);
+			var nsd = NotifyStatData.Load(ua.User);
+			if (nsd.Total > NotifyStatData.MaxCount)
+				return null;
+			var keyboard = ReplyKeyboards.MainMenu;
+			if (nsd.Total == NotifyStatData.MaxCount)
+			{
+				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:000,000} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				keyboard = ReplyKeyboards.ContactSupport(ua.User);
+			}
+			nsd.Inc();
+			nsd.Store(ua.User);
+			if (ua.ChatId == 0)
+                return await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
             else
 				return await SendTextMessage(ua.ChatId, text, replaceId);
         }

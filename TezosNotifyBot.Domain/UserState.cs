@@ -9,6 +9,7 @@ namespace TezosNotifyBot.Domain
         SetDlgAmountThreshold = 4,
         SetName = 5,
         NotifyFollowers = 6,
-        SetDelegatorsBalanceThreshold = 7, 
+        SetDelegatorsBalanceThreshold = 7,
+        ReplyToUser = 8
     }
 }

@@ -15,13 +15,14 @@ namespace TezosNotifyBot.NotifyStats
 
 		public int Total => Count.Sum(o => o);
 
+		int Index = (int)DateTime.Today.Subtract(new DateTime(2026, 1, 1)).TotalDays % 30;
+
 		public void Inc()
 		{
-			int index = (int)DateTime.Today.Subtract(new DateTime(2026, 1, 1)).TotalDays % 30;
-			Count[index]++;
+			Count[Index]++;
 		}
 
-		const int MaxCount = 10000;
+		public const int MaxCount = 10000;
 
 		public void Store(User user)
 		{
@@ -29,9 +30,15 @@ namespace TezosNotifyBot.NotifyStats
 		}
 
 		private NotifyStatData()
-		{			
+		{
 		}
 
-		public static NotifyStatData Load(User user) => JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
+		public static NotifyStatData Load(User user) {
+			var nsd = JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
+			if (nsd.Index != nsd.Last)
+				nsd.Count[nsd.Index] = 0;
+			nsd.Last = nsd.Index;
+			return nsd;
+		}
 	}
 }

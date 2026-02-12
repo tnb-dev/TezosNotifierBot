@@ -79,6 +79,14 @@ namespace TezosNotifyBot
 			return KeyboardMarkup.InlineKeyboard(buttons);
 		}
 
+		public static KeyboardMarkup ReplyToUser(User toUser)
+		{
+			var buttons = new List<List<(string Text, string Callback)>>();
+			buttons.Add([("Reply", $"reply_{toUser.Id}")]);
+
+			return KeyboardMarkup.InlineKeyboard(buttons);
+		}
+
 		public static KeyboardMarkup AddressMenu(User u, int id, UserAddress ua,
             Tuple<string, string> addDelegate)
         {

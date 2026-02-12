@@ -26,6 +26,7 @@ namespace TezosNotifyBot.Domain
 		public bool VotingNotify { get; set; }
         public int Type { get; set; }
         public int? MaxAddrCount { get; set; }
+        public long? ReplyToUserId { get; set; }
 
         public UserCurrency Currency { get; set; } = UserCurrency.Usd;
 
