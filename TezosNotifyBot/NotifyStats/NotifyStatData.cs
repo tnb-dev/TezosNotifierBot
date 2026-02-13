@@ -29,10 +29,6 @@ namespace TezosNotifyBot.NotifyStats
 			user.NotifyStat = JsonSerializer.Serialize(this);
 		}
 
-		private NotifyStatData()
-		{
-		}
-
 		public static NotifyStatData Load(User user) {
 			var nsd = user.NotifyStat == null ? new NotifyStatData() : JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
 			if (nsd.Index != nsd.Last)
