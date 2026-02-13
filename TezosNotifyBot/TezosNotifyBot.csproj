@@ -10,7 +10,10 @@
     <PackageReference Include="Gelf.Extensions.Logging" Version="2.6.0" />
     <PackageReference Include="HttpClient.Caching" Version="1.6.6" />
     <PackageReference Include="HttpToSocks5Proxy" Version="1.4.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.13" />
+	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.13">
+		<PrivateAssets>all</PrivateAssets>
+		<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.13" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.13" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.13" />
