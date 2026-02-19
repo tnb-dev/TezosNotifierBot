@@ -23,8 +23,9 @@ namespace TezosNotifyBot
 			buttons.Add(u, 0, $"🥩 Major stake alerts: " + u.StakeAlertThresholdText, "set_whalestakealert");
 			buttons.Add(u, 0, $"🔈 Voting: {(u.VotingNotify ? "On" : "Off")}", u.VotingNotify ? "hidevotingnotify" : "showvotingnotify");
 			buttons.Add(u, 0, $"🦊 Software releases: {(u.ReleaseNotify ? "On" : "Off")}", u.ReleaseNotify ? "tezos_release_off" : "tezos_release_on");
+			buttons.Add(u, 0, $"📊 Statistics", "statistics");
 
-            if (u.IsAdmin(options))
+			if (u.IsAdmin(options))
             	buttons.Add(u, 0, $"🖋 Broadcast message", "broadcast");
 			buttons.Add(u, 0, $"🎁 Donate", "donate");
 

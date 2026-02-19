@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,8 @@ namespace TezosNotifyBot.NotifyStats
 
 		public int Total => Count.Sum(o => o);
 
-		int Index = (int)DateTime.Today.Subtract(new DateTime(2026, 1, 1)).TotalDays % 30;
+		int Current = (int)DateTime.Today.Subtract(new DateTime(2026, 1, 1)).TotalDays;
+		int Index => Current % 30;
 
 		public void Inc()
 		{
@@ -29,11 +31,14 @@ namespace TezosNotifyBot.NotifyStats
 			user.NotifyStat = JsonSerializer.Serialize(this);
 		}
 
-		public static NotifyStatData Load(User user) {
-			var nsd = user.NotifyStat == null ? new NotifyStatData() : JsonSerializer.Deserialize<NotifyStatData>(user.NotifyStat);
-			if (nsd.Index != nsd.Last)
-				nsd.Count[nsd.Index] = 0;
-			nsd.Last = nsd.Index;
+		public static NotifyStatData Load(User user) => Load(user.NotifyStat);
+
+		public static NotifyStatData Load(string notifyStat)
+		{
+			var nsd = notifyStat == null ? new NotifyStatData() : JsonSerializer.Deserialize<NotifyStatData>(notifyStat);
+			while (nsd.Current > nsd.Last)
+				nsd.Count[++nsd.Last % 30] = 0;
+
 			return nsd;
 		}
 	}

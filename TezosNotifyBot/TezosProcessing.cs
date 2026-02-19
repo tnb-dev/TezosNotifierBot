@@ -420,10 +420,10 @@ namespace TezosNotifyBot
 				var contract = addrMgr.GetContract(to.Key.to);
 				if (contract.@delegate != null && to.Key.token == null)
 				{
-					HandleDelegatorsBalance();
+					await HandleDelegatorsBalance();
 				}
 
-				void HandleDelegatorsBalance()
+				async Task HandleDelegatorsBalance()
 				{
 					var receiverAddr = to.Key.to;
 					var senderAddr = to.First().Item1;
@@ -471,9 +471,7 @@ namespace TezosNotifyBot
 							text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
 						}
 
-						tezosBot.PushTextMessage(db, delegateAddress, text.ToString());
-						// TODO: Using ChatId instead of UserId?
-						//SendTextMessage(delegateAddress.UserId, text.ToString());
+						await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
 					}
 				}
 
@@ -702,7 +700,7 @@ namespace TezosNotifyBot
 								result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
 							}
 
-							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+							await tezosBot.SendTextMessageU(db, u, result);
 						}
 					}
 				}
@@ -771,7 +769,7 @@ namespace TezosNotifyBot
 								result += "\n\n#stake" + ua_from.HashTag() + ua_to.HashTag();
 							}
 
-							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+							await tezosBot.SendTextMessageU(db, u, result);
 						}
 					}
 				}

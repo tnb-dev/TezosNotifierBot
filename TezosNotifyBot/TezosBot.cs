@@ -228,6 +228,27 @@ namespace TezosNotifyBot
 					await OnNewAddressEntered(db, md, user, addr);
 				}
 
+				if (callbackData == "statistics")
+				{
+					var users = db.Users.Where(x => !x.Inactive).Select(x => new {
+						x.NotifyStat,
+						AddrCount = db.UserAddresses.Count(x1 => x1.UserId == x.Id && !x1.IsDeleted),
+						x.Id
+					}).ToList();
+
+					string result = "🤖 <b>Bot statistics</b>\n\n";
+					result += $"Active users: {users.Count}\r\n";
+					result += $"Monitored addresses (total): {users.Sum(x => x.AddrCount)}\r\n";
+					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}";
+					result += "\n\n👤 <b>Your statistics</b>\n\n";
+					var u = users.First(x => x.Id == user.Id);
+					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount}\r\n";
+					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat)} / {NotifyStatData.MaxCount}";
+					if (!user.HideHashTags)
+						result += $"\n\n#stat";
+					await SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu);
+				}
+
 				if (callbackData.StartsWith("reply_"))
 				{
 					var replyToUserId = long.Parse(callbackData.Substring("reply_".Length));
@@ -1837,7 +1858,23 @@ namespace TezosNotifyBot
 				return await SendTextMessage(ua.ChatId, text, replaceId);
         }
 
-        int msgSent = 0;
+		public async Task<int?> SendTextMessageU(Storage.TezosDataContext db, User u, string text, int replaceId = 0)
+		{
+			var nsd = NotifyStatData.Load(u);
+			if (nsd.Total > NotifyStatData.MaxCount)
+				return null;
+			var keyboard = ReplyKeyboards.MainMenu;
+			if (nsd.Total == NotifyStatData.MaxCount)
+			{
+				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:000,000} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				keyboard = ReplyKeyboards.ContactSupport(u);
+			}
+			nsd.Inc();
+			nsd.Store(u);
+			return await SendTextMessage(db, u.Id, text, keyboard, replaceId);
+		}
+
+		int msgSent = 0;
 		internal async Task<int> SendTextMessage(Storage.TezosDataContext db, long userId, string text, KeyboardMarkup keyboard, int replaceId = 0)
         {
             var u = db.GetUser(userId);

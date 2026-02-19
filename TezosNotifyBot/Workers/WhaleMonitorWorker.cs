@@ -133,7 +133,7 @@ namespace TezosNotifyBot.Workers
                             result += "\n\n#whale" + ua_from.HashTag() + tags;
                         }
 
-                        await bot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+                        await bot.SendTextMessageU(db, u, result);
                     }
                 }
 
