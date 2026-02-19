@@ -242,8 +242,8 @@ namespace TezosNotifyBot
 					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}";
 					result += "\n\n👤 <b>Your statistics</b>\n\n";
 					var u = users.First(x => x.Id == user.Id);
-					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount}\r\n";
-					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat)} / {NotifyStatData.MaxCount}";
+					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount ?? Config.MaxAddressCount}\r\n";
+					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}";
 					if (!user.HideHashTags)
 						result += $"\n\n#stat";
 					await SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu);
