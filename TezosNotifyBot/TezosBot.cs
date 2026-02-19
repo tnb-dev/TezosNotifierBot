@@ -26,6 +26,7 @@ using TezosNotifyBot.NotifyStats;
 using TezosNotifyBot.Shared.Extensions;
 using TezosNotifyBot.Tezos;
 using TezosNotifyBot.Tzkt;
+using static TezosNotifyBot.TelegramBotHandler;
 using File = System.IO.File;
 using User = TezosNotifyBot.Domain.User;
 
@@ -246,6 +247,7 @@ namespace TezosNotifyBot
 					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}";
 					if (!user.HideHashTags)
 						result += $"\n\n#stat";
+					await telegramBotInvoker.AnswerCallbackQuery(id, null);
 					await SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu);
 				}
 
@@ -255,6 +257,7 @@ namespace TezosNotifyBot
 					user.UserState = UserState.ReplyToUser;
 					user.ReplyToUserId = replyToUserId;
 					db.SaveChanges();
+					await telegramBotInvoker.AnswerCallbackQuery(id, null);
 					await SendTextMessage(db, user.Id, "Enter message", ReplyKeyboards.BackMenu);
 				}
 
@@ -913,7 +916,8 @@ namespace TezosNotifyBot
 /userinfo {userid} - view user info and settings
 /stop - stop processing blockchain
 /resume - resume processing blockchain
-/ka - known addresses count", ReplyKeyboards.MainMenu);
+/ka - known addresses count
+/clearstat - reset statistics", ReplyKeyboards.MainMenu);
 					}
 					else if (text.StartsWith("/sql") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
@@ -981,6 +985,12 @@ namespace TezosNotifyBot
 					else if (text == "/stat")
 					{
 						await Stat(db, chat.Id);
+					}
+					else if (text == "/clearstat" && Config.Telegram.DevUsers.Contains(from.Username))
+					{
+						user.NotifyStat = null;
+						db.SaveChanges();
+						await SendTextMessage(db, user.Id, $"Statistics were reset", ReplyKeyboards.MainMenu);
 					}
 					else if (text == "/block")
 					{
