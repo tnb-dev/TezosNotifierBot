@@ -76,7 +76,7 @@ namespace TezosNotifyBot
 		public async Task<int> SendPhoto(long chatId, string caption, Stream data, KeyboardMarkup keyboardMarkup = null)
 		{
 			var file = InputFile.FromStream(data);
-			var msg = await bot.SendPhoto(chatId, file, caption, replyMarkup: keyboardMarkup);
+			var msg = await bot.SendPhoto(chatId, file, caption, replyMarkup: keyboardMarkup, parseMode: ParseMode.Html);
 			return msg.Id;
 		}
 
