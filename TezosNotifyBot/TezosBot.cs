@@ -197,7 +197,9 @@ namespace TezosNotifyBot
 				if (callbackData == "donate")
 				{
 					var file = File.OpenRead(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "DonateQR.jpg"));
-					await telegramBotInvoker.SendPhoto(userId, "🎁 Your donations help us understand that we are moving in the right direction and making a really cool service!", file, ReplyKeyboards.MainMenu);
+					await telegramBotInvoker.SendPhoto(userId, "🎁 <b>Support Tezos Notifier</b>\n\n" +
+						"Your donation helps us continue improving the bot and building a reliable service for the Tezos community.\n\n" +
+						"XTZ donation address: <code>tz1g5jJc6MWdmmUXdp5eb1KTj8TTU5U74cry</code>\n\nThank you for your support 💙", file, ReplyKeyboards.MainMenu);
 				}
 
 				if (commandsManager.HasCallbackHandler(callbackData))
@@ -241,12 +243,12 @@ namespace TezosNotifyBot
 					result += $"Active users: {users.Count}\r\n";
 					result += $"Monitored addresses (total): {users.Sum(x => x.AddrCount)}\r\n";
 					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}";
-					result += "\n\n👤 <b>Your statistics</b>\n\n";
+					result += "\n\n\n👤 <b>Your statistics</b>\n\n";
 					var u = users.First(x => x.Id == user.Id);
 					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount ?? Config.MaxAddressCount}\r\n";
 					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}";
 					if (!user.HideHashTags)
-						result += $"\n\n#stat";
+						result += $"\n\n#stats";
 					await telegramBotInvoker.AnswerCallbackQuery(id, null);
 					await SendTextMessage(db, user.Id, result, ReplyKeyboards.MainMenu);
 				}
@@ -1857,7 +1859,7 @@ namespace TezosNotifyBot
 			var keyboard = ReplyKeyboards.MainMenu;
 			if (nsd.Total == NotifyStatData.MaxCount)
 			{
-				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:000,000} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:###,##0} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
 				keyboard = ReplyKeyboards.ContactSupport(ua.User);
 			}
 			nsd.Inc();
@@ -1876,7 +1878,7 @@ namespace TezosNotifyBot
 			var keyboard = ReplyKeyboards.MainMenu;
 			if (nsd.Total == NotifyStatData.MaxCount)
 			{
-				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:000,000} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:###,##0} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
 				keyboard = ReplyKeyboards.ContactSupport(u);
 			}
 			nsd.Inc();
