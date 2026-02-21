@@ -614,6 +614,7 @@ namespace TezosNotifyBot
 				{
 					user.UserState = UserState.Support;
 					await SendTextMessage(db, user.Id, resMgr.Get(Res.WriteHere, user), ReplyKeyboards.BackMenu);
+					await telegramBotInvoker.AnswerCallbackQuery(id, null);
 					return;
 				}
 			}
@@ -1854,20 +1855,27 @@ namespace TezosNotifyBot
         public async Task<int?> SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text, int replaceId = 0)
         {
 			var nsd = NotifyStatData.Load(ua.User);
-			if (nsd.Total > NotifyStatData.MaxCount)
+			if (nsd.Total >= NotifyStatData.MaxCount)
 				return null;
 			var keyboard = ReplyKeyboards.MainMenu;
+			nsd.Inc();
+			nsd.Store(ua.User);
+			int msg;
+			if (ua.ChatId == 0)
+                msg = await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
+            else
+				msg = await SendTextMessage(ua.ChatId, text, replaceId);
+
 			if (nsd.Total == NotifyStatData.MaxCount)
 			{
 				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:###,##0} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
 				keyboard = ReplyKeyboards.ContactSupport(ua.User);
 			}
-			nsd.Inc();
-			nsd.Store(ua.User);
 			if (ua.ChatId == 0)
-                return await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
-            else
-				return await SendTextMessage(ua.ChatId, text, replaceId);
+				await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
+			else
+				await SendTextMessage(ua.ChatId, text, replaceId);
+			return msg;
         }
 
 		public async Task<int?> SendTextMessageU(Storage.TezosDataContext db, User u, string text, int replaceId = 0)
