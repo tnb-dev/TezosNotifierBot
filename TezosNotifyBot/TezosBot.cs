@@ -960,6 +960,11 @@ namespace TezosNotifyBot
 							await SendTextMessage(db, user.Id, "Command syntax:\n/msglist {userid}",
 								ReplyKeyboards.MainMenu);
 					}
+					//else if (text.StartsWith("/users") && Config.Telegram.DevUsers.Contains(from.Username))
+					//{
+					//	await OnSql(db, user,
+					//			$"select * from \"user\"");
+					//}
 					else if (text.StartsWith("/userinfo") && Config.Telegram.DevUsers.Contains(from.Username))
 					{
 						if (long.TryParse(text.Substring("/userinfo".Length).Trim(), out long userid))
@@ -1502,7 +1507,7 @@ namespace TezosNotifyBot
 						var limit = user.MaxAddrCount ?? Config.MaxAddressCount;
 						if (addrCount >= limit)
 						{
-							string maxAddrReached = $"👛 <b>You’ve reached the limit of {limit} tracked addresses.</b>\r\n\r\nIf you’d like to increase this limit, please contact our support team.";
+							string maxAddrReached = $"👛 <b>You’ve reached the limit of {limit} tracked addresses.</b>\r\n\r\nIf you need a higher limit, please contact support.\n\n<i>Tip: You can remove unused addresses in 👛 My Addresses.</i>";
 							if (chat == null)
 								await SendTextMessage(db, user.Id, maxAddrReached, ReplyKeyboards.ContactSupport(user));
 							else
@@ -1868,7 +1873,7 @@ namespace TezosNotifyBot
 
 			if (nsd.Total == NotifyStatData.MaxCount)
 			{
-				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:###,##0} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				text = $"📩 <b>You’ve reached your monthly limit of {NotifyStatData.MaxCount:###,##0} notifications.</b>\n\nThe limit is based on the last 30 days. New notifications will be skipped until you’re below the limit.\n\nIf you need a higher limit, please contact support.\n\n<i>Tip: Reduce notifications by adjusting thresholds or notification types in 👛 My Addresses.</i>";
 				keyboard = ReplyKeyboards.ContactSupport(ua.User);
 			}
 			if (ua.ChatId == 0)
@@ -1886,7 +1891,7 @@ namespace TezosNotifyBot
 			var keyboard = ReplyKeyboards.MainMenu;
 			if (nsd.Total == NotifyStatData.MaxCount)
 			{
-				text = $"📩 <b>You’ve reached the monthly limit of {NotifyStatData.MaxCount:###,##0} notifications for your tracked addresses.</b>\r\n\r\nIf you’d like to extend this limit, please contact our support team.";
+				text = $"📩 <b>You’ve reached your monthly limit of {NotifyStatData.MaxCount:###,##0} notifications.</b>\n\nThe limit is based on the last 30 days. New notifications will be skipped until you’re below the limit.\n\nIf you need a higher limit, please contact support.\n\n<i>Tip: Reduce notifications by adjusting thresholds or notification types in 👛 My Addresses.</i>";
 				keyboard = ReplyKeyboards.ContactSupport(u);
 			}
 			nsd.Inc();
