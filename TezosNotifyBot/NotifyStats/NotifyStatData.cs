@@ -13,8 +13,10 @@ namespace TezosNotifyBot.NotifyStats
 	{
 		public int Last { get; set; }
 		public int[] Count { get; set; } = new int[30];
+		public int[] MissedCount { get; set; } = new int[30];
 
 		public int Total => Count.Sum(o => o);
+		public int MissedTotal => MissedCount.Sum(o => o);
 
 		int Current = (int)DateTime.Today.Subtract(new DateTime(2026, 1, 1)).TotalDays;
 		int Index => Current % 30;
@@ -22,6 +24,11 @@ namespace TezosNotifyBot.NotifyStats
 		public void Inc()
 		{
 			Count[Index]++;
+		}
+
+		public void IncMissed()
+		{
+			MissedCount[Index]++;
 		}
 
 		public const int MaxCount = 10;
@@ -37,7 +44,10 @@ namespace TezosNotifyBot.NotifyStats
 		{
 			var nsd = notifyStat == null ? new NotifyStatData() : JsonSerializer.Deserialize<NotifyStatData>(notifyStat);
 			while (nsd.Current > nsd.Last)
+			{
 				nsd.Count[++nsd.Last % 30] = 0;
+				nsd.MissedCount[++nsd.Last % 30] = 0;
+			}
 
 			return nsd;
 		}

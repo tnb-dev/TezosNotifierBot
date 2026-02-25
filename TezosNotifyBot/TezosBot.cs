@@ -243,10 +243,12 @@ namespace TezosNotifyBot
 					result += $"Active users: {users.Count}\r\n";
 					result += $"Monitored addresses (total): {users.Sum(x => x.AddrCount)}\r\n";
 					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}";
+					result += $"Notifications missed (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).MissedTotal)}";
 					result += "\n\n\n👤 <b>Your statistics</b>\n\n";
 					var u = users.First(x => x.Id == user.Id);
 					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount ?? Config.MaxAddressCount}\r\n";
 					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}";
+					result += $"Notifications missed (last 30 days): {NotifyStatData.Load(u.NotifyStat).MissedTotal}";
 					if (!user.HideHashTags)
 						result += $"\n\n#stats";
 					await telegramBotInvoker.AnswerCallbackQuery(id, null);
@@ -1861,7 +1863,11 @@ namespace TezosNotifyBot
         {
 			var nsd = NotifyStatData.Load(ua.User);
 			if (nsd.Total >= NotifyStatData.MaxCount)
+			{
+				nsd.IncMissed();
+				nsd.Store(ua.User);
 				return null;
+			}
 			var keyboard = ReplyKeyboards.MainMenu;
 			nsd.Inc();
 			nsd.Store(ua.User);
@@ -1887,7 +1893,11 @@ namespace TezosNotifyBot
 		{
 			var nsd = NotifyStatData.Load(u);
 			if (nsd.Total >= NotifyStatData.MaxCount)
+			{
+				nsd.IncMissed();
+				nsd.Store(u);
 				return null;
+			}
 			var keyboard = ReplyKeyboards.MainMenu;
 			nsd.Inc();
 			nsd.Store(u);
