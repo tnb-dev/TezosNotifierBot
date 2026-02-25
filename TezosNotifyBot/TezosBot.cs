@@ -240,14 +240,14 @@ namespace TezosNotifyBot
 					}).ToList();
 
 					string result = "🤖 <b>Bot statistics</b>\n\n";
-					result += $"Active users: {users.Count}\r\n";
-					result += $"Monitored addresses (total): {users.Sum(x => x.AddrCount)}\r\n";
-					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}";
+					result += $"Active users: {users.Count}\n";
+					result += $"Monitored addresses (total): {users.Sum(x => x.AddrCount)}\n";
+					result += $"Notifications sent (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).Total)}\n";
 					result += $"Notifications missed (last 30 days): {users.Sum(x => NotifyStatData.Load(x.NotifyStat).MissedTotal)}";
 					result += "\n\n\n👤 <b>Your statistics</b>\n\n";
 					var u = users.First(x => x.Id == user.Id);
-					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount ?? Config.MaxAddressCount}\r\n";
-					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}";
+					result += $"Monitored addresses: {u.AddrCount} / {user.MaxAddrCount ?? Config.MaxAddressCount}\n";
+					result += $"Notifications sent (last 30 days): {NotifyStatData.Load(u.NotifyStat).Total} / {NotifyStatData.MaxCount}\n";
 					result += $"Notifications missed (last 30 days): {NotifyStatData.Load(u.NotifyStat).MissedTotal}";
 					if (!user.HideHashTags)
 						result += $"\n\n#stats";
