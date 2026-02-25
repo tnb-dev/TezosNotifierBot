@@ -1881,11 +1881,11 @@ namespace TezosNotifyBot
 			{
 				text = $"📩 <b>You’ve reached your monthly limit of {NotifyStatData.MaxCount:###,##0} notifications.</b>\n\nThe limit is based on the last 30 days. New notifications will be skipped until you’re below the limit.\n\nIf you need a higher limit, please contact support.\n\n<i>Tip: Reduce notifications by adjusting thresholds or notification types in 👛 My Addresses.</i>";
 				keyboard = ReplyKeyboards.ContactSupport(ua.User);
+				if (ua.ChatId == 0)
+					await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
+				else
+					await SendTextMessage(ua.ChatId, text, replaceId);
 			}
-			if (ua.ChatId == 0)
-				await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
-			else
-				await SendTextMessage(ua.ChatId, text, replaceId);
 			return msg;
         }
 
@@ -1911,11 +1911,11 @@ namespace TezosNotifyBot
 			{
 				text = $"📩 <b>You’ve reached your monthly limit of {NotifyStatData.MaxCount:###,##0} notifications.</b>\n\nThe limit is based on the last 30 days. New notifications will be skipped until you’re below the limit.\n\nIf you need a higher limit, please contact support.\n\n<i>Tip: Reduce notifications by adjusting thresholds or notification types in 👛 My Addresses.</i>";
 				keyboard = ReplyKeyboards.ContactSupport(u);
+				if (u.Id == 0)
+					await SendTextMessage(db, u.Id, text, keyboard, replaceId);
+				else
+					await SendTextMessage(u.Id, text, replaceId);
 			}
-			if (u.Id == 0)
-				await SendTextMessage(db, u.Id, text, keyboard, replaceId);
-			else
-				await SendTextMessage(u.Id, text, replaceId);
 			return msg;
 		}
 
