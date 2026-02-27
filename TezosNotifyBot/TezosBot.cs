@@ -1890,32 +1890,10 @@ namespace TezosNotifyBot
 
 		public async Task<int?> SendTextMessageU(Storage.TezosDataContext db, User u, string text, int replaceId = 0)
 		{
-			var nsd = NotifyStatData.Load(u);
-			if (nsd.Total >= NotifyStatData.MaxCount)
-			{
-				nsd.IncMissed();
-				nsd.Store(u);
-				return null;
-			}
-			var keyboard = ReplyKeyboards.MainMenu;
-			nsd.Inc();
-			nsd.Store(u);
-			int msg;
 			if (u.Id == 0)
-				msg = await SendTextMessage(db, u.Id, text, keyboard, replaceId);
+				return await SendTextMessage(db, u.Id, text, ReplyKeyboards.MainMenu, replaceId);
 			else
-				msg = await SendTextMessage(u.Id, text, replaceId);
-
-			if (nsd.Total == NotifyStatData.MaxCount)
-			{
-				text = $"📩 <b>You’ve reached your monthly limit of {NotifyStatData.MaxCount:###,##0} notifications.</b>\n\nThe limit is based on the last 30 days. New notifications will be skipped until you’re below the limit.\n\nIf you need a higher limit, please contact support.\n\n<i>Tip: Reduce notifications by adjusting thresholds or notification types in 👛 My Addresses.</i>";
-				keyboard = ReplyKeyboards.ContactSupport(u);
-				if (u.Id == 0)
-					await SendTextMessage(db, u.Id, text, keyboard, replaceId);
-				else
-					await SendTextMessage(u.Id, text, replaceId);
-			}
-			return msg;
+				return await SendTextMessage(u.Id, text, replaceId);
 		}
 
 		int msgSent = 0;
