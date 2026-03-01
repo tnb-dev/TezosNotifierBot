@@ -31,7 +31,7 @@ namespace TezosNotifyBot.NotifyStats
 			MissedCount[Index]++;
 		}
 
-		public const int MaxCount = 10;
+		public const int MaxCount = 10000;
 
 		public void Store(User user)
 		{
