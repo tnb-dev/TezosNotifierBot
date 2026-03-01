@@ -1884,6 +1884,7 @@ namespace TezosNotifyBot
 					await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
 				else
 					await SendTextMessage(ua.ChatId, text, replaceId);
+				await NotifyUserActivity(db, $"🚧 User {UserLink(ua.User)} reached the limit of {NotifyStatData.MaxCount:###,##0} notifications.\n\n#message_limit");
 			}
 			return msg;
         }
