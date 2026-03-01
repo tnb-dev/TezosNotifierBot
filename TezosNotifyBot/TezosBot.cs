@@ -781,7 +781,7 @@ namespace TezosNotifyBot
             {
 				var user = db.GetUser(from.Id);
 
-				if (isPrivate && (user?.UserState == UserState.Broadcast || user?.UserState == UserState.NotifyFollowers))
+				if (isPrivate && text != ReplyKeyboards.CmdGoBack && (user?.UserState == UserState.Broadcast || user?.UserState == UserState.NotifyFollowers))
 				{
 					var count = 0;
 					
