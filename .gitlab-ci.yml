@@ -37,6 +37,11 @@ Deploy Bot:
     ENV: Staging
     BASE_DOMAIN: test.tnb.thegroup.tech
     DOCKER_VERSION: staging
+    OTEL_RESOURCE_ATTRIBUTES: service.namespace=tnb-group
+    OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp-gateway-prod-eu-west-2.grafana.net/otlp/v1/logs
+    OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+    OTEL_EXPORTER_OTLP_HEADERS: $OTELTOKEN
+    OTEL_SERVICE_NAME: $OTELSERVICE
 
   environment:
     name: development
