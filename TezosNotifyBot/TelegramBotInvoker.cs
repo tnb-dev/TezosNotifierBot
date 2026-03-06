@@ -33,6 +33,8 @@ namespace TezosNotifyBot
 		{
 			logger.LogInformation($"->{chatId}: {text}");
 			var msg = await bot.SendMessage(chatId, text, ParseMode.Html, replyParameters: null, replyMarkup: keyboardMarkup, new LinkPreviewOptions { IsDisabled = true });
+			AppMetrics.MessagesSent.Add(1);
+
 			Thread.Sleep(50);
 			return msg.Id;
 		}

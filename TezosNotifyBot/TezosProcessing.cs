@@ -606,7 +606,7 @@ namespace TezosNotifyBot
 			blockProcessings.Enqueue(DateTime.UtcNow);
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
-			
+			AppMetrics.BlocksProcessed.Add(1);
 			return true;
 		}
 

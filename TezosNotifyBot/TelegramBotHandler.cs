@@ -64,6 +64,7 @@ namespace TezosNotifyBot
 							if (m.Success)
 								replyToUserId = long.Parse(m.Groups[1].Value);
 						}
+						AppMetrics.MessagesReceived.Add(1);
 						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
 					}
 				}
