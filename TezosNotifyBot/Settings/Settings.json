@@ -1,19 +1,19 @@
 {
     "Logging": {
         "LogLevel": {
-            "Default": "Warning",
+            "Default": "Debug",
             "TezosNotifyBot": "Debug",
-            "System": "Information",
+            "System": "Debug",
             "Microsoft": "Error",
             "Microsoft.EntityFrameworkCore": "Error"
         }
     },
     "ConnectionStrings": {
-        "Default": "User ID=keepscan;Host=keepscan.com;Password=L9cZA9npgWEr94QpqgwyaQ73;Port=49000;Database=keepscan;Pooling=true;"
+        "Default": "User ID=postgres;Host=localhost;Password=postgres;Port=5432;Database=tezos;Pooling=true;"
     },
     "Telegram": {
-        "BotSecret": "",
-        "DevUsers": [],
+        "BotSecret": "519222560:AAFdJ03ViD_IhHOQxj7x6WJP_fjU9Afg7VE",
+        "DevUsers": ["mksmfd"],
         "ActivityChat": [ -1001482752306 ],
         "VotingChat": -1001546962198
     },

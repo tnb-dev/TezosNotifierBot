@@ -1,9 +1,5 @@
-﻿using System;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Text;
-using Gelf.Extensions.Logging;
+﻿using Gelf.Extensions.Logging;
+using Grafana.OpenTelemetry;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Caching.InMemory;
@@ -13,8 +9,17 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MihaZupan;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
 using Polly;
 using Polly.Extensions.Http;
+using Serilog;
+using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
 using Telegram.Bot;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.CryptoCompare;
@@ -53,7 +58,7 @@ namespace TezosNotifyBot
                     builder.AddJsonFile($"Settings/Settings.{context.HostingEnvironment.EnvironmentName}.json", true);
                     builder.AddJsonFile("Settings/Settings.Local.json", true);
                     builder.AddEnvironmentVariables();
-                    builder.AddCommandLine(args);
+                    builder.AddCommandLine(args);                    
                 })
                 .ConfigureServices((context, services) =>
                 {
@@ -72,12 +77,16 @@ namespace TezosNotifyBot
                     services.AddLogging(builder =>
                     {
                         if (context.HostingEnvironment.IsDevelopment())
+                        {
                             builder.AddConsole();
+                        }
                         else
                             builder.AddGelf(options =>
                                 options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
                             );
+                        builder.AddOpenTelemetry();
                     });
+                    services.AddOpenTelemetry().UseGrafana().WithLogging(logging => logging.AddOtlpExporter());
 
                     services.AddScoped<AddressService>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
