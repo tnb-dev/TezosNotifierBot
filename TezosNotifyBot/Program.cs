@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using MihaZupan;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -86,7 +87,13 @@ namespace TezosNotifyBot
                             );
                         builder.AddOpenTelemetry();
                     });
-                    services.AddOpenTelemetry().UseGrafana().WithLogging(logging => logging.AddOtlpExporter());
+                    services.AddOpenTelemetry().UseGrafana().WithLogging(logging => logging.AddOtlpExporter())
+                    .WithMetrics(metrics => metrics
+                    .UseGrafana()
+                    .AddRuntimeInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddOtlpExporter()
+					.AddMeter("TNB.Metrics"));
 
                     services.AddScoped<AddressService>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
