@@ -7,17 +7,40 @@ using System.Threading.Tasks;
 
 namespace TezosNotifyBot
 {
-	public static class AppMetrics
+	public class AppMetrics
 	{
-		private static readonly Meter Meter = new("TNB.Metrics", "1.0");
+		private readonly Counter<long> _messagesSent;
+		private readonly Counter<long> _messagesReceived;
+		private readonly Counter<long> _blocksProcessed;
 
-		public static readonly Counter<long> MessagesSent =
-			Meter.CreateCounter<long>("messages.sent", "messages", "Total messages sent to users");
+		public AppMetrics(IMeterFactory meterFactory)
+		{
+			var meter = meterFactory.Create("TNB.Metrics");
 
-		public static readonly Counter<long> MessagesReceived =
-			Meter.CreateCounter<long>("messages.received", "messages", "Total messages received from users");
+			_messagesSent = meter.CreateCounter<long>("telegram.bot.messages.sent",
+				description: "Number of messages sent to users");
 
-		public static readonly Counter<long> BlocksProcessed =
-			Meter.CreateCounter<long>("blocks.processed", "blocks", "Total blocks processed");
+			_messagesReceived = meter.CreateCounter<long>("telegram.bot.messages.received",
+				description: "Number of messages received from users");
+
+			_blocksProcessed = meter.CreateCounter<long>("blocks.processed",
+				description: "Blocks processed");
+		}
+
+		public void MessageSent(bool isSuccess = true)
+		{
+			_messagesSent.Add(1,
+				new KeyValuePair<string, object?>("success", isSuccess));
+		}
+
+		public void MessageReceived()
+		{
+			_messagesReceived.Add(1);
+		}
+
+		public void BlockProcessed()
+		{
+			_blocksProcessed.Add(1);
+		}
 	}
 }

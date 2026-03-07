@@ -111,6 +111,7 @@ namespace TezosNotifyBot
                     services.AddSingleton<TezosBot>();
                     services.AddSingleton<TezosBotFacade>();
                     services.AddSingleton<AddressManager>();
+                    services.AddSingleton<AppMetrics>();
 
                     services.AddSingleton<ITelegramBotClient>(provider =>
                     {

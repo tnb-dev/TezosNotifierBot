@@ -19,10 +19,12 @@ namespace TezosNotifyBot
     {
 		ITelegramBotClient bot;
 		ILogger<TelegramBotInvoker> logger;
-		public TelegramBotInvoker(ITelegramBotClient client, ILogger<TelegramBotInvoker> logger)
+		AppMetrics appMetrics;
+		public TelegramBotInvoker(ITelegramBotClient client, ILogger<TelegramBotInvoker> logger, AppMetrics metrics)
 		{
 			bot = client;
 			this.logger = logger;
+			appMetrics = metrics;
 		}
 
 		public async Task DeleteMessage(long chatId, int messageId) => await bot.DeleteMessage(chatId, messageId);
@@ -33,7 +35,7 @@ namespace TezosNotifyBot
 		{
 			logger.LogInformation($"->{chatId}: {text}");
 			var msg = await bot.SendMessage(chatId, text, ParseMode.Html, replyParameters: null, replyMarkup: keyboardMarkup, new LinkPreviewOptions { IsDisabled = true });
-			AppMetrics.MessagesSent.Add(1);
+			appMetrics.MessageSent();
 
 			Thread.Sleep(50);
 			return msg.Id;
