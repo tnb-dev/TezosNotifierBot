@@ -1889,14 +1889,6 @@ namespace TezosNotifyBot
 			return msg;
         }
 
-		public async Task<int?> SendTextMessageU(Storage.TezosDataContext db, User u, string text, int replaceId = 0)
-		{
-			if (u.Id == 0)
-				return await SendTextMessage(db, u.Id, text, ReplyKeyboards.MainMenu, replaceId);
-			else
-				return await SendTextMessage(u.Id, text, replaceId);
-		}
-
 		int msgSent = 0;
 		internal async Task<int> SendTextMessage(Storage.TezosDataContext db, long userId, string text, KeyboardMarkup keyboard, int replaceId = 0)
         {

@@ -16,13 +16,15 @@ namespace TezosNotifyBot
     {
 		TelegramBotClient client;
 		private ILogger<TelegramBotHandler> logger { get; }
+		private readonly AppMetrics appMetrics;
 
-		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger)
+		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger, AppMetrics metrics)
 		{
 			this.client = client as TelegramBotClient;
 			this.client.OnUpdate += Client_OnUpdate;
 			this.client.OnError += Client_OnError;
 			this.logger = logger;
+			appMetrics = metrics;
 		}
 
 		async Task Client_OnUpdate(Telegram.Bot.Types.Update update)
@@ -64,7 +66,7 @@ namespace TezosNotifyBot
 							if (m.Success)
 								replyToUserId = long.Parse(m.Groups[1].Value);
 						}
-						AppMetrics.MessagesReceived.Add(1);
+						appMetrics.MessageReceived();
 						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
 					}
 				}

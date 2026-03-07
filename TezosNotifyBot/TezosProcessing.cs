@@ -33,9 +33,10 @@ namespace TezosNotifyBot
 		readonly AddressManager addrMgr;
 		readonly ResourceManager resMgr;
 		readonly BotConfig config;
+		readonly AppMetrics metrics;
 		static readonly Queue<DateTime> blockProcessings = new Queue<DateTime>();
 
-		public TezosProcessing(ILogger<TezosProcessing> logger, TelegramBotInvoker telegramBotInvoker, IServiceProvider serviceProvider, TezosBot tezosBot, AddressManager addrMgr, ResourceManager resMgr, IOptions<BotConfig> config)
+		public TezosProcessing(ILogger<TezosProcessing> logger, TelegramBotInvoker telegramBotInvoker, IServiceProvider serviceProvider, TezosBot tezosBot, AddressManager addrMgr, ResourceManager resMgr, IOptions<BotConfig> config, AppMetrics metrics)
 		{
 			this.serviceProvider = serviceProvider;
 			this.logger = logger;
@@ -44,6 +45,7 @@ namespace TezosNotifyBot
 			this.addrMgr = addrMgr;
 			this.resMgr = resMgr;
 			this.config = config.Value;
+			this.metrics = metrics;
 		}
 
 		//public TezosProcessing(IServiceProvider serviceProvider,
@@ -606,7 +608,7 @@ namespace TezosNotifyBot
 			blockProcessings.Enqueue(DateTime.UtcNow);
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
-			AppMetrics.BlocksProcessed.Add(1);
+			metrics.BlockProcessed();
 			return true;
 		}
 
@@ -700,7 +702,7 @@ namespace TezosNotifyBot
 								result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
 							}
 
-							await tezosBot.SendTextMessageU(db, u, result);
+							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 						}
 					}
 				}
@@ -769,7 +771,7 @@ namespace TezosNotifyBot
 								result += "\n\n#stake" + ua_from.HashTag() + ua_to.HashTag();
 							}
 
-							await tezosBot.SendTextMessageU(db, u, result);
+							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 						}
 					}
 				}
