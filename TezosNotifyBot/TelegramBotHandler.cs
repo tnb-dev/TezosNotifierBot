@@ -49,7 +49,7 @@ namespace TezosNotifyBot
 			}
 			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.ChannelPost)
 			{
-				if (OnChannelPost != null && update.ChannelPost.From != null)
+				if (OnChannelPost != null && update.ChannelPost.From != null && update.ChannelPost.Text != null)
 					await OnChannelPost(new Chat(update.ChannelPost.Chat), update.ChannelPost.Id, new User(update.ChannelPost.From), update.ChannelPost.Text);
 			}
 			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
