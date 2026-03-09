@@ -2067,7 +2067,7 @@ namespace TezosNotifyBot
 
         string ChatLink(User c)
         {
-            return $"{c.Title.Replace("<", "").Replace(">", "")} [[{c.Id}]]";
+            return $"{c.Title?.Replace("<", "")?.Replace(">", "")} [[{c.Id}]]";
 		}
 
         Stream GenerateStreamFromString(string s)
