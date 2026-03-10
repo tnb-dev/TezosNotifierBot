@@ -853,7 +853,7 @@ namespace TezosNotifyBot
 					}
 					ua.DownEnd = null;
 
-					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold))
+					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold + 1))
 					{
 						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block <a href='{t.block(ua.DownStartLevel ?? 0)}'>{ua.DownStartLevel}</a>";
 						if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
@@ -885,7 +885,7 @@ namespace TezosNotifyBot
 						ua.DownEndLevel = block.Level;
 					}
 
-					if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold))
+					if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold + 1))
 					{
 						if (!ua.DownMessageId.HasValue)
 						{
