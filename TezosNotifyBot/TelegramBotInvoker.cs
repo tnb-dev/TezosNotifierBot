@@ -41,7 +41,7 @@ namespace TezosNotifyBot
 			appMetrics.MessageSent();
 
 			Thread.Sleep(50);
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 			return msg.Id;
 		}
 		

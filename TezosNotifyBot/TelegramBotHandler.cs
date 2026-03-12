@@ -82,7 +82,7 @@ namespace TezosNotifyBot
 					}
 				}
 
-				activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+				activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 			}
 			catch(Exception e)
 			{

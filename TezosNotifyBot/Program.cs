@@ -1,4 +1,5 @@
 ﻿using Gelf.Extensions.Logging;
+using Google.Cloud.Dialogflow.V2;
 using Grafana.OpenTelemetry;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -91,7 +92,8 @@ namespace TezosNotifyBot
                     services.AddOpenTelemetry()
                         .UseGrafana()
                         .WithTracing(tracing => tracing
-                            .UseGrafana()
+                            .AddSource("TNB")
+							.UseGrafana()
                             .AddEntityFrameworkCoreInstrumentation()
                             .AddHttpClientInstrumentation())
                         .WithLogging(logging => logging.AddOtlpExporter())

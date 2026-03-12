@@ -612,7 +612,7 @@ namespace TezosNotifyBot
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 			return true;
 		}
 
@@ -713,7 +713,7 @@ namespace TezosNotifyBot
 				}
 			}
 			db.SaveChanges();
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		async Task ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops, List<Domain.User> allUsers, MarketData md)
@@ -805,7 +805,7 @@ namespace TezosNotifyBot
 					}
 				}
 			}
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 		async Task ProcessOriginations(Storage.TezosDataContext db, List<Origination> ops)
 		{
@@ -842,7 +842,7 @@ namespace TezosNotifyBot
 					await tezosBot.SendTextMessageUA(db, ua, result);
 				}
 			}
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
@@ -924,7 +924,7 @@ namespace TezosNotifyBot
 			}
 
 			logger.LogInformation($"Block {block.Level} baking data processed");
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		class RewardMsg
@@ -1103,7 +1103,7 @@ namespace TezosNotifyBot
 			await VotingNotify(db, block, cycle, tzKtClient);
 			
 			logger.LogInformation($"ProcessBlockMetadata {block.Level} completed");
-			activity.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
+			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		public static double GetAvgProcessingTime()
