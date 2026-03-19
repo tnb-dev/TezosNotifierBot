@@ -20,21 +20,18 @@ namespace TezosNotifyBot
 		TelegramBotClient client;
 		ILogger<TelegramBotHandler> logger;
 		AppMetrics appMetrics;
-		Instrumentation instrumentation;
 
-		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger, AppMetrics metrics, Instrumentation instrumentation)
+		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger, AppMetrics metrics)
 		{
 			this.client = client as TelegramBotClient;
 			this.client.OnUpdate += Client_OnUpdate;
 			this.client.OnError += Client_OnError;
 			this.logger = logger;
 			appMetrics = metrics;
-			this.instrumentation = instrumentation;
 		}
 
 		async Task Client_OnUpdate(Telegram.Bot.Types.Update update)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("ProcessMessage");
 			logger.LogInformation("Message received: {RawMessage}", JsonSerializer.Serialize(update));
 			appMetrics.MessageReceived();
 
@@ -81,15 +78,9 @@ namespace TezosNotifyBot
 						}
 					}
 				}
-
-				activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 			}
 			catch(Exception e)
 			{
-				activity?.SetStatus(ActivityStatusCode.Error, e.Message);
-				activity?.SetTag("error.type", e.GetType().Name);
-				activity?.SetTag("error.stack", e.StackTrace);
-
 				logger.LogError(e, "Error processing message");
 				throw;
 			}
@@ -141,12 +132,5 @@ namespace TezosNotifyBot
 				Type = (int)c.Type;
 			}
 		}
-
-		//public class Message
-		//{
-		//	public int Id { get; }
-		//	public string Text { get; }
-		//	public long 
-		//}
 	}
 }

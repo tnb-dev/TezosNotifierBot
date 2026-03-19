@@ -91,11 +91,6 @@ namespace TezosNotifyBot
                     });
                     services.AddOpenTelemetry()
                         .UseGrafana()
-                        .WithTracing(tracing => tracing
-                            .AddSource("TNB")
-							.UseGrafana()
-                            .AddEntityFrameworkCoreInstrumentation()
-                            .AddHttpClientInstrumentation())
                         .WithLogging(logging => logging.AddOtlpExporter())
                         .WithMetrics(metrics => metrics.UseGrafana()
                                         .AddRuntimeInstrumentation()
@@ -120,7 +115,6 @@ namespace TezosNotifyBot
                     services.AddSingleton<TezosBotFacade>();
                     services.AddSingleton<AddressManager>();
                     services.AddSingleton<AppMetrics>();
-                    services.AddSingleton<Instrumentation>();
 
                     services.AddSingleton<ITelegramBotClient>(provider =>
                     {

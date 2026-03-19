@@ -34,10 +34,9 @@ namespace TezosNotifyBot
 		readonly ResourceManager resMgr;
 		readonly BotConfig config;
 		readonly AppMetrics metrics;
-		readonly Instrumentation instrumentation;
 		static readonly Queue<DateTime> blockProcessings = new Queue<DateTime>();
 
-		public TezosProcessing(ILogger<TezosProcessing> logger, TelegramBotInvoker telegramBotInvoker, IServiceProvider serviceProvider, TezosBot tezosBot, AddressManager addrMgr, ResourceManager resMgr, IOptions<BotConfig> config, AppMetrics metrics, Instrumentation instrumentation)
+		public TezosProcessing(ILogger<TezosProcessing> logger, TelegramBotInvoker telegramBotInvoker, IServiceProvider serviceProvider, TezosBot tezosBot, AddressManager addrMgr, ResourceManager resMgr, IOptions<BotConfig> config, AppMetrics metrics)
 		{
 			this.serviceProvider = serviceProvider;
 			this.logger = logger;
@@ -47,7 +46,6 @@ namespace TezosNotifyBot
 			this.resMgr = resMgr;
 			this.config = config.Value;
 			this.metrics = metrics;
-			this.instrumentation = instrumentation;
 		}
 
 		//public TezosProcessing(IServiceProvider serviceProvider,
@@ -153,7 +151,6 @@ namespace TezosNotifyBot
 			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockProcessing");
 
 			var block = tzKt.GetBlock(blockLevel);
 			logger.LogInformation($"Block {block.Level} received");
@@ -612,7 +609,6 @@ namespace TezosNotifyBot
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 			return true;
 		}
 
@@ -633,7 +629,6 @@ namespace TezosNotifyBot
 
 		async Task ProcessTransactions(Storage.TezosDataContext db, List<Transaction> ops, List<(string from, string to, decimal amount, string hash, Token token)> fromToAmountHash, List<Domain.User> allUsers, MarketData md)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockTransactionsProcessing");
 			foreach (var op in ops)
 			{
 				if (op.Status != "applied")
@@ -713,12 +708,10 @@ namespace TezosNotifyBot
 				}
 			}
 			db.SaveChanges();
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		async Task ProcessDelegations(Storage.TezosDataContext db, List<Delegation> ops, List<Domain.User> allUsers, MarketData md)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockDelegationsProcessing");
 			foreach (var op in ops)
 			{
 				if (op.Status != "applied")
@@ -805,11 +798,10 @@ namespace TezosNotifyBot
 					}
 				}
 			}
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
+
 		async Task ProcessOriginations(Storage.TezosDataContext db, List<Origination> ops)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockOriginationsProcessing");
 			foreach (var op in ops)
 			{
 				if (op.Status != "applied")
@@ -842,12 +834,10 @@ namespace TezosNotifyBot
 					await tezosBot.SendTextMessageUA(db, ua, result);
 				}
 			}
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockBakingDataProcessing");
 			logger.LogInformation($"ProcessBlockBakingData {block.Level}");
 
 			var missedRights = tzktClient.GetRights(block.Level, "missed");
@@ -924,7 +914,6 @@ namespace TezosNotifyBot
 			}
 
 			logger.LogInformation($"Block {block.Level} baking data processed");
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		class RewardMsg
@@ -938,7 +927,6 @@ namespace TezosNotifyBot
 		Cycle currentCycle;
 		async Task ProcessBlockMetadata(Storage.TezosDataContext db, Block block, ITzKtClient tzKtClient)
 		{
-			using var activity = instrumentation.ActivitySource.StartActivity("BlockMetaDataProcessing");
 			logger.LogInformation("ProcessBlockMetadata {Level}", block.Level);
 			var cycles = tzKtClient.GetCycles();
 			var cycle = cycles.SingleOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
@@ -1103,7 +1091,6 @@ namespace TezosNotifyBot
 			await VotingNotify(db, block, cycle, tzKtClient);
 			
 			logger.LogInformation($"ProcessBlockMetadata {block.Level} completed");
-			activity?.SetStatus(System.Diagnostics.ActivityStatusCode.Ok);
 		}
 
 		public static double GetAvgProcessingTime()
