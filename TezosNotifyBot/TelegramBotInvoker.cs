@@ -37,7 +37,7 @@ namespace TezosNotifyBot
 			var msg = await bot.SendMessage(chatId, text, ParseMode.Html, replyParameters: null, replyMarkup: keyboardMarkup, new LinkPreviewOptions { IsDisabled = true });
 			appMetrics.MessageSent();
 
-			Thread.Sleep(50);
+			Thread.Sleep(34);
 			return msg.Id;
 		}
 		
@@ -46,7 +46,7 @@ namespace TezosNotifyBot
 			if ((InlineKeyboardMarkup)keyboardMarkup == null)
 				keyboardMarkup = null;
 			var msg = await bot.EditMessageText(chatId, messageId, text, ParseMode.Html, linkPreviewOptions: new LinkPreviewOptions { IsDisabled = true }, replyMarkup: keyboardMarkup);
-			Thread.Sleep(50);
+			Thread.Sleep(34);
 			return msg.Id;
 		}
 
