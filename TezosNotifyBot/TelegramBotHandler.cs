@@ -1,9 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Grafana.OpenTelemetry;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -15,8 +18,8 @@ namespace TezosNotifyBot
     public class TelegramBotHandler
     {
 		TelegramBotClient client;
-		private ILogger<TelegramBotHandler> logger { get; }
-		private readonly AppMetrics appMetrics;
+		ILogger<TelegramBotHandler> logger;
+		AppMetrics appMetrics;
 
 		public TelegramBotHandler(ITelegramBotClient client, ILogger<TelegramBotHandler> logger, AppMetrics metrics)
 		{
@@ -29,47 +32,57 @@ namespace TezosNotifyBot
 
 		async Task Client_OnUpdate(Telegram.Bot.Types.Update update)
 		{
-			if (update.Type == Telegram.Bot.Types.Enums.UpdateType.ChosenInlineResult)
+			logger.LogInformation("Message received: {RawMessage}", JsonSerializer.Serialize(update));
+			appMetrics.MessageReceived();
+
+			try
 			{
-				if (OnChosenInlineResult != null)
-					await OnChosenInlineResult(update.ChosenInlineResult.From.Id, update.ChosenInlineResult.ResultId);
-			}
-			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.CallbackQuery)
-			{
-				if (OnCallbackQuery != null)
+				if (update.Type == Telegram.Bot.Types.Enums.UpdateType.ChosenInlineResult)
 				{
-					var cq = update.CallbackQuery;
-					await OnCallbackQuery(cq.Id, cq.From.Id, cq.Message.Id, cq.Data);
+					if (OnChosenInlineResult != null)
+						await OnChosenInlineResult(update.ChosenInlineResult.From.Id, update.ChosenInlineResult.ResultId);
 				}
-			}
-			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.InlineQuery)
-			{
-				if (OnInlineQuery != null)
-					await OnInlineQuery(update.InlineQuery.Id, update.InlineQuery.Query);
-			}
-			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.ChannelPost)
-			{
-				if (OnChannelPost != null && update.ChannelPost.From != null && update.ChannelPost.Text != null)
-					await OnChannelPost(new Chat(update.ChannelPost.Chat), update.ChannelPost.Id, new User(update.ChannelPost.From), update.ChannelPost.Text);
-			}
-			else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
-			{
-				if (!update.Message.From.IsBot && OnMessage != null)
+				else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.CallbackQuery)
 				{
-					if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
+					if (OnCallbackQuery != null)
 					{
-						logger.LogInformation("MessageUpdate: " + Newtonsoft.Json.JsonConvert.SerializeObject(update.Message));
-						var replyToUserId = update.Message.ReplyToMessage?.Entities?.FirstOrDefault()?.User?.Id;
-						if (replyToUserId == null && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.Text.Contains("["))
-						{
-							var m = Regex.Match(update.Message.ReplyToMessage.Text, @"\[(-?\d+)\]");
-							if (m.Success)
-								replyToUserId = long.Parse(m.Groups[1].Value);
-						}
-						appMetrics.MessageReceived();
-						await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
+						var cq = update.CallbackQuery;
+						await OnCallbackQuery(cq.Id, cq.From.Id, cq.Message.Id, cq.Data);
 					}
 				}
+				else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.InlineQuery)
+				{
+					if (OnInlineQuery != null)
+						await OnInlineQuery(update.InlineQuery.Id, update.InlineQuery.Query);
+				}
+				else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.ChannelPost)
+				{
+					if (OnChannelPost != null && update.ChannelPost.From != null && update.ChannelPost.Text != null)
+						await OnChannelPost(new Chat(update.ChannelPost.Chat), update.ChannelPost.Id, new User(update.ChannelPost.From), update.ChannelPost.Text);
+				}
+				else if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
+				{
+					if (!update.Message.From.IsBot && OnMessage != null)
+					{
+						if (update.Message.Type == Telegram.Bot.Types.Enums.MessageType.Text)
+						{
+							logger.LogInformation("MessageUpdate: " + Newtonsoft.Json.JsonConvert.SerializeObject(update.Message));
+							var replyToUserId = update.Message.ReplyToMessage?.Entities?.FirstOrDefault()?.User?.Id;
+							if (replyToUserId == null && update.Message.ReplyToMessage != null && update.Message.ReplyToMessage.Text.Contains("["))
+							{
+								var m = Regex.Match(update.Message.ReplyToMessage.Text, @"\[(-?\d+)\]");
+								if (m.Success)
+									replyToUserId = long.Parse(m.Groups[1].Value);
+							}
+							await OnMessage(new Chat(update.Message.Chat), update.Message.Chat.Type == Telegram.Bot.Types.Enums.ChatType.Private, update.Message.Id, new User(update.Message.From), update.Message.Text, replyToUserId);
+						}
+					}
+				}
+			}
+			catch(Exception e)
+			{
+				logger.LogError(e, "Error processing message");
+				throw;
 			}
 		}
 
@@ -119,12 +132,5 @@ namespace TezosNotifyBot
 				Type = (int)c.Type;
 			}
 		}
-
-		//public class Message
-		//{
-		//	public int Id { get; }
-		//	public string Text { get; }
-		//	public long 
-		//}
 	}
 }

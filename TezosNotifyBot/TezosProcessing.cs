@@ -148,12 +148,12 @@ namespace TezosNotifyBot
 		{
 			lastReceived = DateTime.UtcNow;
 			var tzKtHead = tzKt.GetHead();
-			logger.LogDebug($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
+			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
 
 			var block = tzKt.GetBlock(blockLevel);
-			logger.LogDebug($"Block {block.Level} received");
+			logger.LogInformation($"Block {block.Level} received");
 
 			if ((prevBlock != null && prevBlock.Level != block.Level - 1) || _currentConstants == null)
 				_currentConstants = tzKt.GetCurrentProtocol().constants;
@@ -799,6 +799,7 @@ namespace TezosNotifyBot
 				}
 			}
 		}
+
 		async Task ProcessOriginations(Storage.TezosDataContext db, List<Origination> ops)
 		{
 			foreach (var op in ops)
@@ -837,7 +838,7 @@ namespace TezosNotifyBot
 
 		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
 		{
-			logger.LogDebug($"ProcessBlockBakingData {block.Level}");
+			logger.LogInformation($"ProcessBlockBakingData {block.Level}");
 
 			var missedRights = tzktClient.GetRights(block.Level, "missed");
 			foreach (var right in missedRights)
@@ -926,7 +927,7 @@ namespace TezosNotifyBot
 		Cycle currentCycle;
 		async Task ProcessBlockMetadata(Storage.TezosDataContext db, Block block, ITzKtClient tzKtClient)
 		{
-			logger.LogDebug($"ProcessBlockMetadata {block.Level}");
+			logger.LogInformation("ProcessBlockMetadata {Level}", block.Level);
 			var cycles = tzKtClient.GetCycles();
 			var cycle = cycles.SingleOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
 			if (cycle == null)
@@ -1089,7 +1090,7 @@ namespace TezosNotifyBot
 
 			await VotingNotify(db, block, cycle, tzKtClient);
 			
-			logger.LogDebug($"ProcessBlockMetadata {block.Level} completed");
+			logger.LogInformation($"ProcessBlockMetadata {block.Level} completed");
 		}
 
 		public static double GetAvgProcessingTime()

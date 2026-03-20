@@ -1,4 +1,5 @@
 ﻿using Gelf.Extensions.Logging;
+using Google.Cloud.Dialogflow.V2;
 using Grafana.OpenTelemetry;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -12,6 +13,7 @@ using MihaZupan;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Polly;
 using Polly.Extensions.Http;
 using Serilog;
@@ -87,18 +89,19 @@ namespace TezosNotifyBot
                             );
                         builder.AddOpenTelemetry();
                     });
-                    services.AddOpenTelemetry().UseGrafana().WithLogging(logging => logging.AddOtlpExporter())
-                    .WithMetrics(metrics => metrics
-                    .UseGrafana()
-                    .AddRuntimeInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddOtlpExporter()
-					.AddMeter("TNB.Metrics"));
+                    services.AddOpenTelemetry()
+                        .UseGrafana()
+                        .WithLogging(logging => logging.AddOtlpExporter())
+                        .WithMetrics(metrics => metrics.UseGrafana()
+                                        .AddRuntimeInstrumentation()
+                                        .AddHttpClientInstrumentation()
+                                        .AddOtlpExporter()
+                                        .AddMeter("TNB.Metrics")
+                                        );
 
                     services.AddScoped<AddressService>();
                     services.AddSingleton<IMemoryCache>(sp => new MemoryCache());
-                    services.AddHttpClient<ReleasesClient>();                   
-                    
+                    services.AddHttpClient<ReleasesClient>();                    
 
                     services.AddTransient<ITzKtClient>(sp =>
                         new TzKtClient(new HttpClient(), sp.GetService<ILogger<TzKtClient>>(),
