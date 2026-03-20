@@ -46,6 +46,7 @@ namespace TezosNotifyBot.Workers
                 catch(Exception e)
 				{
                     _logger.LogError(e, e.Message);
+					System.Threading.Thread.Sleep(5000);
 				}
 			}
 		}

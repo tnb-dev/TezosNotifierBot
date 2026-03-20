@@ -112,8 +112,7 @@ namespace TezosNotifyBot
 		
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
-			var consumeTask = ConsumeChannelAsync(stoppingToken);
-			consumeTask.Start();
+			Task.Run(() => ConsumeChannelAsync(stoppingToken));
 			while (stoppingToken.IsCancellationRequested is false)
 			{
 				if (paused)
