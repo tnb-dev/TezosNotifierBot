@@ -37,16 +37,10 @@ namespace TezosNotifyBot
         private readonly IServiceProvider _serviceProvider;
         private BotConfig Config { get; set; }
         private ILogger<TezosBot> Logger { get; }
-                
-        
-        public static List<Command> Commands;
-
-        
         
         AddressManager addrMgr;
         private readonly ResourceManager resMgr;
-		
-                
+		                
         private readonly CommandsManager commandsManager;
         private readonly TezosBotFacade botClient;
         

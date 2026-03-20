@@ -7,12 +7,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using TezosNotifyBot.Abstractions;
 using TezosNotifyBot.CryptoCompare;
@@ -46,34 +48,57 @@ namespace TezosNotifyBot
 			this.resMgr = resMgr;
 			this.config = config.Value;
 			this.metrics = metrics;
+			
+			Channels = new Channel<Notification>[5];
+			for(int i = 0;i < 5; i++)
+				Channels[i] = Channel.CreateUnbounded<Notification>();
+
+			this.metrics.SetChannels(Channels);
 		}
 
-		//public TezosProcessing(IServiceProvider serviceProvider,
+		async ValueTask PushMessage(UserAddress ua, string text, int priority)
+		{
+			if (priority < 0 || priority > Channels.Length)
+				priority = Channels.Length - 1;
+			await Channels[priority].Writer.WriteAsync(new Notification(ua, null, text));
+		}
 
-		//	IOptions<BotConfig> config,
-		//	ResourceManager resourceManager,
-		//	CommandsManager commandsManager,
-		//	TezosBotFacade botClient,
-		//	TelegramBotInvoker telegramBotInvoker,
-		//	TelegramBotHandler telegramBotHandler)
-		//{
-		//	this.telegramBotInvoker = telegramBotInvoker;
-		//	_serviceProvider = serviceProvider;
-		//	Logger = logger;
-		//	Config = config.Value;
+		async ValueTask PushMessage(User u, string text, int priority)
+		{
+			if (priority < 0 || priority > Channels.Length)
+				priority = Channels.Length - 1;
+			await Channels[priority].Writer.WriteAsync(new Notification(null, u, text));
+		}
 
-		//	this.commandsManager = commandsManager;
-		//	this.botClient = botClient;
+		async Task ConsumeChannelAsync(CancellationToken ct)
+		{
+			while (!ct.IsCancellationRequested)
+			{
+				try
+				{
+					using var scope = serviceProvider.CreateScope();
+					var provider = scope.ServiceProvider;
+					using var db = scope.ServiceProvider.GetRequiredService<Storage.TezosDataContext>();
 
-		//	addrMgr = _serviceProvider.GetRequiredService<AddressManager>();
-		//	resMgr = resourceManager;
-		//	this.telegramBotHandler = telegramBotHandler;
-		//	this.telegramBotHandler.OnChosenInlineResult = OnChosenInlineResult;
-		//	this.telegramBotHandler.OnCallbackQuery = OnCallbackQuery;
-		//	this.telegramBotHandler.OnInlineQuery = OnInlineQuery;
-		//	this.telegramBotHandler.OnChannelPost = OnChannelPost;
-		//	this.telegramBotHandler.OnMessage = OnMessage;
-		//}
+					for (int i = 0; i < Channels.Length; i++)
+					{
+						while (Channels[i].Reader.TryRead(out Notification n))
+						{
+							if (n.UserAddress != null)
+								await tezosBot.SendTextMessageUA(db, n.UserAddress, n.Text);
+							else
+								await tezosBot.SendTextMessage(db, n.User.Id, n.Text, ReplyKeyboards.MainMenu);
+						}
+					}
+					await Task.Delay(10);
+				}
+				catch (Exception ex)
+				{
+					logger.LogError(ex, "ConsumeChannelAsync Failure");
+					await Task.Delay(5000);
+				}
+			}
+		}
 
 		static bool paused = false;
 		public static bool Paused { set { paused = value; } }
@@ -83,9 +108,12 @@ namespace TezosNotifyBot
 		DateTime lastWarn = DateTime.UtcNow;
 		static Block prevBlock;
 		Constants _currentConstants;
-
+		Channel<Notification>[] Channels;
+		
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
+			var consumeTask = ConsumeChannelAsync(stoppingToken);
+			consumeTask.Start();
 			while (stoppingToken.IsCancellationRequested is false)
 			{
 				if (paused)
@@ -370,7 +398,8 @@ namespace TezosNotifyBot
 						result += "\n#outgoing" +
 								  (from.Key.token != null ? " #" + from.Key.token.Symbol.ToLower() : "") +
 								  ua.HashTag() + tags;
-					await tezosBot.SendTextMessageUA(db, ua, result);
+					await PushMessage(ua, result, 0);
+					//await tezosBot.SendTextMessageU_A0(db, ua, result);
 				}
 			}
 
@@ -472,8 +501,8 @@ namespace TezosNotifyBot
 							text.AppendLine();
 							text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
 						}
-
-						await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
+						await PushMessage(delegateAddress, text.ToString(), 4);
+						//await tezosBot.SendTextMessageU_A4(db, delegateAddress, text.ToString());
 					}
 				}
 
@@ -588,7 +617,8 @@ namespace TezosNotifyBot
 					if (!ua.User.HideHashTags)
 						result += $"\n{operationTag}" + (to.Key.token != null ? " #" + to.Key.token.Symbol.ToLower() : "") +
 								  ua.HashTag() + tags;
-					await tezosBot.SendTextMessageUA(db, ua, result);
+					await PushMessage(ua, result, 0);
+					//await tezosBot.SendTextMessageU_A0(db, ua, result);
 				}
 			}
 
@@ -701,8 +731,8 @@ namespace TezosNotifyBot
 							{
 								result += "\n\n#whale" + ua_from.HashTag() + ua_to.HashTag();
 							}
-
-							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+							await PushMessage(u, result, 3);
+							//await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 						}
 					}
 				}
@@ -736,7 +766,8 @@ namespace TezosNotifyBot
 							});
 						if (!ua.User.HideHashTags)
 							result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
-						await tezosBot.SendTextMessageUA(db, ua, result);
+						await PushMessage(ua, result, 4);
+						//await tezosBot.SendTextMessageU_A4(db, ua, result);
 					}
 
 					foreach (var ua in db.GetUserAddresses(to).Where(o => o.NotifyDelegations))
@@ -754,7 +785,8 @@ namespace TezosNotifyBot
 							});
 						if (!ua.User.HideHashTags)
 							result += "\n\n#delegation" + sourceAddr.HashTag() + ua.HashTag();
-						await tezosBot.SendTextMessageUA(db, ua, result);
+						await PushMessage(ua, result, 0);
+						//await tezosBot.SendTextMessageU_A4(db, ua, result);
 					}
 
 					var ka_from = db.KnownAddresses.SingleOrDefault(x => x.Address == from) ?? new KnownAddress(from, null);
@@ -770,8 +802,8 @@ namespace TezosNotifyBot
 							{
 								result += "\n\n#stake" + ua_from.HashTag() + ua_to.HashTag();
 							}
-
-							await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
+							await PushMessage(u, result, 3);
+							//await tezosBot.SendTextMessage(db, u.Id, result, ReplyKeyboards.MainMenu);
 						}
 					}
 				}
@@ -794,7 +826,8 @@ namespace TezosNotifyBot
 							});
 						if (!ua.User.HideHashTags)
 							result += "\n\n#leave_delegate" + sourceAddr.HashTag() + ua.HashTag();
-						await tezosBot.SendTextMessageUA(db, ua, result);
+						await PushMessage(ua, result, 0);
+						//await tezosBot.SendTextMessageU_A4(db, ua, result);
 					}
 				}
 			}
@@ -819,7 +852,8 @@ namespace TezosNotifyBot
 						new ContextObject { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = ua, ua_to = targetAddr });
 					if (!ua.User.HideHashTags)
 						result += "\n\n#delegation" + targetAddr.HashTag() + ua.HashTag();
-					await tezosBot.SendTextMessageUA(db, ua, result);
+					await PushMessage(ua, result, 4);
+					//await tezosBot.SendTextMessageU_A4(db, ua, result);
 				}
 
 				foreach (var ua in db.GetUserAddresses(to).Where(o => o.NotifyDelegations))
@@ -831,7 +865,8 @@ namespace TezosNotifyBot
 						new ContextObject { u = ua.User, OpHash = op.Hash, Amount = amount, ua_from = sourceAddr, ua_to = ua });
 					if (!ua.User.HideHashTags)
 						result += "\n\n#delegation " + sourceAddr.HashTag() + ua.HashTag();
-					await tezosBot.SendTextMessageUA(db, ua, result);
+					await PushMessage(ua, result, 0);
+					//await tezosBot.SendTextMessageU_A4(db, ua, result);
 				}
 			}
 		}
@@ -905,7 +940,8 @@ namespace TezosNotifyBot
 							//	await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId.Value);
 							//}
 							//else
-								await tezosBot.SendTextMessageUA(db, ua, result, 0);
+							await PushMessage(ua, result, 2);
+							//await tezosBot.SendTextMessageU_A2(db, ua, result, 0);
 							ua.DownMessageId = null;
 						}
 					}
