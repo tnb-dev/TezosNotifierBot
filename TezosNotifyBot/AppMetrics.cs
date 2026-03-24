@@ -41,6 +41,7 @@ namespace TezosNotifyBot
 		{
 			_messagesSent.Add(1,
 				new KeyValuePair<string, object?>("success", isSuccess));
+			_messagesPerBlock++;
 		}
 
 		public void MessageReceived() => _messagesReceived.Add(1);
