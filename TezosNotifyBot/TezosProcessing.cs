@@ -154,6 +154,7 @@ namespace TezosNotifyBot
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
 			var processingStart = Stopwatch.StartNew();
+			metrics.StartProcessing();
 
 			var block = tzKt.GetBlock(blockLevel);
 			logger.LogInformation($"Block {block.Level} received");
