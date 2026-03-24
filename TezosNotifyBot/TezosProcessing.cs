@@ -150,7 +150,7 @@ namespace TezosNotifyBot
 			lastReceived = DateTime.UtcNow;
 			var tzKtHead = tzKt.GetHead();
 			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
-			metrics.BlockProcessingLag(tzKtHead.knownLevel - tzKtHead.level);
+			metrics.BlockProcessingLag(tzKtHead.level - blockLevel);
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
 			var processingStart = Stopwatch.StartNew();
