@@ -55,7 +55,7 @@ namespace TezosNotifyBot
 		
 		public void BlockProcessingLag(int lag) => _blockProcessingLag.Record(lag);
 
-		public void BlockProcessingTime(long time) => _blockProcessingTime.Record(time);
+		public void BlockProcessingTime(long time, long block) => _blockProcessingTime.Record(time, new KeyValuePair<string, object>("Block", block));
 
 		public void StartProcessing() => _messagesPerBlock = 0;
 	}

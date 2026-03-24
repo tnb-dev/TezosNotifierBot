@@ -614,7 +614,7 @@ namespace TezosNotifyBot
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
 			processingStart.Stop();
-			metrics.BlockProcessingTime(processingStart.ElapsedMilliseconds);
+			metrics.BlockProcessingTime(processingStart.ElapsedMilliseconds, block.Level);
 			return true;
 		}
 
