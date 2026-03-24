@@ -30,11 +30,11 @@ namespace TezosNotifyBot
 			_blocksProcessed = meter.CreateCounter<long>("blocks.processed",
 				description: "Blocks processed");
 
-			_blockProcessingLag = meter.CreateGauge<long>("Block processing lag", "blocks");
+			_blockProcessingLag = meter.CreateGauge<long>("block.processing.lag", "blocks", "Block processing lag");
 
-			_blockProcessingTime = meter.CreateGauge<long>("Block processing time", "ms");
+			_blockProcessingTime = meter.CreateGauge<long>("block.processing.time", "ms", "Block processing time");
 
-			_messagesSentPerBlock = meter.CreateGauge<long>("Messages sent per block");
+			_messagesSentPerBlock = meter.CreateGauge<long>("messages.sent.per.block", description: "Messages sent per block");
 		}
 
 		public void MessageSent(bool isSuccess = true)
