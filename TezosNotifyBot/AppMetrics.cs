@@ -12,6 +12,8 @@ namespace TezosNotifyBot
 		private readonly Counter<long> _messagesSent;
 		private readonly Counter<long> _messagesReceived;
 		private readonly Counter<long> _blocksProcessed;
+		private readonly Gauge<long> _blockProcessingLag;
+		private readonly Gauge<long> _blockProcessingTime;
 
 		public AppMetrics(IMeterFactory meterFactory)
 		{
@@ -25,6 +27,10 @@ namespace TezosNotifyBot
 
 			_blocksProcessed = meter.CreateCounter<long>("blocks.processed",
 				description: "Blocks processed");
+
+			_blockProcessingLag = meter.CreateGauge<long>("Block processing lag");
+
+			_blockProcessingTime = meter.CreateGauge<long>("Block processing time", "ms");
 		}
 
 		public void MessageSent(bool isSuccess = true)
@@ -33,14 +39,12 @@ namespace TezosNotifyBot
 				new KeyValuePair<string, object?>("success", isSuccess));
 		}
 
-		public void MessageReceived()
-		{
-			_messagesReceived.Add(1);
-		}
+		public void MessageReceived() => _messagesReceived.Add(1);
+		
+		public void BlockProcessed() => _blocksProcessed.Add(1);
+		
+		public void BlockProcessingLag(int lag) => _blockProcessingLag.Record(lag);
 
-		public void BlockProcessed()
-		{
-			_blocksProcessed.Add(1);
-		}
+		public void BlockProcessingTime(long time) => _blockProcessingTime.Record(time);
 	}
 }

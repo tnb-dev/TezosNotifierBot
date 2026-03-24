@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Net;
@@ -104,7 +105,7 @@ namespace TezosNotifyBot
 					var block = db.GetLastBlockLevel();
 					var blockNum = prevBlock?.Level ?? block.Item1;
 					if (!await Client_BlockReceived(db, tzkt, blockNum + 1, md))
-						Thread.Sleep(5000);
+						Thread.Sleep(3000);
 
 					if (DateTime.UtcNow.Subtract(lastReceived).TotalMinutes > 5 &&
 						DateTime.UtcNow.Subtract(lastWarn).TotalMinutes > 10)
@@ -149,8 +150,10 @@ namespace TezosNotifyBot
 			lastReceived = DateTime.UtcNow;
 			var tzKtHead = tzKt.GetHead();
 			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
+			metrics.BlockProcessingLag(tzKtHead.knownLevel - tzKtHead.level);
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
+			var processingStart = Stopwatch.StartNew();
 
 			var block = tzKt.GetBlock(blockLevel);
 			logger.LogInformation($"Block {block.Level} received");
@@ -609,6 +612,8 @@ namespace TezosNotifyBot
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
+			processingStart.Stop();
+			metrics.BlockProcessingTime(processingStart.ElapsedMilliseconds);
 			return true;
 		}
 
