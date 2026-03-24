@@ -598,7 +598,8 @@ namespace TezosNotifyBot
 
 			if (prevBlock == null || prevBlock.Level + 1 == block.Level)
 				db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
-			logger.LogInformation($"Block {block.Level} processed");
+			processingStart.Stop();
+			logger.LogInformation("Block {Level} processed, {Time} ms", block.Level, processingStart.ElapsedMilliseconds);
 			//lastHeader = header;
 			//lastHash = header.hash;
 			if (lastBlockChanged)
@@ -613,7 +614,6 @@ namespace TezosNotifyBot
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
-			processingStart.Stop();
 			metrics.BlockProcessingTime(processingStart.ElapsedMilliseconds, block.Level);
 			return true;
 		}
