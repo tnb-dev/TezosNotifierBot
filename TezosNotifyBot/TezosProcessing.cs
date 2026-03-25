@@ -147,13 +147,13 @@ namespace TezosNotifyBot
 
 		async Task<bool> Client_BlockReceived(Storage.TezosDataContext db, ITzKtClient tzKt, int blockLevel, MarketData md)
 		{
+			var processingStart = Stopwatch.StartNew();
 			lastReceived = DateTime.UtcNow;
 			var tzKtHead = tzKt.GetHead();
 			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
 			metrics.BlockProcessingLag(tzKtHead.level - blockLevel);
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
-			var processingStart = Stopwatch.StartNew();
 			metrics.StartProcessing();
 
 			var block = tzKt.GetBlock(blockLevel);
