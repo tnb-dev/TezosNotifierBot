@@ -264,6 +264,7 @@ namespace TezosNotifyBot.Model
                 ua.CreateDate = DateTime.UtcNow;
                 ua.NotifyBakingRewards = user.Type == 0;
                 ua.NotifyDelegatorsBalance = user.Type == 0;
+                ua.DelegatorsBalanceThreshold = 10;
                 ua.ChatId = chatId;
                 _db.Add(ua);
             }

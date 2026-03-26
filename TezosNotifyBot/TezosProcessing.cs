@@ -61,6 +61,7 @@ namespace TezosNotifyBot
 			if (priority < 0 || priority > Channels.Length)
 				priority = Channels.Length - 1;
 			await Channels[priority].Writer.WriteAsync(new Notification(ua, null, text));
+			metrics.RecordNQ(Channels[priority].Reader.Count, priority);
 		}
 
 		async ValueTask PushMessage(User u, string text, int priority)
@@ -68,6 +69,7 @@ namespace TezosNotifyBot
 			if (priority < 0 || priority > Channels.Length)
 				priority = Channels.Length - 1;
 			await Channels[priority].Writer.WriteAsync(new Notification(null, u, text));
+			metrics.RecordNQ(Channels[priority].Reader.Count, priority);
 		}
 
 		async Task ConsumeChannelAsync(CancellationToken ct)
@@ -88,6 +90,7 @@ namespace TezosNotifyBot
 								await tezosBot.SendTextMessageUA(db, n.UserAddress, n.Text);
 							else
 								await tezosBot.SendTextMessage(db, n.User.Id, n.Text, ReplyKeyboards.MainMenu);
+							metrics.RecordNQ(Channels[i].Reader.Count, i);
 						}
 					}
 					await Task.Delay(10);

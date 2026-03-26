@@ -14,6 +14,7 @@ namespace TezosNotifyBot
 		private readonly Counter<long> _messagesSent;
 		private readonly Counter<long> _messagesReceived;
 		private readonly Counter<long> _blocksProcessed;
+		private readonly Histogram<long>[] nq = new Histogram<long>[5];
 
 		public AppMetrics(IMeterFactory meterFactory)
 		{
@@ -28,11 +29,11 @@ namespace TezosNotifyBot
 			_blocksProcessed = meter.CreateCounter<long>("blocks.processed",
 				description: "Blocks processed");
 
-			meter.CreateObservableGauge<long>("Notification queue 0", () => channels != null ? channels[0].Reader.Count : 0);
-			meter.CreateObservableGauge<long>("Notification queue 1", () => channels != null ? channels[1].Reader.Count : 0);
-			meter.CreateObservableGauge<long>("Notification queue 2", () => channels != null ? channels[2].Reader.Count : 0);
-			meter.CreateObservableGauge<long>("Notification queue 3", () => channels != null ? channels[3].Reader.Count : 0);
-			meter.CreateObservableGauge<long>("Notification queue 4", () => channels != null ? channels[4].Reader.Count : 0);
+			nq[0] = meter.CreateHistogram<long>("notification.queue.0");
+			nq[1] = meter.CreateHistogram<long>("notification.queue.1");
+			nq[2] = meter.CreateHistogram<long>("notification.queue.2");
+			nq[3] = meter.CreateHistogram<long>("notification.queue.3");
+			nq[4] = meter.CreateHistogram<long>("notification.queue.4");
 		}
 
 		Channel<Notification>[] channels;
@@ -56,5 +57,7 @@ namespace TezosNotifyBot
 		{
 			_blocksProcessed.Add(1);
 		}
+
+		public void RecordNQ(int size, int priority) => nq[priority].Record(size);
 	}
 }
