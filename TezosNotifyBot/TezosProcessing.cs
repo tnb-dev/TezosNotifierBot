@@ -158,6 +158,7 @@ namespace TezosNotifyBot
 
 			var block = tzKt.GetBlock(blockLevel);
 			logger.LogInformation($"Block {block.Level} received");
+			metrics.BlockTxCount(block.Transactions.Count);
 
 			if ((prevBlock != null && prevBlock.Level != block.Level - 1) || _currentConstants == null)
 				_currentConstants = tzKt.GetCurrentProtocol().constants;

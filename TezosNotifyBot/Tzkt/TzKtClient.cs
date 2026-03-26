@@ -19,18 +19,20 @@ namespace TezosNotifyBot.Tzkt
 		ILogger<TzKtClient> _logger;
 		HttpClient _client;
 		IMemoryCache _cache;
+		AppMetrics _appMetrics;
 
 		private readonly JsonSerializerSettings _jsonSerializerSettings = new JsonSerializerSettings
 		{
 			ContractResolver = new CamelCasePropertyNamesContractResolver()
 		};
 
-		public TzKtClient(HttpClient http, ILogger<TzKtClient> logger, IConfiguration config, IMemoryCache cache)
+		public TzKtClient(HttpClient http, ILogger<TzKtClient> logger, IConfiguration config, IMemoryCache cache, AppMetrics metrics)
 		{
 			_client = http;
 			_client.BaseAddress = new Uri(config.GetValue<string>("TzKtUrl"));
 			_logger = logger;
 			_cache = cache;
+			_appMetrics = metrics;
 		}
 		List<Account> ITzKtClient.GetAccounts(string type, int offset)
 		{
@@ -177,6 +179,7 @@ namespace TezosNotifyBot.Tzkt
 				System.Threading.Thread.Sleep(50);
 				result = _client.GetStringAsync(addr).ConfigureAwait(false).GetAwaiter().GetResult();
 				_logger.LogDebug($"download complete: {_client.BaseAddress}{addr}");
+				_appMetrics.ApiRequestInc();
 				if (caching)
 					_cache.Set(addr, result, new TimeSpan(0, 1, 0));
 				return (string)result;

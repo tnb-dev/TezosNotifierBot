@@ -15,7 +15,10 @@ namespace TezosNotifyBot
 		private readonly Gauge<long> _blockProcessingLag;
 		private readonly Gauge<long> _blockProcessingTime;
 		private readonly Gauge<long> _messagesSentPerBlock;
+		private readonly Gauge<long> _blockTxCount;
+		private readonly Gauge<long> _blockApiRequestCount;
 		long _messagesPerBlock = 0;
+		long _requestsPerBlock = 0;
 
 		public AppMetrics(IMeterFactory meterFactory)
 		{
@@ -35,6 +38,10 @@ namespace TezosNotifyBot
 			_blockProcessingTime = meter.CreateGauge<long>("block.processing.time", "ms", "Block processing time");
 
 			_messagesSentPerBlock = meter.CreateGauge<long>("messages.sent.per.block", description: "Messages sent per block");
+
+			_blockTxCount = meter.CreateGauge<long>("block.transactions.count", "count", "Block transactions count");
+
+			_blockApiRequestCount = meter.CreateGauge<long>("block.api.requests", description: "API requests per block");
 		}
 
 		public void MessageSent(bool isSuccess = true)
@@ -51,6 +58,8 @@ namespace TezosNotifyBot
 			_blocksProcessed.Add(1);
 			_messagesSentPerBlock.Record(_messagesPerBlock);
 			_messagesPerBlock = 0;
+			_blockApiRequestCount.Record(_requestsPerBlock);
+			_requestsPerBlock = 0;
 		}
 		
 		public void BlockProcessingLag(int lag) => _blockProcessingLag.Record(lag);
@@ -58,5 +67,9 @@ namespace TezosNotifyBot
 		public void BlockProcessingTime(long time) => _blockProcessingTime.Record(time);
 
 		public void StartProcessing() => _messagesPerBlock = 0;
+
+		public void BlockTxCount(int txCount) => _blockTxCount.Record(txCount);
+
+		public void ApiRequestInc() => _requestsPerBlock++;
 	}
 }

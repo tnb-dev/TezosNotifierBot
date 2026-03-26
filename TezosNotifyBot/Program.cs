@@ -105,7 +105,7 @@ namespace TezosNotifyBot
 
                     services.AddTransient<ITzKtClient>(sp =>
                         new TzKtClient(new HttpClient(), sp.GetService<ILogger<TzKtClient>>(),
-                        context.Configuration, sp.GetService<IMemoryCache>()));
+                        context.Configuration, sp.GetService<IMemoryCache>(), sp.GetRequiredService<AppMetrics>()));
 
                     services.AddTransient<IMarketDataProvider>(sp => {
                         var config = sp.GetService<IOptions<BotConfig>>();
