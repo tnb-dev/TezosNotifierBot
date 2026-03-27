@@ -425,62 +425,67 @@ namespace TezosNotifyBot
 
 				var amount = to.Sum(o => o.Item3);
 
-				var contract = addrMgr.GetContract(to.Key.to);
-				if (contract.@delegate != null && to.Key.token == null)
+				if (db.Delegates.Any(d => d.Address == to.Key.to))
 				{
-					await HandleDelegatorsBalance();
-				}
-
-				async Task HandleDelegatorsBalance()
-				{
-					var receiverAddr = to.Key.to;
-					var senderAddr = to.First().Item1;
-					var isPayout = db.IsPayoutAddress(senderAddr);
-					if (isPayout)
-						return;
-
-					var delegatesAddr = db.GetUserAddresses(contract.@delegate)
-						.Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
-
-					if (delegatesAddr.Any())
+					var contract = addrMgr.GetContract(to.Key.to);
+					if (contract.@delegate != null && to.Key.token == null)
 					{
-						var receiver = new UserAddress {
-							Address = receiverAddr,
-							Balance = addrMgr.GetBalance(receiverAddr)
-						};
-						if (amount < receiver.InflationValue || amount < 10)
+						await HandleDelegatorsBalance();
+					}
+
+					async Task HandleDelegatorsBalance()
+					{
+						logger.BeginScope("Handle Delegators Balance for {Addr}", contract.@delegate);
+
+						var receiverAddr = to.Key.to;
+						var senderAddr = to.First().Item1;
+						var isPayout = db.IsPayoutAddress(senderAddr);
+						if (isPayout)
 							return;
 
-						foreach (var delegateAddress in delegatesAddr)
+						var delegatesAddr = db.GetUserAddresses(contract.@delegate)
+							.Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
+
+						if (delegatesAddr.Any())
 						{
-							var tags = new List<string>
+							var receiver = new UserAddress {
+								Address = receiverAddr,
+								Balance = addrMgr.GetBalance(receiverAddr)
+							};
+							if (amount < receiver.InflationValue || amount < 10)
+								return;
+
+							foreach (var delegateAddress in delegatesAddr)
 							{
+								var tags = new List<string>
+								{
 							"#delegator_balance",
 							receiver.HashTag(),
 							delegateAddress.HashTag()
 						};
-							var textData = new ContextObject {
-								u = delegateAddress.User,
-								md = md,
-								ua = receiver,
-								OpHash = to.First().Item4,
-								Block = block.Level,
-								Amount = amount,
-								Delegate = delegateAddress,
-							};
-							var text = new StringBuilder();
-							text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
+								var textData = new ContextObject {
+									u = delegateAddress.User,
+									md = md,
+									ua = receiver,
+									OpHash = to.First().Item4,
+									Block = block.Level,
+									Amount = amount,
+									Delegate = delegateAddress,
+								};
+								var text = new StringBuilder();
+								text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
 
-							text.AppendLine();
-							text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
-
-							if (delegateAddress.User.HideHashTags is false)
-							{
 								text.AppendLine();
-								text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
-							}
+								text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
 
-							await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
+								if (delegateAddress.User.HideHashTags is false)
+								{
+									text.AppendLine();
+									text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
+								}
+
+								await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
+							}
 						}
 					}
 				}
