@@ -154,6 +154,7 @@ namespace TezosNotifyBot
 			metrics.BlockProcessingLag(tzKtHead.level - blockLevel);
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
+			logger.BeginScope("Start block {Block} processing", blockLevel);
 			metrics.StartProcessing();
 
 			var block = tzKt.GetBlock(blockLevel);
@@ -936,7 +937,7 @@ namespace TezosNotifyBot
 		Cycle currentCycle;
 		async Task ProcessBlockMetadata(Storage.TezosDataContext db, Block block, ITzKtClient tzKtClient)
 		{
-			logger.LogInformation("ProcessBlockMetadata {Level}", block.Level);
+			logger.LogInformation("ProcessBlockMetadata {Block}", block.Level);
 			var cycles = tzKtClient.GetCycles();
 			var cycle = cycles.SingleOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
 			if (cycle == null)
