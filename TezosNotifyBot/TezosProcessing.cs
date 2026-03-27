@@ -438,47 +438,49 @@ namespace TezosNotifyBot
 					if (isPayout)
 						return;
 
-					var receiver = new UserAddress {
-						Address = receiverAddr,
-						Balance = addrMgr.GetBalance(receiverAddr)
-					};
-
-					if (amount < receiver.InflationValue)
-						return;
-
 					var delegatesAddr = db.GetUserAddresses(contract.@delegate)
 						.Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
 
-					foreach (var delegateAddress in delegatesAddr)
+					if (delegatesAddr.Any())
 					{
-						var tags = new List<string>
+						var receiver = new UserAddress {
+							Address = receiverAddr,
+							Balance = addrMgr.GetBalance(receiverAddr)
+						};
+						if (amount < receiver.InflationValue)
+							return;
+
+						foreach (var delegateAddress in delegatesAddr)
 						{
+							var tags = new List<string>
+							{
 							"#delegator_balance",
 							receiver.HashTag(),
 							delegateAddress.HashTag()
 						};
-						var textData = new ContextObject {
-							u = delegateAddress.User,
-							md = md,
-							ua = receiver,
-							OpHash = to.First().Item4,
-							Block = block.Level,
-							Amount = amount,
-							Delegate = delegateAddress,
-						};
-						var text = new StringBuilder();
-						text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
+							var textData = new ContextObject {
+								u = delegateAddress.User,
+								md = md,
+								ua = receiver,
+								OpHash = to.First().Item4,
+								Block = block.Level,
+								Amount = amount,
+								Delegate = delegateAddress,
+							};
+							var text = new StringBuilder();
+							text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
 
-						text.AppendLine();
-						text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
-
-						if (delegateAddress.User.HideHashTags is false)
-						{
 							text.AppendLine();
-							text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
-						}
+							text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
 
-						await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
+							if (delegateAddress.User.HideHashTags is false)
+							{
+								text.AppendLine();
+								text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
+							}
+
+							await tezosBot.SendTextMessageUA(db, delegateAddress, text.ToString());
+						}
 					}
 				}
 
