@@ -425,7 +425,7 @@ namespace TezosNotifyBot
 
 				var amount = to.Sum(o => o.Item3);
 
-				if (db.Delegates.Any(d => d.Address == to.Key.to))
+				if (amount >= 10)
 				{
 					var contract = addrMgr.GetContract(to.Key.to);
 					if (contract.@delegate != null && to.Key.token == null)
@@ -452,7 +452,7 @@ namespace TezosNotifyBot
 								Address = receiverAddr,
 								Balance = addrMgr.GetBalance(receiverAddr)
 							};
-							if (amount < receiver.InflationValue || amount < 10)
+							if (amount < receiver.InflationValue)
 								return;
 
 							foreach (var delegateAddress in delegatesAddr)
