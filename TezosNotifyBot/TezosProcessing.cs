@@ -447,7 +447,7 @@ namespace TezosNotifyBot
 							Address = receiverAddr,
 							Balance = addrMgr.GetBalance(receiverAddr)
 						};
-						if (amount < receiver.InflationValue)
+						if (amount < receiver.InflationValue || amount < 10)
 							return;
 
 						foreach (var delegateAddress in delegatesAddr)
