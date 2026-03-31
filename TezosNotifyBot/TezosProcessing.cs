@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Management;
 using System.Net;
@@ -134,7 +135,7 @@ namespace TezosNotifyBot
 					var block = db.GetLastBlockLevel();
 					var blockNum = prevBlock?.Level ?? block.Item1;
 					if (!await Client_BlockReceived(db, tzkt, blockNum + 1, md))
-						Thread.Sleep(5000);
+						Thread.Sleep(3000);
 
 					if (DateTime.UtcNow.Subtract(lastReceived).TotalMinutes > 5 &&
 						DateTime.UtcNow.Subtract(lastWarn).TotalMinutes > 10)
@@ -176,14 +177,19 @@ namespace TezosNotifyBot
 
 		async Task<bool> Client_BlockReceived(Storage.TezosDataContext db, ITzKtClient tzKt, int blockLevel, MarketData md)
 		{
+			var processingStart = Stopwatch.StartNew();
 			lastReceived = DateTime.UtcNow;
 			var tzKtHead = tzKt.GetHead();
 			logger.LogInformation($"TzKt level: {tzKtHead.level}, known level: {tzKtHead.knownLevel}");
+			metrics.BlockProcessingLag(tzKtHead.level - blockLevel);
 			if (tzKtHead.level < blockLevel + 1)
 				return false;
+			logger.BeginScope("Start block {Block} processing", blockLevel);
+			metrics.StartProcessing();
 
 			var block = tzKt.GetBlock(blockLevel);
 			logger.LogInformation($"Block {block.Level} received");
+			metrics.BlockTxCount(block.Transactions.Count);
 
 			if ((prevBlock != null && prevBlock.Level != block.Level - 1) || _currentConstants == null)
 				_currentConstants = tzKt.GetCurrentProtocol().constants;
@@ -450,61 +456,67 @@ namespace TezosNotifyBot
 
 				var amount = to.Sum(o => o.Item3);
 
-				var contract = addrMgr.GetContract(to.Key.to);
-				if (contract.@delegate != null && to.Key.token == null)
+				if (amount >= 10)
 				{
-					await HandleDelegatorsBalance();
-				}
-
-				async Task HandleDelegatorsBalance()
-				{
-					var receiverAddr = to.Key.to;
-					var senderAddr = to.First().Item1;
-					var isPayout = db.IsPayoutAddress(senderAddr);
-					if (isPayout)
-						return;
-
-					var receiver = new UserAddress {
-						Address = receiverAddr,
-						Balance = addrMgr.GetBalance(receiverAddr)
-					};
-
-					if (amount < receiver.InflationValue)
-						return;
-
-					var delegatesAddr = db.GetUserAddresses(contract.@delegate)
-						.Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
-
-					foreach (var delegateAddress in delegatesAddr)
+					var contract = addrMgr.GetContract(to.Key.to);
+					if (contract.@delegate != null && to.Key.token == null)
 					{
-						var tags = new List<string>
-						{
-							"#delegator_balance",
-							receiver.HashTag(),
-							delegateAddress.HashTag()
-						};
-						var textData = new ContextObject {
-							u = delegateAddress.User,
-							md = md,
-							ua = receiver,
-							OpHash = to.First().Item4,
-							Block = block.Level,
-							Amount = amount,
-							Delegate = delegateAddress,
-						};
-						var text = new StringBuilder();
-						text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
+						await HandleDelegatorsBalance();
+					}
 
-						text.AppendLine();
-						text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
+					async Task HandleDelegatorsBalance()
+					{
+						logger.BeginScope("Handle Delegators Balance for {Addr}", contract.@delegate);
 
-						if (delegateAddress.User.HideHashTags is false)
+						var receiverAddr = to.Key.to;
+						var senderAddr = to.First().Item1;
+						var isPayout = db.IsPayoutAddress(senderAddr);
+						if (isPayout)
+							return;
+
+						var delegatesAddr = db.GetUserAddresses(contract.@delegate)
+							.Where(x => x.NotifyDelegatorsBalance && x.DelegatorsBalanceThreshold < amount && x.User.Type == 0);
+
+						if (delegatesAddr.Any())
 						{
-							text.AppendLine();
-							text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
+							var receiver = new UserAddress {
+								Address = receiverAddr,
+								Balance = addrMgr.GetBalance(receiverAddr)
+							};
+							if (amount < receiver.InflationValue)
+								return;
+
+							foreach (var delegateAddress in delegatesAddr)
+							{
+								var tags = new List<string> {
+									"#delegator_balance",
+									receiver.HashTag(),
+									delegateAddress.HashTag()
+								};
+								var textData = new ContextObject {
+									u = delegateAddress.User,
+									md = md,
+									ua = receiver,
+									OpHash = to.First().Item4,
+									Block = block.Level,
+									Amount = amount,
+									Delegate = delegateAddress,
+								};
+								var text = new StringBuilder();
+								text.AppendLine(resMgr.Get(Res.DelegatorsBalance, textData));
+
+								text.AppendLine();
+								text.AppendLine(resMgr.Get(Res.CurrentDelegatorBalance, textData));
+
+								if (delegateAddress.User.HideHashTags is false)
+								{
+									text.AppendLine();
+									text.AppendLine(string.Join(" ", tags.Select(x => x.Trim())));
+								}
+								await PushMessage(delegateAddress, text.ToString(), 4);
+								//await tezosBot.SendTextMessageU_A4(db, delegateAddress, text.ToString());
+							}
 						}
-						await PushMessage(delegateAddress, text.ToString(), 4);
-						//await tezosBot.SendTextMessageU_A4(db, delegateAddress, text.ToString());
 					}
 				}
 
@@ -626,7 +638,8 @@ namespace TezosNotifyBot
 
 			if (prevBlock == null || prevBlock.Level + 1 == block.Level)
 				db.SetLastBlockLevel(block.Level, block.blockRound, block.Hash);
-			logger.LogInformation($"Block {block.Level} processed");
+			processingStart.Stop();
+			logger.LogInformation($"Block {block.Level} processed, {processingStart.ElapsedMilliseconds} ms");
 			//lastHeader = header;
 			//lastHash = header.hash;
 			if (lastBlockChanged)
@@ -641,6 +654,7 @@ namespace TezosNotifyBot
 			if (blockProcessings.Count > 21)
 				blockProcessings.Dequeue();
 			metrics.BlockProcessed();
+			metrics.BlockProcessingTime(processingStart.ElapsedMilliseconds);
 			return true;
 		}
 
@@ -965,7 +979,7 @@ namespace TezosNotifyBot
 		Cycle currentCycle;
 		async Task ProcessBlockMetadata(Storage.TezosDataContext db, Block block, ITzKtClient tzKtClient)
 		{
-			logger.LogInformation("ProcessBlockMetadata {Level}", block.Level);
+			logger.LogInformation("ProcessBlockMetadata {Block}", block.Level);
 			var cycles = tzKtClient.GetCycles();
 			var cycle = cycles.SingleOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
 			if (cycle == null)

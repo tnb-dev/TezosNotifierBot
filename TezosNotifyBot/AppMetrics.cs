@@ -14,6 +14,13 @@ namespace TezosNotifyBot
 		private readonly Counter<long> _messagesSent;
 		private readonly Counter<long> _messagesReceived;
 		private readonly Counter<long> _blocksProcessed;
+		private readonly Gauge<long> _blockProcessingLag;
+		private readonly Gauge<long> _blockProcessingTime;
+		private readonly Gauge<long> _messagesSentPerBlock;
+		private readonly Gauge<long> _blockTxCount;
+		private readonly Gauge<long> _blockApiRequestCount;
+		long _messagesPerBlock = 0;
+		long _requestsPerBlock = 0;
 		private readonly Histogram<long>[] nq = new Histogram<long>[5];
 
 		public AppMetrics(IMeterFactory meterFactory)
@@ -28,6 +35,16 @@ namespace TezosNotifyBot
 
 			_blocksProcessed = meter.CreateCounter<long>("blocks.processed",
 				description: "Blocks processed");
+
+			_blockProcessingLag = meter.CreateGauge<long>("block.processing.lag", "blocks", "Block processing lag");
+
+			_blockProcessingTime = meter.CreateGauge<long>("block.processing.time", "ms", "Block processing time");
+
+			_messagesSentPerBlock = meter.CreateGauge<long>("messages.sent.per.block", description: "Messages sent per block");
+
+			_blockTxCount = meter.CreateGauge<long>("block.transactions.count", "count", "Block transactions count");
+
+			_blockApiRequestCount = meter.CreateGauge<long>("block.api.requests", description: "API requests per block");
 
 			nq[0] = meter.CreateHistogram<long>("notification.queue.0");
 			nq[1] = meter.CreateHistogram<long>("notification.queue.1");
@@ -46,17 +63,29 @@ namespace TezosNotifyBot
 		{
 			_messagesSent.Add(1,
 				new KeyValuePair<string, object?>("success", isSuccess));
+			_messagesPerBlock++;
 		}
 
-		public void MessageReceived()
-		{
-			_messagesReceived.Add(1);
-		}
+		public void MessageReceived() => _messagesReceived.Add(1);
 
 		public void BlockProcessed()
 		{
 			_blocksProcessed.Add(1);
+			_messagesSentPerBlock.Record(_messagesPerBlock);
+			_messagesPerBlock = 0;
+			_blockApiRequestCount.Record(_requestsPerBlock);
+			_requestsPerBlock = 0;
 		}
+		
+		public void BlockProcessingLag(int lag) => _blockProcessingLag.Record(lag);
+
+		public void BlockProcessingTime(long time) => _blockProcessingTime.Record(time);
+
+		public void StartProcessing() => _messagesPerBlock = 0;
+
+		public void BlockTxCount(int txCount) => _blockTxCount.Record(txCount);
+
+		public void ApiRequestInc() => _requestsPerBlock++;
 
 		public void RecordNQ(int size, int priority) => nq[priority].Record(size);
 	}

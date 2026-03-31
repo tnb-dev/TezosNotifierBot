@@ -266,6 +266,7 @@ namespace TezosNotifyBot.Model
                 ua.NotifyDelegatorsBalance = user.Type == 0;
                 ua.DelegatorsBalanceThreshold = 10;
                 ua.ChatId = chatId;
+                ua.DelegatorsBalanceThreshold = 10;
                 _db.Add(ua);
             }
 
