@@ -1855,7 +1855,8 @@ namespace TezosNotifyBot
         }
         public async Task<int?> SendTextMessageUA(Storage.TezosDataContext db, UserAddress ua, string text, int replaceId = 0)
         {
-			var nsd = NotifyStatData.Load(ua.User);
+			var u = db.GetUser(ua.UserId);
+			var nsd = NotifyStatData.Load(u);
 			if (nsd.Total >= NotifyStatData.MaxCount)
 			{
 				nsd.IncMissed();
@@ -1864,7 +1865,8 @@ namespace TezosNotifyBot
 			}
 			var keyboard = ReplyKeyboards.MainMenu;
 			nsd.Inc();
-			nsd.Store(ua.User);
+			nsd.Store(u);
+			db.SaveChanges();
 			int msg;
 			if (ua.ChatId == 0)
                 msg = await SendTextMessage(db, ua.UserId, text, keyboard, replaceId);
