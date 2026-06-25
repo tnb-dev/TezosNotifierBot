@@ -127,13 +127,19 @@ Check out the <a href='{release.AnnounceUrl}'>announcement</a>";
             }).ToArray();
         }
 
-        private class ReleaseItem
+        public class ReleaseItem
         {
 			public int major { get; set; }
 			public int minor { get; set; }
-			public int rc { get; set; }
+			public PreRelease prerelease { get; set; }
 			public string announcement { get; set; }
 			public bool? latest { get; set; }
 		}
+
+        public class PreRelease
+        {
+            public string kind { get; set; }
+            public int number { get; set; }
+        }
     }
 }
