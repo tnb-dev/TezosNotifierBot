@@ -26,7 +26,7 @@ namespace TezosNotifyBot.CryptoCompare
 
 		MarketData IMarketDataProvider.GetMarketData()
         {
-			if (DateTime.UtcNow.Subtract(md.Received).TotalMinutes < 5)
+			//if (DateTime.UtcNow.Subtract(md.Received).TotalMinutes < 5)
                 return md;
 
             try

@@ -41,11 +41,8 @@ namespace TezosNotifyBot.Tezos
         public List<FrozenBalanceByCycle> frozen_balance_by_cycle { get; set; }
         public decimal staking_balance { get; set; }
         public List<string> delegated_contracts { get; set; }
-        //public decimal delegated_balance { get; set; }
         public bool deactivated { get; set; }
-        //public int grace_period { get; set; }
         public DateTime Received { get; } = DateTime.UtcNow;
-        //public string Hash;
         public decimal? bond;
         public int NumDelegators { get; set; }
         public decimal Bond => bond ?? (balance - frozen_balance + (frozen_balance_by_cycle.Count > 0 ? frozen_balance_by_cycle.Sum(o => o.deposit) : 0));
@@ -56,12 +53,7 @@ namespace TezosNotifyBot.Tezos
     {
         public string manager { get; set; }
         public ulong balance { get; set; }
-        //public bool spendable { get; set; }
         public string @delegate { get; set; }
-		//public string counter { get; set; }
-
-		//public readonly DateTime Received = DateTime.Now;
-		//public string Hash;
     }
     
 	public class CryptoComparePrice
