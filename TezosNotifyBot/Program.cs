@@ -83,10 +83,10 @@ namespace TezosNotifyBot
                         {
                             builder.AddConsole();
                         }
-                        else
-                            builder.AddGelf(options =>
-                                options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
-                            );
+                        //else
+                        //    builder.AddGelf(options =>
+                        //        options.LogSource = $"Tezos {context.HostingEnvironment.EnvironmentName}"
+                        //    );
                         builder.AddOpenTelemetry();
                     });
                     services.AddOpenTelemetry()
