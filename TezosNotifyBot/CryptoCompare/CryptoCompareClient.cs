@@ -39,8 +39,9 @@ namespace TezosNotifyBot.CryptoCompare
 				var apiInstance = new SpotApi(config);
 				var result = apiInstance.ListCandlesticks("XTZ_USDT", 1);
                 md.price_usd = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
-				result = apiInstance.ListCandlesticks("XTZ_BTC", 1);
+				result = apiInstance.ListCandlesticks("BTC_USDT", 1);
 				md.price_btc = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
+                md.price_btc = md.price_usd / md.price_btc;
 
 				md.Received = DateTime.UtcNow;
             }
