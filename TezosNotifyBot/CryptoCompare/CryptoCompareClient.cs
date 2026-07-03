@@ -37,12 +37,12 @@ namespace TezosNotifyBot.CryptoCompare
 				Configuration config = new Configuration();
 				config.BasePath = "https://api.gateio.ws/api/v4";
 				var apiInstance = new SpotApi(config);
-				var currencyPair = "XTZ_USDT";
-				var result = apiInstance.ListCandlesticks(currencyPair, 1);
-
-				
+				var result = apiInstance.ListCandlesticks("XTZ_USDT", 1);
                 md.price_usd = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
-                md.Received = DateTime.UtcNow;
+				result = apiInstance.ListCandlesticks("XTZ_BTC", 1);
+				md.price_btc = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
+
+				md.Received = DateTime.UtcNow;
             }
             catch (Exception e)
             {
