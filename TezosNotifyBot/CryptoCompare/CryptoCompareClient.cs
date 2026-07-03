@@ -1,7 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Io.Gate.GateApi.Api;
+using Io.Gate.GateApi.Client;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Http;
 using System.Text;
 using TezosNotifyBot.Tezos;
@@ -26,18 +29,19 @@ namespace TezosNotifyBot.CryptoCompare
 
 		MarketData IMarketDataProvider.GetMarketData()
         {
-			//if (DateTime.UtcNow.Subtract(md.Received).TotalMinutes < 5)
+			if (DateTime.UtcNow.Subtract(md.Received).TotalMinutes < 5)
                 return md;
 
             try
             {
-                string str =
-                    Download(
-                        $"https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH&api_key={_cryptoCompareToken}");
-                var dto = JsonConvert.DeserializeObject<CryptoComparePrice>(str);
-                md.price_eur = dto.EUR;
-                md.price_usd = dto.USD;
-                md.price_btc = dto.BTC;
+				Configuration config = new Configuration();
+				config.BasePath = "https://api.gateio.ws/api/v4";
+				var apiInstance = new SpotApi(config);
+				var currencyPair = "XTZ_USDT";
+				var result = apiInstance.ListCandlesticks(currencyPair, 1);
+
+				
+                md.price_usd = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
                 md.Received = DateTime.UtcNow;
             }
             catch (Exception e)
