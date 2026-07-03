@@ -47,7 +47,7 @@ namespace TezosNotifyBot.CryptoCompare
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to call https://min-api.cryptocompare.com/data/price?fsym=XTZ&tsyms=BTC,USD,EUR,ETH");
+                
             }
             return md;
 		}
