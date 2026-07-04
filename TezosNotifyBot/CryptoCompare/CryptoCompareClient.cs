@@ -42,6 +42,9 @@ namespace TezosNotifyBot.CryptoCompare
 				result = apiInstance.ListCandlesticks("BTC_USDT", 1);
 				md.price_btc = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
                 md.price_btc = md.price_usd / md.price_btc;
+				result = apiInstance.ListCandlesticks("CEUR_USDT", 1);
+				md.price_eur = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
+				md.price_eur = md.price_usd / md.price_eur;
 
 				md.Received = DateTime.UtcNow;
             }
