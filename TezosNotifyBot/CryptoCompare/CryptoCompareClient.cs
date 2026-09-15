@@ -42,9 +42,9 @@ namespace TezosNotifyBot.CryptoCompare
 				result = apiInstance.ListCandlesticks("BTC_USDT", 1);
 				md.price_btc = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
                 md.price_btc = md.price_usd / md.price_btc;
-				result = apiInstance.ListCandlesticks("CEUR_USDT", 1);
-				md.price_eur = decimal.Parse(result[0][3], System.Globalization.NumberStyles.Number, CultureInfo.InvariantCulture);
-				md.price_eur = md.price_usd / md.price_eur;
+				var eurJson = Download("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=USD");
+				var eurRates = JsonConvert.DeserializeObject<FrankfurterLatest>(eurJson);
+				md.price_eur = md.price_usd / eurRates.Rates["USD"];
 
 				md.Received = DateTime.UtcNow;
             }
@@ -71,5 +71,11 @@ namespace TezosNotifyBot.CryptoCompare
                 throw;
             }
         }
+
+		class FrankfurterLatest
+		{
+			[JsonProperty("rates")]
+			public Dictionary<string, decimal> Rates { get; set; }
+		}
     }
 }
