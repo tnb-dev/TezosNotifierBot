@@ -48,8 +48,8 @@ namespace TezosNotifyBot.CryptoCompare
 
 				md.Received = DateTime.UtcNow;
             }
-            catch (Exception e)
-            {
+            catch (Exception)
+			{
                 
             }
             return md;

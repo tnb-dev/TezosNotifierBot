@@ -1152,5 +1152,6 @@ namespace TezosNotifyBot
 		}
 
 		public static int PrevBlockLevel => prevBlock?.Level ?? 0;
+		public static DateTime PrevBlockTimestamp => prevBlock?.Timestamp ?? DateTime.MinValue;
 	}
 }
