@@ -196,9 +196,9 @@ namespace TezosNotifyBot
 			if (prevBlock == null)
 				prevBlock = tzKt.GetBlock(blockLevel - 1);
 
-			await ProcessBlockBakingData(db, block, tzKt);
+			//await ProcessBlockBakingData(db, block, tzKt);
 
-			await ProcessBlockMetadata(db, block, tzKt);
+			//await ProcessBlockMetadata(db, block, tzKt);
 
 			// var periods = tzKt.GetVotingPeriods();
 			// var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
