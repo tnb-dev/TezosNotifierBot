@@ -890,81 +890,80 @@ namespace TezosNotifyBot
 		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
 		{
 			var sw = Stopwatch.StartNew();
+			var sw0 = new Stopwatch();
+			var sw1 = new Stopwatch();
+			var sw2 = new Stopwatch();
+			var sw3 = new Stopwatch();
 			logger.LogInformation($"ProcessBlockBakingData {block.Level}");
 
 			var missedRights = tzktClient.GetRights(block.Level, "missed");
-			foreach (var right in missedRights)
+			sw0.Start();
+			var uaddrs = db.GetUserAddresses(missedRights.Select(right => right.baker.address).ToList());
+			sw0.Stop();
+
+			foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
 			{
-				var uaddrs = db.GetUserAddresses(right.baker.address);
-
-				foreach (var ua in uaddrs.Where(o => o.NotifyMisses))
+				if (ua.DownStart == null)
 				{
-					if (ua.DownStart == null)
-					{
-						ua.DownStart = block.Timestamp;
-						ua.DownStartLevel = block.Level;
-					}
-					ua.DownEnd = null;
-
-					if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold + 1))
-					{
-						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block <a href='{t.block(ua.DownStartLevel ?? 0)}'>{ua.DownStartLevel}</a>";
-						if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
-						{
-							if (!ua.User.HideHashTags)
-								result += "\n\n#missed" + ua.HashTag();
-							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, 0);
-							ua.LastUpdate = block.Timestamp;
-						}
-					}
-					await db.SaveChangesAsync();
+					ua.DownStart = block.Timestamp;
+					ua.DownStartLevel = block.Level;
 				}
+				ua.DownEnd = null;
+
+				if (block.Timestamp >= ua.DownStart.Value.AddMinutes((double)ua.MissesThreshold + 1))
+				{
+					var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block <a href='{t.block(ua.DownStartLevel ?? 0)}'>{ua.DownStartLevel}</a>";
+					if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
+					{
+						if (!ua.User.HideHashTags)
+							result += "\n\n#missed" + ua.HashTag();
+						ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, 0);
+						ua.LastUpdate = block.Timestamp;
+					}
+				}
+				await db.SaveChangesAsync();
 			}
+			
 			logger.LogInformation($"Block {block.Level} missed rights processed in {sw.ElapsedMilliseconds} ms");
 
 			var activeDelegates = block.Endorsements.Select(o => o.@delegate.address).ToList();
 			activeDelegates.Add(block.producer.address);
-			var sw1 = new Stopwatch();
-			var sw2 = new Stopwatch();
-			var sw3 = new Stopwatch();
-			foreach (var addr in activeDelegates)
+			
+			sw1.Start();
+			uaddrs = db.UserAddresses.Include(x => x.User).Where(o => activeDelegates.Contains(o.Address) && !o.IsDeleted && !o.User.Inactive && o.NotifyMisses && o.DownStart.HasValue).ToList();
+			sw1.Stop();
+			foreach (var ua in uaddrs)
 			{
-				sw1.Start();
-				var uaddrs = db.UserAddresses.Include(x => x.User).Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive && o.NotifyMisses && o.DownStart.HasValue).ToList();
-				sw1.Stop();
-				foreach (var ua in uaddrs)
+				if (ua.DownEnd == null)
 				{
-					if (ua.DownEnd == null)
-					{
-						ua.DownEnd = block.Timestamp;
-						ua.DownEndLevel = block.Level;
-					}
-
-					if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold + 1))
-					{
-						if (!ua.DownMessageId.HasValue)
-						{
-							ua.DownStart = null;
-							ua.DownEnd = null;
-						}
-						else
-						{
-							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {ua.DownEnd.Value.ToString("MMM dd, hh:mm tt")}, at block <a href='{t.block(ua.DownEndLevel ?? 0)}'>{ua.DownEndLevel}</a>";
-							if (!ua.User.HideHashTags)
-								result += "\n\n#missed" + ua.HashTag();
-							sw2.Start();
-							await PushMessage(ua, result, 2);
-							sw2.Stop();
-							ua.DownMessageId = null;
-						}
-					}
-					sw3.Start();
-					await db.SaveChangesAsync();
-					sw3.Stop();
+					ua.DownEnd = block.Timestamp;
+					ua.DownEndLevel = block.Level;
 				}
+
+				if (block.Timestamp >= ua.DownEnd.Value.AddMinutes((double)ua.MissesThreshold + 1))
+				{
+					if (!ua.DownMessageId.HasValue)
+					{
+						ua.DownStart = null;
+						ua.DownEnd = null;
+					}
+					else
+					{
+						var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {ua.DownEnd.Value.ToString("MMM dd, hh:mm tt")}, at block <a href='{t.block(ua.DownEndLevel ?? 0)}'>{ua.DownEndLevel}</a>";
+						if (!ua.User.HideHashTags)
+							result += "\n\n#missed" + ua.HashTag();
+						sw2.Start();
+						await PushMessage(ua, result, 2);
+						sw2.Stop();
+						ua.DownMessageId = null;
+					}
+				}
+				sw3.Start();
+				await db.SaveChangesAsync();
+				sw3.Stop();
 			}
 
-			logger.LogInformation($"Block {block.Level} baking data processed in {sw.ElapsedMilliseconds} ms, sw1:{sw1.ElapsedMilliseconds}, sw2:{sw2.ElapsedMilliseconds}, sw3:{sw3.ElapsedMilliseconds}");
+			logger.LogInformation($"Block {block.Level} baking data processed in {sw.ElapsedMilliseconds} ms, sw0:{sw0.ElapsedMilliseconds}, sw1:{sw1.ElapsedMilliseconds}, sw2:{sw2.ElapsedMilliseconds}, sw3:{sw3.ElapsedMilliseconds}");
 		}
 
 		class RewardMsg

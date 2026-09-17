@@ -105,8 +105,12 @@ namespace TezosNotifyBot.Model
         public static List<UserAddress> GetUserAddresses(this TezosDataContext _db, string addr)
         {
             return _db.UserAddresses.Include(x => x.User).Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive).ToList();
-        }
-        public static List<UserAddress> GetUserAddresses(this TezosDataContext _db, long userId)
+		}
+		public static List<UserAddress> GetUserAddresses(this TezosDataContext _db, List<string> addrs)
+		{
+			return _db.UserAddresses.Include(x => x.User).Where(o => addrs.Contains(o.Address) && !o.IsDeleted && !o.User.Inactive).ToList();
+		}
+		public static List<UserAddress> GetUserAddresses(this TezosDataContext _db, long userId)
         {
             return _db.UserAddresses.Where(o => o.UserId == userId && !o.IsDeleted).OrderBy(x => x.CreateDate).ToList();
         }
