@@ -1004,7 +1004,7 @@ namespace TezosNotifyBot
 						var avg = TezosProcessing.GetAvgProcessingTime();
 						var cs = ((MemoryCache)_serviceProvider.GetService<IMemoryCache>()).Count;
 						var ts = TezosProcessing.PrevBlockTimestamp;
-						await SendTextMessage(db, user.Id, $"Last block processed: {l}, msh sent: {msgSent}\nAvg. processing time: {avg}\nCache size: {cs}\nBlock timestamp: {ts:dd.MM.yyyy}", ReplyKeyboards.MainMenu);
+						await SendTextMessage(db, user.Id, $"Last block processed: {l}, msh sent: {msgSent}\nAvg. processing time: {avg}\nCache size: {cs}\nBlock timestamp: {ts:dd.MM.yyyy HH:mm:ss}", ReplyKeyboards.MainMenu);
 					}
 					else if (text.StartsWith("/setblock") && Config.Telegram.DevUsers.Contains(from.Username))
 					{

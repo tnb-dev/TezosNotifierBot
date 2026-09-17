@@ -198,7 +198,7 @@ namespace TezosNotifyBot
 
 			//await ProcessBlockBakingData(db, block, tzKt);
 
-			//await ProcessBlockMetadata(db, block, tzKt);
+			await ProcessBlockMetadata(db, block, tzKt);
 
 			// var periods = tzKt.GetVotingPeriods();
 			// var currentPeriod = periods.FirstOrDefault(c => c.firstLevel <= block.Level && block.Level <= c.lastLevel);
