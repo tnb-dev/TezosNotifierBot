@@ -924,9 +924,14 @@ namespace TezosNotifyBot
 
 			var activeDelegates = block.Endorsements.Select(o => o.@delegate.address).ToList();
 			activeDelegates.Add(block.producer.address);
-			foreach(var addr in activeDelegates)
+			var sw1 = new Stopwatch();
+			var sw2 = new Stopwatch();
+			var sw3 = new Stopwatch();
+			foreach (var addr in activeDelegates)
 			{
+				sw1.Start();
 				var uaddrs = db.UserAddresses.Include(x => x.User).Where(o => o.Address == addr && !o.IsDeleted && !o.User.Inactive && o.NotifyMisses && o.DownStart.HasValue).ToList();
+				sw1.Stop();
 				foreach (var ua in uaddrs)
 				{
 					if (ua.DownEnd == null)
@@ -947,15 +952,19 @@ namespace TezosNotifyBot
 							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {ua.DownEnd.Value.ToString("MMM dd, hh:mm tt")}, at block <a href='{t.block(ua.DownEndLevel ?? 0)}'>{ua.DownEndLevel}</a>";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
+							sw2.Start();
 							await PushMessage(ua, result, 2);
+							sw2.Stop();
 							ua.DownMessageId = null;
 						}
 					}
+					sw3.Start();
 					await db.SaveChangesAsync();
+					sw3.Stop();
 				}
 			}
 
-			logger.LogInformation($"Block {block.Level} baking data processed in {sw.ElapsedMilliseconds} ms");
+			logger.LogInformation($"Block {block.Level} baking data processed in {sw.ElapsedMilliseconds} ms, sw1:{sw1.ElapsedMilliseconds}, sw2:{sw2.ElapsedMilliseconds}, sw3:{sw3.ElapsedMilliseconds}");
 		}
 
 		class RewardMsg
