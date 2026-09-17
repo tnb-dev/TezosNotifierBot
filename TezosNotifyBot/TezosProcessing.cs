@@ -196,7 +196,7 @@ namespace TezosNotifyBot
 			if (prevBlock == null)
 				prevBlock = tzKt.GetBlock(blockLevel - 1);
 
-			//await ProcessBlockBakingData(db, block, tzKt);
+			await ProcessBlockBakingData(db, block, tzKt);
 
 			await ProcessBlockMetadata(db, block, tzKt);
 
@@ -889,6 +889,7 @@ namespace TezosNotifyBot
 
 		async Task ProcessBlockBakingData(Storage.TezosDataContext db, Block block, ITzKtClient tzktClient)
 		{
+			var sw = Stopwatch.StartNew();
 			logger.LogInformation($"ProcessBlockBakingData {block.Level}");
 
 			var missedRights = tzktClient.GetRights(block.Level, "missed");
@@ -910,19 +911,16 @@ namespace TezosNotifyBot
 						var result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")} at block <a href='{t.block(ua.DownStartLevel ?? 0)}'>{ua.DownStartLevel}</a>";
 						if (!ua.DownMessageId.HasValue /*|| block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes > 4*/ || block.Timestamp < ua.LastUpdate)
 						{
-							//if (ua.DownMessageId.HasValue)
-							//	result += $"\nContinues missing as of {block.Timestamp.ToString("MMM dd, hh:mm tt")}";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
 							ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, 0);
-							//result = "! " + result;
-							//ua.DownMessageId = await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId ?? 0);
 							ua.LastUpdate = block.Timestamp;
 						}
 					}
 					await db.SaveChangesAsync();
 				}
 			}
+			logger.LogInformation($"Block {block.Level} missed rights processed in {sw.ElapsedMilliseconds} ms");
 
 			var activeDelegates = block.Endorsements.Select(o => o.@delegate.address).ToList();
 			activeDelegates.Add(block.producer.address);
@@ -949,15 +947,7 @@ namespace TezosNotifyBot
 							var result = $"☀️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has resumed block production as of {ua.DownEnd.Value.ToString("MMM dd, hh:mm tt")}, at block <a href='{t.block(ua.DownEndLevel ?? 0)}'>{ua.DownEndLevel}</a>";
 							if (!ua.User.HideHashTags)
 								result += "\n\n#missed" + ua.HashTag();
-							//if (block.Timestamp.Subtract(ua.LastUpdate).TotalMinutes < 4)
-							//{
-							//	result = $"🤷🏻‍♂️ Delegate <a href='{t.account(ua.Address)}'>{ua.DisplayName()}</a> has started missing blocks as of {ua.DownStart.Value.ToString("MMM dd, hh:mm tt")}\n\n" +
-							//		result;
-							//	await tezosBot.SendTextMessageUA(db, ua, result, ua.DownMessageId.Value);
-							//}
-							//else
 							await PushMessage(ua, result, 2);
-							//await tezosBot.SendTextMessageU_A2(db, ua, result, 0);
 							ua.DownMessageId = null;
 						}
 					}
@@ -965,7 +955,7 @@ namespace TezosNotifyBot
 				}
 			}
 
-			logger.LogInformation($"Block {block.Level} baking data processed");
+			logger.LogInformation($"Block {block.Level} baking data processed in {sw.ElapsedMilliseconds} ms");
 		}
 
 		class RewardMsg
